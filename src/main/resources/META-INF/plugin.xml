@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>io.github.cafecanudo.soundbridgeduplex</id>
+    <name>SoundBridge Duplex</name>
+    <vendor url="https://github.com/Cafecanudo/soundbridge_plugin_jetbrains_duplex">Wellton S. Barros</vendor>
+
+    <description><![CDATA[
+        Send files and folders to another computer over an audio cable, using the SoundBridge
+        OFDM transceiver.
+        Right-click a file or folder in the Project view and choose <b>SoundBridge Send</b>.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable
+                parentId="tools"
+                id="io.github.cafecanudo.soundbridgeduplex.settings"
+                instance="io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable"
+                displayName="SoundBridge"/>
+    </extensions>
+</idea-plugin>
