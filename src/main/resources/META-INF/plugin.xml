@@ -25,6 +25,18 @@
                 anchor="right"
                 icon="AllIcons.Actions.Upload"
                 factoryClass="io.github.cafecanudo.soundbridgeduplex.send.SoundBridgeToolWindowFactory"/>
+        <toolWindow
+                id="SoundBridge.Receive"
+                anchor="right"
+                secondary="true"
+                icon="AllIcons.Actions.Download"
+                factoryClass="io.github.cafecanudo.soundbridgeduplex.receive.ReceiveToolWindowFactory"/>
+        <toolWindow
+                id="SoundBridge.History"
+                anchor="right"
+                secondary="true"
+                icon="AllIcons.Vcs.History"
+                factoryClass="io.github.cafecanudo.soundbridgeduplex.history.HistoryToolWindowFactory"/>
     </extensions>
 
     <actions>

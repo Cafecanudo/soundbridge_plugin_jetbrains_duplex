@@ -130,7 +130,7 @@ public final class ReceivePanel {
                 .addComponentToRightColumn(progressLabel)
                 .addComponent(logScroll)
                 .getPanel();
-        form.setBorder(JBUI.Borders.empty(0, 8, 8, 8));
+        form.setBorder(JBUI.Borders.empty(8));
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(form, BorderLayout.NORTH);
         return wrapper;

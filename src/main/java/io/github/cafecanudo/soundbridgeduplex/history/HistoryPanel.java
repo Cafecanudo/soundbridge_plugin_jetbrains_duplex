@@ -91,7 +91,7 @@ public final class HistoryPanel {
         buttons.add(clearButton);
         buttons.add(Box.createHorizontalGlue());
         JPanel panel = new JPanel(new BorderLayout(0, JBUI.scale(4)));
-        panel.setBorder(JBUI.Borders.empty(0, 8, 8, 8));
+        panel.setBorder(JBUI.Borders.empty(8));
         panel.add(scroll, BorderLayout.CENTER);
         panel.add(buttons, BorderLayout.SOUTH);
         return panel;

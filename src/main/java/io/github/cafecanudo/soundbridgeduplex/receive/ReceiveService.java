@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
+import io.github.cafecanudo.soundbridgeduplex.ToolWindows;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliEvent;
@@ -21,7 +22,6 @@ import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
 import io.github.cafecanudo.soundbridgeduplex.send.SendEventReader;
 import io.github.cafecanudo.soundbridgeduplex.send.SendService;
-import io.github.cafecanudo.soundbridgeduplex.send.SoundBridgeToolWindowFactory;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -216,7 +216,7 @@ public final class ReceiveService implements Disposable {
 
     private void notifyUser(String content, NotificationType type) {
         IdeAlerts.notify(project, message("receive.notify.title"), content, type, message("send.notify.open"),
-                () -> SoundBridgeToolWindowFactory.show(project));
+                () -> ToolWindows.show(project, ToolWindows.RECEIVE));
     }
 
     private static void onUi(Runnable runnable) {

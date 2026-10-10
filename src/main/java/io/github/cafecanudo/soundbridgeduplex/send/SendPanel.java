@@ -92,6 +92,10 @@ final class SendPanel {
     private final JBScrollPane commandScroll = new JBScrollPane(commandArea);
     private final JBScrollPane logScroll = new JBScrollPane(logArea);
     private final Consumer<List<Path>> draftListener = this::showItems;
+    private final Consumer<HistoryEntry> resendListener = entry -> {
+        draft().consumeResend();
+        resend(entry);
+    };
     private final SendObserver sendObserver = new SendWatcher();
     private final CalibrationObserver calibrationObserver = new CalibrationWatcher();
     private final JPanel root;
@@ -143,6 +147,7 @@ final class SendPanel {
             refresh();
         });
         draft().addListener(draftListener);
+        draft().addResendListener(resendListener);
         sendService().addObserver(sendObserver);
         calibrationService().addObserver(calibrationObserver);
         root = buildLayout();
@@ -150,6 +155,10 @@ final class SendPanel {
         root.addAncestorListener(onShown(this::applySettings));
         sendService().log().forEach(this::appendLog);
         showItems(draft().items());
+        HistoryEntry pending = draft().consumeResend();
+        if (pending != null) {
+            resend(pending);
+        }
     }
 
     JComponent component() {
@@ -158,6 +167,7 @@ final class SendPanel {
 
     void dispose() {
         draft().removeListener(draftListener);
+        draft().removeResendListener(resendListener);
         sendService().removeObserver(sendObserver);
         calibrationService().removeObserver(calibrationObserver);
     }

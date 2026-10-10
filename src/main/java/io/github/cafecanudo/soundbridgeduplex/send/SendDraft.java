@@ -2,6 +2,7 @@ package io.github.cafecanudo.soundbridgeduplex.send;
 
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
+import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -14,6 +15,8 @@ public final class SendDraft {
 
     private final List<Consumer<List<Path>>> listeners = new CopyOnWriteArrayList<>();
     private final AtomicBoolean autoSendRequested = new AtomicBoolean();
+    private final List<Consumer<HistoryEntry>> resendListeners = new CopyOnWriteArrayList<>();
+    private volatile HistoryEntry pendingResend;
     private volatile List<Path> items = List.of();
 
     public static SendDraft getInstance(Project project) {
@@ -40,6 +43,25 @@ public final class SendDraft {
         items = List.copyOf(selected);
         autoSendRequested.set(fromMenu);
         listeners.forEach(listener -> listener.accept(items));
+    }
+
+    public void resend(HistoryEntry entry) {
+        pendingResend = entry;
+        resendListeners.forEach(listener -> listener.accept(entry));
+    }
+
+    public HistoryEntry consumeResend() {
+        HistoryEntry entry = pendingResend;
+        pendingResend = null;
+        return entry;
+    }
+
+    public void addResendListener(Consumer<HistoryEntry> listener) {
+        resendListeners.add(listener);
+    }
+
+    public void removeResendListener(Consumer<HistoryEntry> listener) {
+        resendListeners.remove(listener);
     }
 
     public void addListener(Consumer<List<Path>> listener) {
