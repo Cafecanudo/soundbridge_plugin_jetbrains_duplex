@@ -8,6 +8,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import io.github.cafecanudo.soundbridgeduplex.send.SendService;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
 import java.time.LocalDateTime;
@@ -58,6 +59,10 @@ public final class CalibrationService {
     }
 
     public boolean start(CalibrationRequest request) {
+        if (SendService.getInstance(project).isRunning()) {
+            notifyUser(message("calibration.notify.busy"), NotificationType.WARNING);
+            return false;
+        }
         if (!running.compareAndSet(false, true)) {
             return false;
         }

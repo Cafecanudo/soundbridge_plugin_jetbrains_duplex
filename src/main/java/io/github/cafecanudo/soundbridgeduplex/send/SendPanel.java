@@ -12,6 +12,9 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationObserver;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
@@ -26,6 +29,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.event.DocumentEvent;
@@ -40,6 +44,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
@@ -48,8 +53,13 @@ final class SendPanel {
 
     private static final int ITEM_ROWS = 4;
     private static final int COMMAND_ROWS = 3;
+    private static final int LOG_ROWS = 6;
     private static final int ITEM_GAP = 6;
+    private static final int PROGRESS_SCALE = 1000;
+    private static final double PERCENT = 100.0;
     private static final double HZ_PER_KHZ = 1000.0;
+    private static final String LINE_BREAK = "\n";
+    private static final String PART_SEPARATOR = " · ";
 
     private final Project project;
     private final DefaultListModel<Path> itemsModel = new DefaultListModel<>();
@@ -66,8 +76,16 @@ final class SendPanel {
     private final ComboBox<McsSelection> mcsCombo = new ComboBox<>();
     private final JBTextArea commandArea = new JBTextArea(COMMAND_ROWS, 0);
     private final JButton sendButton = new JButton(message("send.start"));
-    private final Consumer<List<Path>> draftListener = items -> showItems(items);
+    private final JButton cancelButton = new JButton(message("send.cancel"));
+    private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
+    private final JBLabel progressLabel = new JBLabel(message("send.progress.idle"));
+    private final JBTextArea logArea = new JBTextArea(LOG_ROWS, 0);
+    private final Consumer<List<Path>> draftListener = this::showItems;
+    private final SendObserver sendObserver = new SendWatcher();
+    private final CalibrationObserver calibrationObserver = new CalibrationWatcher();
     private final JPanel root;
+
+    private boolean perItemDestination;
 
     SendPanel(Project project) {
         this.project = project;
@@ -75,20 +93,24 @@ final class SendPanel {
         mcsCombo.setModel(mcsModel());
         commandArea.setEditable(false);
         commandArea.setLineWrap(true);
-        sendButton.setEnabled(false);
-        sendButton.setToolTipText(message("send.start.pending"));
-        clearButton.addActionListener(e -> draft().setItems(List.of()));
-        configureButton.addActionListener(e -> openSettings());
+        logArea.setEditable(false);
         modeGroup.add(oneWayRadio);
         modeGroup.add(twoWayRadio);
+        clearButton.addActionListener(e -> draft().setItems(List.of()));
+        configureButton.addActionListener(e -> openSettings());
         oneWayRadio.addActionListener(e -> applyModeMcs());
         twoWayRadio.addActionListener(e -> applyModeMcs());
         zipCombo.addActionListener(e -> refresh());
         mcsCombo.addActionListener(e -> refresh());
         destinationField.getDocument().addDocumentListener(onChange(this::refresh));
+        sendButton.addActionListener(e -> start());
+        cancelButton.addActionListener(e -> sendService().cancel());
         draft().addListener(draftListener);
+        sendService().addObserver(sendObserver);
+        calibrationService().addObserver(calibrationObserver);
         root = buildLayout();
         root.addAncestorListener(onShown(this::applySettings));
+        sendService().log().forEach(this::appendLog);
         showItems(draft().items());
     }
 
@@ -98,29 +120,29 @@ final class SendPanel {
 
     void dispose() {
         draft().removeListener(draftListener);
+        sendService().removeObserver(sendObserver);
+        calibrationService().removeObserver(calibrationObserver);
     }
 
     private void showItems(List<Path> items) {
         itemsModel.clear();
         items.forEach(itemsModel::addElement);
-        destinationField.setText(DestinationResolver.defaultDestination(projectBase(), items, Files::isDirectory));
+        perItemDestination = SendPlan.perItem(SendPlan.jobs(projectBase(), items, Files::isDirectory, ""));
+        destinationField.setEnabled(!perItemDestination);
+        destinationField.setText(perItemDestination ? message("send.destination.perItem")
+                : DestinationResolver.defaultDestination(projectBase(), items, Files::isDirectory));
         applySettings();
     }
 
-    private Path projectBase() {
-        String basePath = project.getBasePath();
-        return basePath == null ? null : Path.of(basePath);
-    }
-
     private void applySettings() {
-        SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
+        SoundBridgeProjectSettings settings = settings();
         ProjectConfig config = settings.config();
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
         enableMode(oneWayRadio, calibrated.contains(SendMode.ONE_WAY));
         enableMode(twoWayRadio, calibrated.contains(SendMode.TWO_WAY));
-        Optional<SendMode> preferred = SendMode.preferred(config, calibrated);
         modeGroup.clearSelection();
-        preferred.ifPresent(mode -> (mode == SendMode.ONE_WAY ? oneWayRadio : twoWayRadio).setSelected(true));
+        SendMode.preferred(config, calibrated)
+                .ifPresent(mode -> (mode == SendMode.ONE_WAY ? oneWayRadio : twoWayRadio).setSelected(true));
         modeHint.setText(calibrated.isEmpty() ? message("send.mode.none") : "");
         applyModeMcs();
     }
@@ -131,18 +153,70 @@ final class SendPanel {
     }
 
     private void refresh() {
+        parametersLabel.setText(selectedMode().map(mode -> describe(parameters(mode)))
+                .orElse(message("send.parameters.none")));
+        commandArea.setText(request().map(SendPanel::preview)
+                .orElse(message(currentItems().isEmpty() ? "send.items.empty" : "send.mode.none")));
+        updateButtons();
+    }
+
+    private Optional<SendRequest> request() {
         Optional<SendMode> mode = selectedMode();
-        parametersLabel.setText(mode.map(m -> describe(parameters(m))).orElse(message("send.parameters.none")));
         List<Path> items = currentItems();
         if (items.isEmpty() || mode.isEmpty()) {
-            commandArea.setText(message(items.isEmpty() ? "send.items.empty" : "send.mode.none"));
-            return;
+            return Optional.empty();
         }
-        SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
+        SoundBridgeProjectSettings settings = settings();
         ProjectConfig config = mode.get().applyTo(settings.config());
-        List<String> arguments = SendCommandBuilder.arguments(config, settings.uniProfile(), settings.calibrationProfile(),
-                options(), items);
-        commandArea.setText(CommandPreview.format(CliCommand.of(config.launcher(), arguments).withJson().fullCommand()));
+        String typed = perItemDestination ? "" : destinationField.getText();
+        List<SendJob> jobs = SendPlan.jobs(projectBase(), items, Files::isDirectory, typed);
+        List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
+                settings.calibrationProfile(), options(), jobs);
+        return Optional.of(new SendRequest(config.launcher(), commands, items.stream().map(Path::toString).toList()));
+    }
+
+    private void start() {
+        request().ifPresent(request -> {
+            logArea.setText("");
+            progressBar.setValue(0);
+            progressLabel.setText(message("send.progress.idle"));
+            sendService().start(request);
+        });
+    }
+
+    private void updateButtons() {
+        boolean sending = sendService().isRunning();
+        boolean calibrating = calibrationService().isRunning();
+        sendButton.setEnabled(!sending && !calibrating && selectedMode().isPresent() && !currentItems().isEmpty());
+        cancelButton.setEnabled(sending);
+    }
+
+    private void showProgress(SendProgress progress) {
+        progressBar.setIndeterminate(progress.fraction() == null);
+        if (progress.fraction() != null) {
+            progressBar.setValue((int) Math.round(progress.fraction() * PROGRESS_SCALE));
+        }
+        List<String> parts = new ArrayList<>();
+        parts.add(progress.counter().isEmpty() ? progress.file()
+                : message("send.progress.counter", progress.counter(), progress.file()));
+        if (progress.fraction() != null) {
+            parts.add(String.format(Locale.ROOT, "%.0f%%", progress.fraction() * PERCENT));
+        }
+        if (progress.kibPerSecond() != null) {
+            parts.add(String.format(Locale.ROOT, "%.1f KB/s", progress.kibPerSecond()));
+        }
+        if (progress.etaSeconds() != null) {
+            parts.add(message("send.progress.eta", SendEventReader.formatTime(progress.etaSeconds())));
+        }
+        if (!progress.status().isEmpty()) {
+            parts.add(progress.status());
+        }
+        progressLabel.setText(String.join(PART_SEPARATOR, parts));
+    }
+
+    private void appendLog(String line) {
+        logArea.append(line + LINE_BREAK);
+        logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 
     private Optional<SendMode> selectedMode() {
@@ -153,21 +227,15 @@ final class SendPanel {
     }
 
     private UniProfile parameters(SendMode mode) {
-        SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
+        SoundBridgeProjectSettings settings = settings();
         return SendCommandBuilder.txParameters(mode.applyTo(settings.config()), settings.uniProfile(),
                 settings.calibrationProfile());
-    }
-
-    private static void enableMode(JBRadioButton radio, boolean calibrated) {
-        radio.setEnabled(calibrated);
-        radio.setToolTipText(calibrated ? null : message("send.mode.notCalibrated"));
     }
 
     private SendOptions options() {
         Object zip = zipCombo.getSelectedItem();
         Integer level = zip instanceof Integer value ? value : null;
-        McsSelection mcs = (McsSelection) mcsCombo.getSelectedItem();
-        return new SendOptions(destinationField.getText(), level, mcs);
+        return new SendOptions(destinationField.getText(), level, (McsSelection) mcsCombo.getSelectedItem());
     }
 
     private List<Path> currentItems() {
@@ -178,9 +246,25 @@ final class SendPanel {
         return items;
     }
 
+    private Path projectBase() {
+        String basePath = project.getBasePath();
+        return basePath == null ? null : Path.of(basePath);
+    }
+
     private void openSettings() {
         ShowSettingsUtil.getInstance().showSettingsDialog(project, SoundBridgeConfigurable.class);
         applySettings();
+    }
+
+    private static String preview(SendRequest request) {
+        return request.commands().stream()
+                .map(arguments -> CommandPreview.format(CliCommand.of(request.launcher(), arguments).withJson().fullCommand()))
+                .collect(Collectors.joining(LINE_BREAK));
+    }
+
+    private static void enableMode(JBRadioButton radio, boolean calibrated) {
+        radio.setEnabled(calibrated);
+        radio.setToolTipText(calibrated ? null : message("send.mode.notCalibrated"));
     }
 
     private static String describe(UniProfile parameters) {
@@ -198,7 +282,7 @@ final class SendPanel {
         if (parameters.mcs() != null) {
             parts.add("MCS " + parameters.mcs());
         }
-        return String.join(" · ", parts);
+        return String.join(PART_SEPARATOR, parts);
     }
 
     private static DefaultComboBoxModel<Object> zipModel() {
@@ -231,7 +315,10 @@ final class SendPanel {
                 .addLabeledComponent(message("send.zip"), row(zipCombo))
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
                 .addLabeledComponent(message("send.command"), new JBScrollPane(commandArea))
-                .addComponentToRightColumn(row(sendButton))
+                .addComponentToRightColumn(row(sendButton, cancelButton))
+                .addLabeledComponent(message("send.progress"), progressBar)
+                .addComponentToRightColumn(progressLabel)
+                .addLabeledComponent(message("send.log"), new JBScrollPane(logArea))
                 .getPanel();
         form.setBorder(JBUI.Borders.empty(8));
         JPanel wrapper = new JPanel(new BorderLayout());
@@ -291,7 +378,57 @@ final class SendPanel {
         };
     }
 
+    private SoundBridgeProjectSettings settings() {
+        return SoundBridgeProjectSettings.getInstance(project);
+    }
+
+    private SendService sendService() {
+        return SendService.getInstance(project);
+    }
+
+    private CalibrationService calibrationService() {
+        return CalibrationService.getInstance(project);
+    }
+
     private SendDraft draft() {
         return SendDraft.getInstance(project);
+    }
+
+    private final class SendWatcher implements SendObserver {
+
+        @Override
+        public void onLog(String line) {
+            appendLog(line);
+        }
+
+        @Override
+        public void onRunningChanged(boolean running) {
+            if (!running) {
+                progressBar.setIndeterminate(false);
+            }
+            updateButtons();
+        }
+
+        @Override
+        public void onProgress(SendProgress progress) {
+            showProgress(progress);
+        }
+    }
+
+    private final class CalibrationWatcher implements CalibrationObserver {
+
+        @Override
+        public void onLog(String line) {
+        }
+
+        @Override
+        public void onRunningChanged(boolean running) {
+            updateButtons();
+        }
+
+        @Override
+        public void onProfileChanged(CalibrationProfile profile) {
+            applySettings();
+        }
     }
 }

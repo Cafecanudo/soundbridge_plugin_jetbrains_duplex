@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Adicionado
+- Fase 6: envio pela Tool Window. **Enviar** roda o SoundBridge em background (barra de status), com
+  **Cancelar**, barra de progresso (fração, KB/s, tempo restante, arquivo atual e contador), log e
+  notificação no fim. Itens em pastas diferentes viram um comando por destino, em sequência, todos menos o
+  último com `--more` (a estrutura do projeto chega igual do outro lado). Envio e calibração não rodam ao
+  mesmo tempo (mesma placa).
 - Fase 5: ação **SoundBridge Enviar** no menu de contexto do Project (arquivos, pastas, seleção múltipla) e
   Tool Window **SoundBridge** (embaixo) com o formulário de envio: itens; modo unidirecional ou
   bidirecional, habilitado só quando calibrado; parâmetros do modo (perfil uni digitado ou calibração bi

@@ -57,6 +57,19 @@ class SendCommandBuilderTest {
                 SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), fixed, ITEMS));
     }
 
+    @Test
+    void queueMarksAllButLastCommandWithMore() {
+        List<SendJob> jobs = List.of(new SendJob(List.of(Path.of("C:/p/src/a.txt")), "src"),
+                new SendJob(List.of(Path.of("C:/p/lib")), "lib"));
+
+        List<List<String>> commands = SendCommandBuilder.commands(UNI, UniProfile.EMPTY, Optional.empty(),
+                SendOptions.DEFAULT, jobs);
+
+        assertEquals(List.of("--tx", Path.of("C:/p/src/a.txt").toString(), "--out", "dq8f", "--dest", "src", "--more"),
+                commands.get(0));
+        assertEquals(List.of("--tx", Path.of("C:/p/lib").toString(), "--out", "dq8f", "--dest", "lib"), commands.get(1));
+    }
+
     private static SendOptions withMcs(int value) {
         return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value));
     }
