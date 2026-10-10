@@ -39,7 +39,9 @@ final class QuickSend {
                 settings.replaceExisting());
         List<List<String>> commands = SendCommandBuilder.commands(effective, settings.uniProfile(),
                 settings.calibrationProfile(), options, jobs);
-        service.start(new SendRequest(effective.launcher(), commands, items.stream().map(Path::toString).toList()));
+        SendSnapshot snapshot = SendSnapshot.of(mode.get(), SendPlan.perItem(jobs) ? "" : destination, options);
+        service.start(new SendRequest(effective.launcher(), commands, items.stream().map(Path::toString).toList(),
+                snapshot));
     }
 
     private static Path projectBase(Project project) {

@@ -55,7 +55,7 @@ final class SendTask extends Task.Backgroundable {
     @Override
     public void onFinished() {
         double seconds = (System.nanoTime() - startedAt) / NANOS_PER_SECOND;
-        service.finish(new SendOutcome(results, seconds, cancelled, failure.get()));
+        service.finish(request, new SendOutcome(results, seconds, cancelled, failure.get()));
     }
 
     private CliExitCode runCommand(List<String> arguments, ProgressIndicator indicator) {

@@ -1,0 +1,117 @@
+package io.github.cafecanudo.soundbridgeduplex.history;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import io.github.cafecanudo.soundbridgeduplex.send.SendFileResult;
+import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
+import io.github.cafecanudo.soundbridgeduplex.send.SendOutcome;
+import io.github.cafecanudo.soundbridgeduplex.send.SendSnapshot;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
+
+public record HistoryEntry(
+        String timestamp,
+        List<String> items,
+        SendSnapshot snapshot,
+        int files,
+        int okFiles,
+        long size,
+        Integer finalMcs,
+        double seconds,
+        SendStatus status,
+        List<String> log) {
+
+    public static final int MAX_LOG_LINES = 200;
+
+    private static final String TIMESTAMP = "timestamp";
+    private static final String ITEMS = "items";
+    private static final String MODE = "mode";
+    private static final String DESTINATION = "destination";
+    private static final String ZIP_LEVEL = "zip_level";
+    private static final String MCS = "mcs";
+    private static final String REPLACE = "replace";
+    private static final String FILES = "files";
+    private static final String OK_FILES = "ok_files";
+    private static final String SIZE = "size";
+    private static final String FINAL_MCS = "final_mcs";
+    private static final String SECONDS = "seconds";
+    private static final String STATUS = "status";
+    private static final String LOG = "log";
+
+    public HistoryEntry {
+        items = List.copyOf(items);
+        log = List.copyOf(log.size() > MAX_LOG_LINES ? log.subList(log.size() - MAX_LOG_LINES, log.size()) : log);
+    }
+
+    public static HistoryEntry of(String timestamp, List<String> items, SendSnapshot snapshot, SendOutcome outcome,
+                                  List<String> log) {
+        List<SendFileResult> results = outcome.files();
+        Integer finalMcs = results.isEmpty() ? null : results.get(results.size() - 1).finalMcs();
+        long size = results.stream().mapToLong(SendFileResult::size).sum();
+        return new HistoryEntry(timestamp, items, snapshot, results.size(), (int) outcome.okCount(), size, finalMcs,
+                outcome.seconds(), SendStatus.of(outcome), log);
+    }
+
+    public String toJson() {
+        JsonObject object = new JsonObject();
+        object.addProperty(TIMESTAMP, timestamp);
+        object.add(ITEMS, strings(items));
+        object.addProperty(MODE, snapshot.mode().name());
+        object.addProperty(DESTINATION, snapshot.destination());
+        object.add(ZIP_LEVEL, number(snapshot.zipLevel()));
+        object.add(MCS, number(snapshot.mcs()));
+        object.addProperty(REPLACE, snapshot.replaceExisting());
+        object.addProperty(FILES, files);
+        object.addProperty(OK_FILES, okFiles);
+        object.addProperty(SIZE, size);
+        object.add(FINAL_MCS, number(finalMcs));
+        object.addProperty(SECONDS, seconds);
+        object.addProperty(STATUS, status.name());
+        object.add(LOG, strings(log));
+        return object.toString();
+    }
+
+    public static Optional<HistoryEntry> fromJson(String json) {
+        try {
+            JsonObject o = JsonParser.parseString(json).getAsJsonObject();
+            SendSnapshot snapshot = new SendSnapshot(SendMode.valueOf(o.get(MODE).getAsString()),
+                    o.get(DESTINATION).getAsString(), integer(o, ZIP_LEVEL), integer(o, MCS),
+                    o.get(REPLACE).getAsBoolean());
+            return Optional.of(new HistoryEntry(o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
+                    snapshot, o.get(FILES).getAsInt(), o.get(OK_FILES).getAsInt(), o.get(SIZE).getAsLong(),
+                    integer(o, FINAL_MCS), o.get(SECONDS).getAsDouble(), SendStatus.valueOf(o.get(STATUS).getAsString()),
+                    strings(o.getAsJsonArray(LOG))));
+        } catch (JsonParseException | IllegalStateException | IllegalArgumentException | NullPointerException e) {
+            return Optional.empty();
+        }
+    }
+
+    private static JsonArray strings(List<String> values) {
+        JsonArray array = new JsonArray();
+        values.forEach(array::add);
+        return array;
+    }
+
+    private static List<String> strings(JsonArray array) {
+        return StreamSupport.stream(Objects.requireNonNull(array).spliterator(), false)
+                .map(JsonElement::getAsString)
+                .toList();
+    }
+
+    private static JsonElement number(Number value) {
+        return value == null ? JsonNull.INSTANCE : new JsonPrimitive(value);
+    }
+
+    private static Integer integer(JsonObject object, String key) {
+        JsonElement element = object.get(key);
+        return element == null || element.isJsonNull() ? null : element.getAsInt();
+    }
+}

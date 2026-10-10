@@ -11,7 +11,11 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
+import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
+import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -22,6 +26,8 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
 @Service(Service.Level.PROJECT)
 public final class SendService {
+
+    private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final Project project;
     private final List<SendObserver> observers = new CopyOnWriteArrayList<>();
@@ -88,7 +94,10 @@ public final class SendService {
         onUi(() -> observers.forEach(observer -> observer.onProgress(progress)));
     }
 
-    void finish(SendOutcome outcome) {
+    void finish(SendRequest request, SendOutcome outcome) {
+        String timestamp = LocalDateTime.now().format(TIMESTAMP);
+        SendHistory.getInstance(project).add(HistoryEntry.of(timestamp, request.itemLabels(), request.snapshot(),
+                outcome, log()));
         indicator.set(null);
         running.set(false);
         notifyRunning(false);

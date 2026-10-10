@@ -20,6 +20,8 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
+import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
+import io.github.cafecanudo.soundbridgeduplex.history.HistoryPanel;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
@@ -84,6 +86,9 @@ final class SendPanel {
     private final JBCheckBox showWindowCheck = new JBCheckBox(message("send.showWindow"));
     private final JBCheckBox showCommandCheck = new JBCheckBox(message("send.showCommand"));
     private final JBCheckBox showLogCheck = new JBCheckBox(message("send.showLog"));
+    private final JBCheckBox showHistoryCheck = new JBCheckBox(message("send.showHistory"));
+    private final TitledSeparator historySeparator = new TitledSeparator(message("history.section"));
+    private final HistoryPanel historyPanel;
     private final JBLabel commandLabel = new JBLabel(message("send.command"));
     private final JBLabel logLabel = new JBLabel(message("send.log"));
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
@@ -128,6 +133,11 @@ final class SendPanel {
             settings().setShowCommand(showCommandCheck.isSelected());
             updateVisibility();
         });
+        showHistoryCheck.setSelected(settings().showHistory());
+        showHistoryCheck.addActionListener(e -> {
+            settings().setShowHistory(showHistoryCheck.isSelected());
+            updateVisibility();
+        });
         showLogCheck.addActionListener(e -> {
             settings().setShowLog(showLogCheck.isSelected());
             updateVisibility();
@@ -145,6 +155,7 @@ final class SendPanel {
         draft().addListener(draftListener);
         sendService().addObserver(sendObserver);
         calibrationService().addObserver(calibrationObserver);
+        historyPanel = new HistoryPanel(project, this::resend);
         root = buildLayout();
         updateVisibility();
         root.addAncestorListener(onShown(this::applySettings));
@@ -157,6 +168,7 @@ final class SendPanel {
     }
 
     void dispose() {
+        historyPanel.dispose();
         draft().removeListener(draftListener);
         sendService().removeObserver(sendObserver);
         calibrationService().removeObserver(calibrationObserver);
@@ -221,7 +233,9 @@ final class SendPanel {
         List<SendJob> jobs = SendPlan.jobs(projectBase(), items, Files::isDirectory, typed);
         List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
                 settings.calibrationProfile(), options(), jobs);
-        return Optional.of(new SendRequest(config.launcher(), commands, items.stream().map(Path::toString).toList()));
+        SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
+        return Optional.of(new SendRequest(config.launcher(), commands, items.stream().map(Path::toString).toList(),
+                snapshot));
     }
 
     private void start() {
@@ -239,8 +253,35 @@ final class SendPanel {
         commandScroll.setVisible(showCommandCheck.isSelected());
         logLabel.setVisible(showLogCheck.isSelected());
         logScroll.setVisible(showLogCheck.isSelected());
+        historySeparator.setVisible(showHistoryCheck.isSelected());
+        historyPanel.component().setVisible(showHistoryCheck.isSelected());
         root.revalidate();
         root.repaint();
+    }
+
+    private void resend(HistoryEntry entry) {
+        List<Path> existing = entry.items().stream().map(Path::of).filter(Files::exists).toList();
+        int missing = entry.items().size() - existing.size();
+        if (missing > 0) {
+            sendService().notifyUser(message("history.resend.missing", missing), NotificationType.WARNING);
+        }
+        draft().setItems(existing);
+        applySnapshot(entry.snapshot());
+    }
+
+    private void applySnapshot(SendSnapshot snapshot) {
+        JBRadioButton radio = snapshot.mode() == SendMode.ONE_WAY ? oneWayRadio : twoWayRadio;
+        if (radio.isEnabled()) {
+            radio.setSelected(true);
+        }
+        if (!perItemDestination && !snapshot.destination().isEmpty()) {
+            destinationField.setText(snapshot.destination());
+        }
+        zipCombo.setSelectedItem(snapshot.zipLevel() == null ? message("send.zip.none") : snapshot.zipLevel());
+        mcsCombo.setSelectedItem(McsSelection.of(snapshot.mcs()));
+        replaceCheck.setSelected(snapshot.replaceExisting());
+        settings().setReplaceExisting(snapshot.replaceExisting());
+        refresh();
     }
 
     private void updateButtons() {
@@ -375,12 +416,14 @@ final class SendPanel {
                 .addLabeledComponent(message("send.destination"), destinationField)
                 .addLabeledComponent(message("send.zip"), row(zipCombo))
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
-                .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
+                .addComponentToRightColumn(row(showCommandCheck, showLogCheck, showHistoryCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
                 .addComponentToRightColumn(row(sendButton, cancelButton, autoSendCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
                 .addLabeledComponent(logLabel, logScroll)
+                .addComponent(historySeparator)
+                .addComponent(historyPanel.component())
                 .getPanel();
         form.setBorder(JBUI.Borders.empty(8));
         JPanel wrapper = new JPanel(new BorderLayout());

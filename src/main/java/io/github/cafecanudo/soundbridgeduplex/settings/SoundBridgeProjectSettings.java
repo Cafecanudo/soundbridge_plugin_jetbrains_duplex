@@ -13,6 +13,8 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOptions;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,6 +42,8 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean showLog = false;
         public boolean showWindowOnSend = true;
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
+        public boolean showHistory = true;
+        public List<String> history = new ArrayList<>();
     }
 
     private static final int NO_ZIP = -1;
@@ -159,6 +163,22 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setZipLevel(Integer level) {
         state.zipLevel = level == null ? NO_ZIP : level;
+    }
+
+    public boolean showHistory() {
+        return state.showHistory;
+    }
+
+    public void setShowHistory(boolean value) {
+        state.showHistory = value;
+    }
+
+    public List<String> history() {
+        return state.history == null ? List.of() : List.copyOf(state.history);
+    }
+
+    public void setHistory(List<String> entries) {
+        state.history = new ArrayList<>(entries);
     }
 
     public String projectDirectory() {

@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Adicionado
+- Fase 7: histórico de envios na Tool Window (por projeto, últimas 200 entradas, ocultável com **Mostrar
+  histórico**). Uma linha por envio: data, itens, modo, arquivos OK/total, tamanho, MCS final, duração e
+  status (OK, Falha, Cancelado). **Reenviar** carrega itens, modo, destino, compressão, MCS e Substituir no
+  formulário (itens apagados ficam de fora, com aviso); **Ver log** mostra as últimas 200 linhas daquele
+  envio; **Limpar** apaga o histórico, com confirmação.
 - Alertas de envio com o link **Detalhes**, que abre a Tool Window.
 - Balão de alerta (envio e calibração) some após 5 s; o alerta fica no painel Notifications da IDE.
 - Caixa **Mostrar esta janela ao enviar pelo menu** (por projeto, marcada por padrão). Desmarcada, o menu
