@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Adicionado
+- Opção "Bidirecional" na calibração (por projeto). Desmarcada: só a seção Unidirecional (e a entrada some da
+  tela). Marcada: Unidirecional e Bidirecional. Unidirecional: botão "Calibrar só a ida" (`--calibrate-uni`,
+  sondagem pela saída) e campos mono, banda, pico e MCS para digitar os valores mostrados no PC que recebe.
+- Calibração na tela *Settings > Tools > SoundBridge* (fase 4): tamanhos de teste (2k a 10mb), validar com
+  transferências e gravar como perfil; roda em background na barra de status, com cancelamento, log ao vivo
+  na tela e notificação com o resumo no fim. Opções e perfil (sentido este PC → outro) gravados por projeto;
+  o perfil indica quando foi feito com outras placas. O plugin nunca usa `--calibrate-save`: o perfil fica
+  só no projeto, sem mexer nos padrões do SoundBridge em nenhum dos PCs.
 - Esqueleto do plugin: Gradle 9.7.1, IntelliJ Platform Gradle Plugin 2.19.0, Java 17.
 - `plugin.xml` com dependência só de `com.intellij.modules.platform` (todas as IDEs JetBrains).
 - Compatível a partir da 2023.3 (`since-build` 233), sem `until-build`.

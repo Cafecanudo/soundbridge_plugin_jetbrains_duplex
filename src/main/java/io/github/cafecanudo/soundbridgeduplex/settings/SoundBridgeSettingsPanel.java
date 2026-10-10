@@ -14,6 +14,9 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UIUtil;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationOptions;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
+import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.client.DevicesDocument;
 import io.github.cafecanudo.soundbridgeduplex.client.SoundBridgeClient;
 
@@ -23,6 +26,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.util.List;
+import java.util.Optional;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
@@ -37,11 +41,13 @@ final class SoundBridgeSettingsPanel {
     private final JBLabel versionLabel = new JBLabel();
     private final DeviceComboBox outputCombo = new DeviceComboBox();
     private final DeviceComboBox inputCombo = new DeviceComboBox();
+    private final JBLabel inputLabel = new JBLabel(message("settings.input"));
     private final TextFieldWithBrowseButton directoryField = new TextFieldWithBrowseButton();
     private final JButton projectDirectoryButton = new JButton(message("settings.directory.project"));
     private final JButton refreshButton = new JButton(message("settings.devices.refresh"));
     private final JBLabel devicesStatus = new JBLabel();
     private final JBLabel errorLabel = new JBLabel();
+    private final CalibrationSection calibration;
     private final JPanel root;
 
     private int generation;
@@ -54,15 +60,41 @@ final class SoundBridgeSettingsPanel {
         refreshButton.addActionListener(e -> refreshDevices());
         directoryField.addActionListener(e -> chooseDirectory());
         projectDirectoryButton.addActionListener(e -> directoryField.setText(projectDirectory));
+        calibration = new CalibrationSection(project, this::config);
+        outputCombo.addActionListener(e -> calibration.refreshProfileLabel());
+        inputCombo.addActionListener(e -> calibration.refreshProfileLabel());
+        calibration.setOnModeChanged(this::updateInputVisibility);
         root = buildLayout();
+        updateInputVisibility();
     }
 
     JComponent component() {
         return root;
     }
 
+    void dispose() {
+        calibration.dispose();
+    }
+
+    CalibrationOptions calibrationOptions() {
+        return calibration.options();
+    }
+
+    void loadCalibration(CalibrationOptions options, Optional<CalibrationProfile> profile, UniProfile uni) {
+        calibration.load(options, profile, uni);
+    }
+
+    UniProfile uniProfile() {
+        return calibration.uniProfile();
+    }
+
+    Optional<String> uniError() {
+        return calibration.uniError();
+    }
+
     ProjectConfig config() {
-        return new ProjectConfig(launcherField.getText(), outputCombo.spec(), inputCombo.spec(), directoryField.getText());
+        return new ProjectConfig(launcherField.getText(), outputCombo.spec(), inputCombo.spec(), directoryField.getText(),
+                calibration.bidirectional());
     }
 
     void load(ProjectConfig config) {
@@ -70,8 +102,15 @@ final class SoundBridgeSettingsPanel {
         outputCombo.show(List.of(), config.output());
         inputCombo.show(List.of(), config.input());
         directoryField.setText(config.receiveDirectory());
+        calibration.setBidirectional(config.bidirectional());
         versionLabel.setText("");
         refreshDevices();
+    }
+
+    private void updateInputVisibility() {
+        boolean visible = calibration.bidirectional();
+        inputLabel.setVisible(visible);
+        inputCombo.setVisible(visible);
     }
 
     private void refreshDevices() {
@@ -143,13 +182,15 @@ final class SoundBridgeSettingsPanel {
                 .addComponentToRightColumn(versionLabel)
                 .addSeparator()
                 .addLabeledComponent(message("settings.output"), outputCombo)
-                .addLabeledComponent(message("settings.input"), inputCombo)
+                .addLabeledComponent(inputLabel, inputCombo)
                 .addComponentToRightColumn(hint(message("settings.devices.hint")))
                 .addComponentToRightColumn(row(devicesStatus, refreshButton))
                 .addSeparator()
                 .addLabeledComponent(message("settings.directory"), row(directoryField, projectDirectoryButton))
                 .addComponentToRightColumn(hint(message("settings.directory.hint")))
                 .addComponent(errorLabel)
+                .addSeparator()
+                .addComponent(calibration.component())
                 .getPanel();
 
         JPanel wrapper = new JPanel(new BorderLayout());

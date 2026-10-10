@@ -2,7 +2,7 @@ package io.github.cafecanudo.soundbridgeduplex.settings;
 
 import java.util.Objects;
 
-public record ProjectConfig(String launcher, String output, String input, String receiveDirectory) {
+public record ProjectConfig(String launcher, String output, String input, String receiveDirectory, boolean bidirectional) {
 
     public ProjectConfig {
         launcher = normalize(launcher);

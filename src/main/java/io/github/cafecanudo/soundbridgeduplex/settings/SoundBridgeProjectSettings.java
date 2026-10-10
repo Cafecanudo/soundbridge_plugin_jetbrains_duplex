@@ -7,9 +7,13 @@ import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.FileUtil;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationOptions;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
+import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Service(Service.Level.PROJECT)
 @State(name = "SoundBridgeDuplex", storages = @Storage(StoragePathMacros.WORKSPACE_FILE))
@@ -20,6 +24,15 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public String output = "";
         public String input = "";
         public String receiveDirectory = "";
+        public boolean bidirectional = false;
+        public boolean uniMono = false;
+        public String uniBandHz = "";
+        public String uniPeak = "";
+        public String uniMcs = "";
+        public String calibrationSizes = CalibrationOptions.encodeSizes(CalibrationOptions.DEFAULT.sizes());
+        public boolean calibrationValidate = CalibrationOptions.DEFAULT.validate();
+        public boolean calibrationSave = CalibrationOptions.DEFAULT.save();
+        public String calibrationProfile = "";
     }
 
     private final Project project;
@@ -48,7 +61,8 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
                 orDefault(state.launcher, CliCommand.DEFAULT_LAUNCHER),
                 state.output,
                 state.input,
-                orDefault(state.receiveDirectory, projectDirectory()));
+                orDefault(state.receiveDirectory, projectDirectory()),
+                state.bidirectional);
     }
 
     public void update(ProjectConfig config) {
@@ -56,6 +70,38 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         state.output = config.output();
         state.input = config.input();
         state.receiveDirectory = isProjectDirectory(config.receiveDirectory()) ? "" : config.receiveDirectory();
+        state.bidirectional = config.bidirectional();
+    }
+
+    public UniProfile uniProfile() {
+        return new UniProfile(state.uniMono, UniProfile.parseDouble(state.uniBandHz),
+                UniProfile.parseDouble(state.uniPeak), UniProfile.parseInteger(state.uniMcs));
+    }
+
+    public void updateUniProfile(UniProfile profile) {
+        state.uniMono = profile.mono();
+        state.uniBandHz = text(profile.bandHighHz());
+        state.uniPeak = text(profile.peak());
+        state.uniMcs = text(profile.mcs());
+    }
+
+    public CalibrationOptions calibrationOptions() {
+        return new CalibrationOptions(
+                CalibrationOptions.decodeSizes(state.calibrationSizes), state.calibrationValidate, state.calibrationSave);
+    }
+
+    public void updateCalibrationOptions(CalibrationOptions options) {
+        state.calibrationSizes = CalibrationOptions.encodeSizes(options.sizes());
+        state.calibrationValidate = options.validate();
+        state.calibrationSave = options.save();
+    }
+
+    public Optional<CalibrationProfile> calibrationProfile() {
+        return CalibrationProfile.fromJson(state.calibrationProfile);
+    }
+
+    public void updateCalibrationProfile(CalibrationProfile profile) {
+        state.calibrationProfile = profile.toJson();
     }
 
     public String projectDirectory() {
@@ -65,6 +111,10 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     private boolean isProjectDirectory(String directory) {
         return FileUtil.pathsEqual(directory, projectDirectory());
+    }
+
+    private static String text(Number value) {
+        return value == null ? "" : value.toString();
     }
 
     private static String orDefault(String value, String fallback) {

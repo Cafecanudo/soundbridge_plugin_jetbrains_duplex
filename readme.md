@@ -4,7 +4,7 @@ Plugin para IDEs JetBrains que envia arquivos e pastas por cabo de áudio usando
 plugin não reimplementa o transceptor: executa o CLI do SoundBridge, que já deve estar instalado, e lê
 os eventos `--json`.
 
-> **Em desenvolvimento.** Fases 1 a 3: esqueleto, execução do CLI e tela de configuração por projeto.
+> **Em desenvolvimento.** Fases 1 a 4: esqueleto, execução do CLI, configuração por projeto e calibração (uni e bi).
 
 ## Configuração
 
@@ -15,7 +15,12 @@ os eventos `--json`.
 - **Saída e entrada**: as placas usadas no envio. Vazio usa o padrão do SoundBridge na máquina.
 - **Pasta de recepção**: padrão, a pasta do projeto; editável.
 
-A calibração é a única configuração global: vale para o par de placas, em qualquer projeto.
+- **Bidirecional**: liga o modo de dois cabos (dados e confirmação). Desmarcado, a tela mostra só o
+  unidirecional e esconde a entrada.
+- **Calibração unidirecional**: "Calibrar só a ida" toca a sondagem; o PC que recebe mostra mono, banda, pico e
+  MCS, que você digita nos campos do projeto.
+- **Calibração bidirecional** (com Bidirecional marcado): mede os dois sentidos com o outro PC recebendo;
+  opcionalmente valida com transferências de teste e grava o resultado como perfil do projeto (nunca nos padrões do SoundBridge). Roda em background (barra de status), com cancelamento.
 
 ## Compatibilidade
 

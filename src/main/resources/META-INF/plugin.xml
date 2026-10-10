@@ -17,5 +17,6 @@
                 id="io.github.cafecanudo.soundbridgeduplex.settings"
                 instance="io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable"
                 displayName="SoundBridge"/>
+        <notificationGroup id="SoundBridge" displayType="BALLOON"/>
     </extensions>
 </idea-plugin>
