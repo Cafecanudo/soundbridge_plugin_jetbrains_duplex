@@ -21,7 +21,6 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
-import io.github.cafecanudo.soundbridgeduplex.history.HistoryPanel;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
@@ -86,9 +85,6 @@ final class SendPanel {
     private final JBCheckBox showWindowCheck = new JBCheckBox(message("send.showWindow"));
     private final JBCheckBox showCommandCheck = new JBCheckBox(message("send.showCommand"));
     private final JBCheckBox showLogCheck = new JBCheckBox(message("send.showLog"));
-    private final JBCheckBox showHistoryCheck = new JBCheckBox(message("send.showHistory"));
-    private final TitledSeparator historySeparator = new TitledSeparator(message("history.section"));
-    private final HistoryPanel historyPanel;
     private final JBLabel commandLabel = new JBLabel(message("send.command"));
     private final JBLabel logLabel = new JBLabel(message("send.log"));
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
@@ -133,11 +129,6 @@ final class SendPanel {
             settings().setShowCommand(showCommandCheck.isSelected());
             updateVisibility();
         });
-        showHistoryCheck.setSelected(settings().showHistory());
-        showHistoryCheck.addActionListener(e -> {
-            settings().setShowHistory(showHistoryCheck.isSelected());
-            updateVisibility();
-        });
         showLogCheck.addActionListener(e -> {
             settings().setShowLog(showLogCheck.isSelected());
             updateVisibility();
@@ -155,7 +146,6 @@ final class SendPanel {
         draft().addListener(draftListener);
         sendService().addObserver(sendObserver);
         calibrationService().addObserver(calibrationObserver);
-        historyPanel = new HistoryPanel(project, this::resend);
         root = buildLayout();
         updateVisibility();
         root.addAncestorListener(onShown(this::applySettings));
@@ -168,7 +158,6 @@ final class SendPanel {
     }
 
     void dispose() {
-        historyPanel.dispose();
         draft().removeListener(draftListener);
         sendService().removeObserver(sendObserver);
         calibrationService().removeObserver(calibrationObserver);
@@ -253,13 +242,11 @@ final class SendPanel {
         commandScroll.setVisible(showCommandCheck.isSelected());
         logLabel.setVisible(showLogCheck.isSelected());
         logScroll.setVisible(showLogCheck.isSelected());
-        historySeparator.setVisible(showHistoryCheck.isSelected());
-        historyPanel.component().setVisible(showHistoryCheck.isSelected());
         root.revalidate();
         root.repaint();
     }
 
-    private void resend(HistoryEntry entry) {
+    void resend(HistoryEntry entry) {
         List<Path> existing = entry.items().stream().map(Path::of).filter(Files::exists).toList();
         int missing = entry.items().size() - existing.size();
         if (missing > 0) {
@@ -416,14 +403,12 @@ final class SendPanel {
                 .addLabeledComponent(message("send.destination"), destinationField)
                 .addLabeledComponent(message("send.zip"), row(zipCombo))
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
-                .addComponentToRightColumn(row(showCommandCheck, showLogCheck, showHistoryCheck))
+                .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
                 .addComponentToRightColumn(row(sendButton, cancelButton, autoSendCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
                 .addLabeledComponent(logLabel, logScroll)
-                .addComponent(historySeparator)
-                .addComponent(historyPanel.component())
                 .getPanel();
         form.setBorder(JBUI.Borders.empty(8));
         JPanel wrapper = new JPanel(new BorderLayout());

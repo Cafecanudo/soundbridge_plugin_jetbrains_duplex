@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Adicionado
+- Tool Window dividida: envio em cima e histórico embaixo, com divisor arrastável (posição lembrada); a
+  caixa Mostrar histórico deixa de existir.
 - Fase 7: histórico de envios na Tool Window (por projeto, últimas 200 entradas, ocultável com **Mostrar
   histórico**). Uma linha por envio: data, itens, modo, arquivos OK/total, tamanho, MCS final, duração e
   status (OK, Falha, Cancelado). **Reenviar** carrega itens, modo, destino, compressão, MCS e Substituir no

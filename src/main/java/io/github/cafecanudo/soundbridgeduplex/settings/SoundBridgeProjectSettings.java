@@ -42,7 +42,6 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean showLog = false;
         public boolean showWindowOnSend = true;
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
-        public boolean showHistory = true;
         public List<String> history = new ArrayList<>();
     }
 
@@ -163,14 +162,6 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setZipLevel(Integer level) {
         state.zipLevel = level == null ? NO_ZIP : level;
-    }
-
-    public boolean showHistory() {
-        return state.showHistory;
-    }
-
-    public void setShowHistory(boolean value) {
-        state.showHistory = value;
     }
 
     public List<String> history() {
