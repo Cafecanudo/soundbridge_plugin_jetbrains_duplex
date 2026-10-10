@@ -3,8 +3,12 @@
 ## [Unreleased]
 
 ### Adicionado
-- Tool Window dividida: envio em cima e histórico embaixo, com divisor arrastável (posição lembrada); a
-  caixa Mostrar histórico deixa de existir.
+- Seção **Recebimento** na Tool Window: Receber/Parar roda `--rx <pasta do projeto> --keep` (com `--out` no
+  modo bidirecional), com estado, progresso e log (Mostrar log). O RX pausa durante um envio ou uma
+  calibração e retoma no fim. Cada arquivo recebido entra no Histórico (coluna de direção: ↑ enviado,
+  ↓ recebido), atualiza a árvore do Project e gera a notificação "Recebido: arquivo · tempo".
+- Tool Window em seções empilhadas (Envio e Histórico), cada uma com título no topo e divisor arrastável
+  entre elas (posição lembrada); pronta para a seção Recebimento. A caixa Mostrar histórico deixa de existir.
 - Fase 7: histórico de envios na Tool Window (por projeto, últimas 200 entradas, ocultável com **Mostrar
   histórico**). Uma linha por envio: data, itens, modo, arquivos OK/total, tamanho, MCS final, duração e
   status (OK, Falha, Cancelado). **Reenviar** carrega itens, modo, destino, compressão, MCS e Substituir no

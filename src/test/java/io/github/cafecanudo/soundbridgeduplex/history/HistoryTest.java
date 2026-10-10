@@ -1,5 +1,6 @@
 package io.github.cafecanudo.soundbridgeduplex.history;
 
+import io.github.cafecanudo.soundbridgeduplex.receive.ReceivedFile;
 import io.github.cafecanudo.soundbridgeduplex.send.SendFileResult;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOutcome;
@@ -65,6 +66,19 @@ class HistoryTest {
 
         assertEquals(HistoryLog.MAX_ENTRIES, entries.size());
         assertEquals("2026-10-10 00:00:204", entries.get(0).timestamp());
+    }
+
+    @Test
+    void receivedEntryRoundTripsAndOldEntriesAreSent() {
+        ReceivedFile file = new ReceivedFile("src/Main.java", "C:/p/src/Main.java", 800, 12.4, true, false,
+                List.of("OK"));
+        HistoryEntry received = HistoryEntry.ofReceived("2026-10-10 15:00:00", file);
+
+        assertEquals(Direction.RECEIVED, received.direction());
+        assertEquals(List.of("C:/p/src/Main.java"), received.items());
+        assertEquals(received, HistoryEntry.fromJson(received.toJson()).orElseThrow());
+        String legacy = entry("t", new SendOutcome(FILES, 1.0, false, null)).toJson().replace("\"direction\":\"SENT\",", "");
+        assertEquals(Direction.SENT, HistoryEntry.fromJson(legacy).orElseThrow().direction());
     }
 
     @Test

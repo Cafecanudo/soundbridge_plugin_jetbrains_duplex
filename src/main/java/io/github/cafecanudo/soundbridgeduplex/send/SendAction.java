@@ -7,8 +7,6 @@ import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
 import java.nio.file.Path;
@@ -16,8 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class SendAction extends AnAction implements DumbAware {
-
-    public static final String TOOL_WINDOW_ID = "SoundBridge";
 
     @Override
     public ActionUpdateThread getActionUpdateThread() {
@@ -42,10 +38,7 @@ public final class SendAction extends AnAction implements DumbAware {
             return;
         }
         SendDraft.getInstance(project).selectFromMenu(items);
-        ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
-        if (window != null) {
-            window.activate(null);
-        }
+        SoundBridgeToolWindowFactory.show(project);
     }
 
     private static List<Path> localFiles(AnActionEvent event) {

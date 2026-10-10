@@ -7,8 +7,6 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
 import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
@@ -115,10 +113,7 @@ public final class SendService {
     }
 
     private void openToolWindow() {
-        ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(SendAction.TOOL_WINDOW_ID);
-        if (window != null) {
-            window.activate(null);
-        }
+        SoundBridgeToolWindowFactory.show(project);
     }
 
     private static void onUi(Runnable runnable) {

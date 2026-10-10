@@ -9,6 +9,7 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliEvent;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliExitCode;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliListener;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliProcess;
+import io.github.cafecanudo.soundbridgeduplex.receive.ReceiveService;
 
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,6 +28,7 @@ final class CalibrationTask extends Task.Backgroundable {
     private final AtomicReference<CalibrationResult> result = new AtomicReference<>();
     private final AtomicReference<String> failure = new AtomicReference<>();
     private final AtomicReference<CliExitCode> exitCode = new AtomicReference<>();
+    private volatile boolean receiverPaused;
 
     CalibrationTask(Project project, CalibrationRequest request, CalibrationService service) {
         super(project, message("calibration.task.title"), true);
@@ -38,6 +40,7 @@ final class CalibrationTask extends Task.Backgroundable {
     public void run(ProgressIndicator indicator) {
         indicator.setIndeterminate(true);
         service.attach(indicator);
+        receiverPaused = ReceiveService.getInstance(getProject()).pauseForTransmit();
         CliCommand command = CliCommand.of(request.launcher(), request.arguments());
         try {
             CliProcess process = CliProcess.start(command, WORK_DIRECTORY, new Listener(indicator));
@@ -57,6 +60,9 @@ final class CalibrationTask extends Task.Backgroundable {
 
     @Override
     public void onFinished() {
+        if (receiverPaused) {
+            ReceiveService.getInstance(getProject()).resumeAfterTransmit();
+        }
         service.finish(request, result.get(), failure.get(), exitCode.get() == CliExitCode.OK);
     }
 

@@ -2,7 +2,6 @@ package io.github.cafecanudo.soundbridgeduplex.history;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBUI;
@@ -61,7 +60,7 @@ public final class HistoryPanel {
 
     private void updateButtons() {
         boolean hasSelection = selected().isPresent();
-        resendButton.setEnabled(hasSelection);
+        resendButton.setEnabled(selected().filter(entry -> entry.direction() == Direction.SENT).isPresent());
         logButton.setEnabled(hasSelection);
         clearButton.setEnabled(model.getRowCount() > 0);
     }
@@ -93,7 +92,6 @@ public final class HistoryPanel {
         buttons.add(Box.createHorizontalGlue());
         JPanel panel = new JPanel(new BorderLayout(0, JBUI.scale(4)));
         panel.setBorder(JBUI.Borders.empty(0, 8, 8, 8));
-        panel.add(new TitledSeparator(message("history.section")), BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         panel.add(buttons, BorderLayout.SOUTH);
         return panel;

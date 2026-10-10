@@ -40,6 +40,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean replaceExisting = false;
         public boolean showCommand = false;
         public boolean showLog = false;
+        public boolean showReceiveLog = false;
         public boolean showWindowOnSend = true;
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
         public List<String> history = new ArrayList<>();
@@ -146,6 +147,14 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setShowLog(boolean value) {
         state.showLog = value;
+    }
+
+    public boolean showReceiveLog() {
+        return state.showReceiveLog;
+    }
+
+    public void setShowReceiveLog(boolean value) {
+        state.showReceiveLog = value;
     }
 
     public boolean showWindowOnSend() {

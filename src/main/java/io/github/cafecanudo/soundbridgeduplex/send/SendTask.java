@@ -9,6 +9,7 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliEvent;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliExitCode;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliListener;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliProcess;
+import io.github.cafecanudo.soundbridgeduplex.receive.ReceiveService;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -30,6 +31,7 @@ final class SendTask extends Task.Backgroundable {
     private final AtomicReference<String> failure = new AtomicReference<>();
     private volatile boolean cancelled;
     private long startedAt;
+    private volatile boolean receiverPaused;
 
     SendTask(Project project, SendRequest request, SendService service) {
         super(project, message("send.task.title"), true);
@@ -40,6 +42,7 @@ final class SendTask extends Task.Backgroundable {
     @Override
     public void run(ProgressIndicator indicator) {
         service.attach(indicator);
+        receiverPaused = ReceiveService.getInstance(getProject()).pauseForTransmit();
         startedAt = System.nanoTime();
         for (List<String> arguments : request.commands()) {
             CliExitCode code = runCommand(arguments, indicator);
@@ -54,6 +57,9 @@ final class SendTask extends Task.Backgroundable {
 
     @Override
     public void onFinished() {
+        if (receiverPaused) {
+            ReceiveService.getInstance(getProject()).resumeAfterTransmit();
+        }
         double seconds = (System.nanoTime() - startedAt) / NANOS_PER_SECOND;
         service.finish(request, new SendOutcome(results, seconds, cancelled, failure.get()));
     }

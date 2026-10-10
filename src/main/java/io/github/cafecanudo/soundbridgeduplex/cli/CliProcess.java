@@ -30,6 +30,10 @@ public final class CliProcess {
         handler.destroyProcess();
     }
 
+    public void kill() {
+        handler.killProcess();
+    }
+
     public boolean isRunning() {
         return !handler.isProcessTerminated();
     }

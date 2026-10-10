@@ -8,8 +8,9 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 public final class HistoryTableModel extends AbstractTableModel {
 
     private static final List<String> COLUMNS = List.of(
-            "history.column.date", "history.column.items", "history.column.mode", "history.column.files",
-            "history.column.size", "history.column.mcs", "history.column.duration", "history.column.status");
+            "history.column.direction", "history.column.date", "history.column.items", "history.column.mode",
+            "history.column.files", "history.column.size", "history.column.mcs", "history.column.duration",
+            "history.column.status");
 
     private List<HistoryEntry> entries = List.of();
 
@@ -41,13 +42,14 @@ public final class HistoryTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         HistoryEntry entry = entries.get(row);
         return switch (column) {
-            case 0 -> HistoryFormat.date(entry.timestamp());
-            case 1 -> HistoryFormat.items(entry.items());
-            case 2 -> HistoryFormat.mode(entry.snapshot().mode());
-            case 3 -> HistoryFormat.files(entry);
-            case 4 -> HistoryFormat.size(entry.size());
-            case 5 -> HistoryFormat.mcs(entry.finalMcs());
-            case 6 -> HistoryFormat.duration(entry.seconds());
+            case 0 -> entry.direction().label();
+            case 1 -> HistoryFormat.date(entry.timestamp());
+            case 2 -> HistoryFormat.items(entry.items());
+            case 3 -> HistoryFormat.mode(entry.snapshot().mode());
+            case 4 -> HistoryFormat.files(entry);
+            case 5 -> HistoryFormat.size(entry.size());
+            case 6 -> HistoryFormat.mcs(entry.finalMcs());
+            case 7 -> HistoryFormat.duration(entry.seconds());
             default -> entry.status().label();
         };
     }

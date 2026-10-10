@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import io.github.cafecanudo.soundbridgeduplex.receive.ReceivedFile;
 import io.github.cafecanudo.soundbridgeduplex.send.SendFileResult;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOutcome;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 public record HistoryEntry(
+        Direction direction,
         String timestamp,
         List<String> items,
         SendSnapshot snapshot,
@@ -31,6 +33,7 @@ public record HistoryEntry(
 
     public static final int MAX_LOG_LINES = 200;
 
+    private static final String DIRECTION = "direction";
     private static final String TIMESTAMP = "timestamp";
     private static final String ITEMS = "items";
     private static final String MODE = "mode";
@@ -56,12 +59,21 @@ public record HistoryEntry(
         List<SendFileResult> results = outcome.files();
         Integer finalMcs = results.isEmpty() ? null : results.get(results.size() - 1).finalMcs();
         long size = results.stream().mapToLong(SendFileResult::size).sum();
-        return new HistoryEntry(timestamp, items, snapshot, results.size(), (int) outcome.okCount(), size, finalMcs,
-                outcome.seconds(), SendStatus.of(outcome), log);
+        return new HistoryEntry(Direction.SENT, timestamp, items, snapshot, results.size(), (int) outcome.okCount(),
+                size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log);
+    }
+
+    public static HistoryEntry ofReceived(String timestamp, ReceivedFile file) {
+        SendSnapshot snapshot = new SendSnapshot(file.bidirectional() ? SendMode.TWO_WAY : SendMode.ONE_WAY, "",
+                null, null, false);
+        String item = file.path().isEmpty() ? file.name() : file.path();
+        return new HistoryEntry(Direction.RECEIVED, timestamp, List.of(item), snapshot, 1, file.ok() ? 1 : 0,
+                file.size(), null, file.seconds(), file.ok() ? SendStatus.OK : SendStatus.FAILED, file.log());
     }
 
     public String toJson() {
         JsonObject object = new JsonObject();
+        object.addProperty(DIRECTION, direction.name());
         object.addProperty(TIMESTAMP, timestamp);
         object.add(ITEMS, strings(items));
         object.addProperty(MODE, snapshot.mode().name());
@@ -85,7 +97,8 @@ public record HistoryEntry(
             SendSnapshot snapshot = new SendSnapshot(SendMode.valueOf(o.get(MODE).getAsString()),
                     o.get(DESTINATION).getAsString(), integer(o, ZIP_LEVEL), integer(o, MCS),
                     o.get(REPLACE).getAsBoolean());
-            return Optional.of(new HistoryEntry(o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
+            Direction direction = o.has(DIRECTION) ? Direction.valueOf(o.get(DIRECTION).getAsString()) : Direction.SENT;
+            return Optional.of(new HistoryEntry(direction, o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
                     snapshot, o.get(FILES).getAsInt(), o.get(OK_FILES).getAsInt(), o.get(SIZE).getAsLong(),
                     integer(o, FINAL_MCS), o.get(SECONDS).getAsDouble(), SendStatus.valueOf(o.get(STATUS).getAsString()),
                     strings(o.getAsJsonArray(LOG))));

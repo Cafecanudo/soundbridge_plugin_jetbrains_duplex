@@ -4,7 +4,7 @@ Plugin para IDEs JetBrains que envia arquivos e pastas por cabo de áudio usando
 plugin não reimplementa o transceptor: executa o CLI do SoundBridge, que já deve estar instalado, e lê
 os eventos `--json`.
 
-> **Em desenvolvimento.** Fases 1 a 7: esqueleto, execução do CLI, configuração por projeto, calibração (uni e bi), envio e histórico.
+> **Em desenvolvimento.** Fases 1 a 7: esqueleto, execução do CLI, configuração por projeto, calibração (uni e bi), envio, recebimento e histórico.
 
 ## Configuração
 
@@ -29,6 +29,13 @@ itens, o modo e os parâmetros do projeto; o formulário ajusta subpasta no dest
 aquele envio e mostra o comando que será executado. **Enviar** roda em background, com progresso, log e
 **Cancelar**; itens em pastas diferentes são enviados um destino por vez, mantendo a estrutura do projeto.
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
+
+## Recebimento
+
+Na seção **Recebimento** da Tool Window, **Receber** deixa o SoundBridge escutando na pasta de recepção do
+projeto (com confirmação no modo bidirecional) até **Parar**. Durante um envio ou uma calibração o recebimento
+pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (↓), na árvore do Project e numa
+notificação.
 
 ## Compatibilidade
 

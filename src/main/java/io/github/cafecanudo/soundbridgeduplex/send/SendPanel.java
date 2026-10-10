@@ -5,7 +5,6 @@ import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
@@ -394,7 +393,6 @@ final class SendPanel {
         itemsPanel.add(new JBScrollPane(itemsList), BorderLayout.CENTER);
         JPanel form = FormBuilder.createFormBuilder()
                 .addComponent(showWindowCheck)
-                .addComponent(new TitledSeparator(message("send.section.send")))
                 .addComponentToRightColumn(replaceCheck)
                 .addLabeledComponent(message("send.items"), itemsPanel)
                 .addLabeledComponent(message("send.mode"), row(oneWayRadio, twoWayRadio, configureButton))
