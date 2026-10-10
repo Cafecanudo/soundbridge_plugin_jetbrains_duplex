@@ -33,8 +33,7 @@
                 factoryClass="io.github.cafecanudo.soundbridgeduplex.receive.ReceiveToolWindowFactory"/>
         <toolWindow
                 id="SoundBridge.History"
-                anchor="right"
-                secondary="true"
+                anchor="bottom"
                 icon="AllIcons.Vcs.History"
                 factoryClass="io.github.cafecanudo.soundbridgeduplex.history.HistoryToolWindowFactory"/>
     </extensions>

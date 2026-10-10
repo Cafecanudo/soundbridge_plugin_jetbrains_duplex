@@ -3,12 +3,15 @@
 ## [Unreleased]
 
 ### Adicionado
+- Recebimento com opções na própria janela: modo (uni/bi), placas do Settings com Configurar…, pasta
+  editável (grava a pasta de recepção do projeto), **Mostrar comando** e **Mostrar log**. No bidirecional, passa
+  `--ack-peak` da calibração bidirecional das mesmas placas.
 - **Recebimento**: Receber/Parar roda `--rx <pasta do projeto> --keep` (com `--out` no
   modo bidirecional), com estado, progresso e log (Mostrar log). O RX pausa durante um envio ou uma
   calibração e retoma no fim. Cada arquivo recebido entra no Histórico (coluna de direção: ↑ enviado,
   ↓ recebido), atualiza a árvore do Project e gera a notificação "Recebido: arquivo · tempo".
-- Três Tool Windows do lado direito: **SoundBridge** (envio, em cima), **SoundBridge Recebimento** e
-  **SoundBridge Histórico** (embaixo, `secondary`), dividindo o lado com o envio. Reenviar abre o
+- Três Tool Windows visíveis ao mesmo tempo: **SoundBridge** (envio, à direita em cima), **SoundBridge
+  Recebimento** (à direita embaixo, `secondary`) e **SoundBridge Histórico** (painel inferior). Reenviar abre o
   SoundBridge com o formulário preenchido; o Detalhes de um recebido abre o Recebimento. A caixa Mostrar
   histórico deixa de existir.
 - Fase 7: histórico de envios na Tool Window (por projeto, últimas 200 entradas, ocultável com **Mostrar

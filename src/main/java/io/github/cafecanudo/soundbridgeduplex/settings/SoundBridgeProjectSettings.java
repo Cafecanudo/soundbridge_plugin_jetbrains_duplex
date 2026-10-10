@@ -41,6 +41,8 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean showCommand = false;
         public boolean showLog = false;
         public boolean showReceiveLog = false;
+        public boolean showReceiveCommand = false;
+        public Boolean receiveBidirectional = null;
         public boolean showWindowOnSend = true;
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
         public List<String> history = new ArrayList<>();
@@ -155,6 +157,26 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setShowReceiveLog(boolean value) {
         state.showReceiveLog = value;
+    }
+
+    public boolean showReceiveCommand() {
+        return state.showReceiveCommand;
+    }
+
+    public void setShowReceiveCommand(boolean value) {
+        state.showReceiveCommand = value;
+    }
+
+    public boolean receiveBidirectional() {
+        return state.receiveBidirectional == null ? state.bidirectional : state.receiveBidirectional;
+    }
+
+    public void setReceiveBidirectional(boolean value) {
+        state.receiveBidirectional = value;
+    }
+
+    public void setReceiveDirectory(String directory) {
+        state.receiveDirectory = isProjectDirectory(directory.strip()) ? "" : directory.strip();
     }
 
     public boolean showWindowOnSend() {

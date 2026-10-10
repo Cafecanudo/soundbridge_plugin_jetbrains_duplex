@@ -49,6 +49,7 @@ public final class ReceiveService implements Disposable {
     private volatile ReceiveState state = ReceiveState.STOPPED;
     private volatile boolean wanted;
     private volatile boolean paused;
+    private volatile ReceiveOptions options;
 
     public ReceiveService(Project project) {
         this.project = project;
@@ -74,7 +75,7 @@ public final class ReceiveService implements Disposable {
         observers.remove(observer);
     }
 
-    public synchronized void start() {
+    public synchronized void start(ReceiveOptions requested) {
         if (process != null && process.isRunning()) {
             return;
         }
@@ -87,6 +88,7 @@ public final class ReceiveService implements Disposable {
             notifyUser(message("receive.notify.noInput"), NotificationType.WARNING);
             return;
         }
+        options = requested;
         wanted = true;
         launch(config);
     }
@@ -132,11 +134,12 @@ public final class ReceiveService implements Disposable {
     }
 
     private void launch(ProjectConfig config) {
-        Path directory = Path.of(config.receiveDirectory());
+        Path directory = Path.of(options.directory());
         try {
             Files.createDirectories(directory);
-            process = CliProcess.start(CliCommand.of(config.launcher(), arguments(config, directory)), WORK_DIRECTORY,
-                    new Listener());
+            List<String> arguments = ReceiveCommandBuilder.arguments(config, options,
+                    SoundBridgeProjectSettings.getInstance(project).calibrationProfile());
+            process = CliProcess.start(CliCommand.of(config.launcher(), arguments), WORK_DIRECTORY, new Listener());
             setState(ReceiveState.LISTENING);
         } catch (ExecutionException | java.io.IOException e) {
             wanted = false;
@@ -144,15 +147,6 @@ public final class ReceiveService implements Disposable {
             setState(ReceiveState.STOPPED);
             notifyUser(message("receive.notify.failed", e.getMessage()), NotificationType.WARNING);
         }
-    }
-
-    private static List<String> arguments(ProjectConfig config, Path directory) {
-        List<String> arguments = new ArrayList<>(List.of("--rx", directory.toString(), "--in", config.input(), "--keep"));
-        if (config.bidirectional() && !config.output().isEmpty()) {
-            arguments.add("--out");
-            arguments.add(config.output());
-        }
-        return arguments;
     }
 
     private void terminate() {
