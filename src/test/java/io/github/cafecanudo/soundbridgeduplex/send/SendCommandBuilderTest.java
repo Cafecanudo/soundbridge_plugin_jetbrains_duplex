@@ -46,11 +46,11 @@ class SendCommandBuilderTest {
 
     @Test
     void formOptionsOverrideMcsAndCompression() {
-        SendOptions auto = new SendOptions("fotos/2026", null, McsSelection.AUTO);
-        SendOptions fixed = new SendOptions("", 6, McsSelection.fixed(3));
+        SendOptions auto = new SendOptions("fotos/2026", null, McsSelection.AUTO, true);
+        SendOptions fixed = new SendOptions("", 6, McsSelection.fixed(3), false);
 
         assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003",
-                        "--auto", "--dest", "fotos/2026", "--no-zip"),
+                        "--auto", "--dest", "fotos/2026", "--no-zip", "--force-repl"),
                 SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), auto, ITEMS));
         assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003",
                         "--mcs", "3", "--zip-level", "6"),
@@ -71,6 +71,6 @@ class SendCommandBuilderTest {
     }
 
     private static SendOptions withMcs(int value) {
-        return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value));
+        return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value), false);
     }
 }

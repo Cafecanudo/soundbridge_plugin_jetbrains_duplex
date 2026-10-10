@@ -15,6 +15,7 @@ public final class SendCommandBuilder {
 
     private static final String ITEM_SEPARATOR = ";";
     private static final String MORE_FLAG = "--more";
+    private static final String REPLACE_FLAG = "--force-repl";
 
     private SendCommandBuilder() {
     }
@@ -36,6 +37,9 @@ public final class SendCommandBuilder {
         }
         addOption(arguments, "--dest", options.destination());
         addCompression(arguments, options);
+        if (options.replaceExisting()) {
+            arguments.add(REPLACE_FLAG);
+        }
         return arguments;
     }
 
@@ -45,7 +49,8 @@ public final class SendCommandBuilder {
         List<List<String>> commands = new ArrayList<>();
         for (int i = 0; i < jobs.size(); i++) {
             SendJob job = jobs.get(i);
-            SendOptions jobOptions = new SendOptions(job.destination(), options.zipLevel(), options.mcs());
+            SendOptions jobOptions = new SendOptions(job.destination(), options.zipLevel(), options.mcs(),
+                    options.replaceExisting());
             List<String> arguments = arguments(config, uniProfile, biProfile, jobOptions, job.items());
             if (i < jobs.size() - 1) {
                 arguments.add(MORE_FLAG);

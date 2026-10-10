@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Adicionado
+- Comando e log da Tool Window ocultos por padrão, com as caixas **Mostrar comando** e **Mostrar log** (por
+  projeto).
+- Caixa **Substituir se existir** na Tool Window (por projeto), acima dos itens: passa `--force-repl` e o RX
+  substitui o arquivo de mesmo nome em vez de gravar `nome (1).ext` (exige sb-duplex 1.2.0b4 no RX).
 - Fase 6.1: caixa **Enviar automaticamente ao selecionar** na Tool Window (por projeto). Marcada, o SoundBridge
   Enviar do menu de contexto já inicia o envio; sem modo calibrado ou com envio/calibração em andamento,
   não envia e avisa por notificação.

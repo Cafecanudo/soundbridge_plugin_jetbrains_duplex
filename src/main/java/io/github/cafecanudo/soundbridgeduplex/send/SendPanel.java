@@ -80,9 +80,16 @@ final class SendPanel {
     private final JButton sendButton = new JButton(message("send.start"));
     private final JButton cancelButton = new JButton(message("send.cancel"));
     private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
+    private final JBCheckBox replaceCheck = new JBCheckBox(message("send.replace"));
+    private final JBCheckBox showCommandCheck = new JBCheckBox(message("send.showCommand"));
+    private final JBCheckBox showLogCheck = new JBCheckBox(message("send.showLog"));
+    private final JBLabel commandLabel = new JBLabel(message("send.command"));
+    private final JBLabel logLabel = new JBLabel(message("send.log"));
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
     private final JBLabel progressLabel = new JBLabel(message("send.progress.idle"));
     private final JBTextArea logArea = new JBTextArea(LOG_ROWS, 0);
+    private final JBScrollPane commandScroll = new JBScrollPane(commandArea);
+    private final JBScrollPane logScroll = new JBScrollPane(logArea);
     private final Consumer<List<Path>> draftListener = this::showItems;
     private final SendObserver sendObserver = new SendWatcher();
     private final CalibrationObserver calibrationObserver = new CalibrationWatcher();
@@ -111,10 +118,27 @@ final class SendPanel {
         autoSendCheck.setSelected(settings().autoSend());
         autoSendCheck.setToolTipText(message("send.autoSend.tooltip"));
         autoSendCheck.addActionListener(e -> settings().setAutoSend(autoSendCheck.isSelected()));
+        showCommandCheck.setSelected(settings().showCommand());
+        showLogCheck.setSelected(settings().showLog());
+        showCommandCheck.addActionListener(e -> {
+            settings().setShowCommand(showCommandCheck.isSelected());
+            updateVisibility();
+        });
+        showLogCheck.addActionListener(e -> {
+            settings().setShowLog(showLogCheck.isSelected());
+            updateVisibility();
+        });
+        replaceCheck.setSelected(settings().replaceExisting());
+        replaceCheck.setToolTipText(message("send.replace.tooltip"));
+        replaceCheck.addActionListener(e -> {
+            settings().setReplaceExisting(replaceCheck.isSelected());
+            refresh();
+        });
         draft().addListener(draftListener);
         sendService().addObserver(sendObserver);
         calibrationService().addObserver(calibrationObserver);
         root = buildLayout();
+        updateVisibility();
         root.addAncestorListener(onShown(this::applySettings));
         sendService().log().forEach(this::appendLog);
         showItems(draft().items());
@@ -202,6 +226,15 @@ final class SendPanel {
         });
     }
 
+    private void updateVisibility() {
+        commandLabel.setVisible(showCommandCheck.isSelected());
+        commandScroll.setVisible(showCommandCheck.isSelected());
+        logLabel.setVisible(showLogCheck.isSelected());
+        logScroll.setVisible(showLogCheck.isSelected());
+        root.revalidate();
+        root.repaint();
+    }
+
     private void updateButtons() {
         boolean sending = sendService().isRunning();
         boolean calibrating = calibrationService().isRunning();
@@ -253,7 +286,8 @@ final class SendPanel {
     private SendOptions options() {
         Object zip = zipCombo.getSelectedItem();
         Integer level = zip instanceof Integer value ? value : null;
-        return new SendOptions(destinationField.getText(), level, (McsSelection) mcsCombo.getSelectedItem());
+        return new SendOptions(destinationField.getText(), level, (McsSelection) mcsCombo.getSelectedItem(),
+                replaceCheck.isSelected());
     }
 
     private List<Path> currentItems() {
@@ -324,6 +358,7 @@ final class SendPanel {
         itemsPanel.add(new JBScrollPane(itemsList), BorderLayout.CENTER);
         JPanel form = FormBuilder.createFormBuilder()
                 .addComponent(new TitledSeparator(message("send.section.send")))
+                .addComponentToRightColumn(replaceCheck)
                 .addLabeledComponent(message("send.items"), itemsPanel)
                 .addLabeledComponent(message("send.mode"), row(oneWayRadio, twoWayRadio, configureButton))
                 .addComponentToRightColumn(modeHint)
@@ -331,11 +366,12 @@ final class SendPanel {
                 .addLabeledComponent(message("send.destination"), destinationField)
                 .addLabeledComponent(message("send.zip"), row(zipCombo))
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
-                .addLabeledComponent(message("send.command"), new JBScrollPane(commandArea))
+                .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
+                .addLabeledComponent(commandLabel, commandScroll)
                 .addComponentToRightColumn(row(sendButton, cancelButton, autoSendCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
-                .addLabeledComponent(message("send.log"), new JBScrollPane(logArea))
+                .addLabeledComponent(logLabel, logScroll)
                 .getPanel();
         form.setBorder(JBUI.Borders.empty(8));
         JPanel wrapper = new JPanel(new BorderLayout());
