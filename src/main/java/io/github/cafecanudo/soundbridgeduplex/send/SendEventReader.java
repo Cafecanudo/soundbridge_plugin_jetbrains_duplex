@@ -29,6 +29,8 @@ public final class SendEventReader {
     private static final String FILES = "files";
     private static final String MCS_TRACE = "mcs_trace";
     private static final int SECONDS_PER_MINUTE = 60;
+    private static final int SECONDS_PER_HOUR = 3600;
+    private static final double COMPLETE = 1.0;
 
     private String currentFile = "";
     private String counter = "";
@@ -49,7 +51,8 @@ public final class SendEventReader {
 
     public static String formatTime(double seconds) {
         long total = Math.round(seconds);
-        return String.format(Locale.ROOT, "%d:%02d", total / SECONDS_PER_MINUTE, total % SECONDS_PER_MINUTE);
+        return String.format(Locale.ROOT, "%d:%02d:%02d", total / SECONDS_PER_HOUR,
+                total % SECONDS_PER_HOUR / SECONDS_PER_MINUTE, total % SECONDS_PER_MINUTE);
     }
 
     private Update info(CliEvent event) {
@@ -81,7 +84,8 @@ public final class SendEventReader {
         SendFileResult result = new SendFileResult(currentFile, ok, seconds, (long) event.number("size").orElse(0),
                 lastMcs(event));
         String line = message(ok ? "send.log.fileOk" : "send.log.fileFailed", currentFile, formatTime(seconds));
-        return new Update(List.of(line), null, result);
+        SendProgress done = ok ? new SendProgress(currentFile, counter, COMPLETE, null, null, message("send.progress.done")) : null;
+        return new Update(List.of(line), done, result);
     }
 
     private static Integer lastMcs(CliEvent event) {

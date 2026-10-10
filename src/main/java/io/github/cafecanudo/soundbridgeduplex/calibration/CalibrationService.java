@@ -1,6 +1,5 @@
 package io.github.cafecanudo.soundbridgeduplex.calibration;
 
-import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
@@ -8,6 +7,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.send.SendService;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -23,8 +23,6 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
 @Service(Service.Level.PROJECT)
 public final class CalibrationService {
-
-    public static final String NOTIFICATION_GROUP = "SoundBridge";
 
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -125,10 +123,7 @@ public final class CalibrationService {
     }
 
     private void notifyUser(String content, NotificationType type) {
-        NotificationGroupManager.getInstance()
-                .getNotificationGroup(NOTIFICATION_GROUP)
-                .createNotification(message("calibration.notify.title"), content, type)
-                .notify(project);
+        IdeAlerts.notify(project, message("calibration.notify.title"), content, type);
     }
 
     private static void onUi(Runnable runnable) {

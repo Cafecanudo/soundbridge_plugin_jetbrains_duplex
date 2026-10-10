@@ -1,6 +1,5 @@
 package io.github.cafecanudo.soundbridgeduplex.send;
 
-import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
@@ -8,6 +7,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 
 import java.util.ArrayList;
@@ -57,6 +57,7 @@ public final class SendService {
             return false;
         }
         if (!running.compareAndSet(false, true)) {
+            notifyUser(message("send.notify.running"), NotificationType.WARNING);
             return false;
         }
         log.clear();
@@ -89,6 +90,7 @@ public final class SendService {
         indicator.set(null);
         running.set(false);
         notifyRunning(false);
+        onUi(() -> observers.forEach(observer -> observer.onFinished(outcome)));
         notifyUser(outcome.summary(), outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);
     }
 
@@ -96,11 +98,8 @@ public final class SendService {
         onUi(() -> observers.forEach(observer -> observer.onRunningChanged(value)));
     }
 
-    private void notifyUser(String content, NotificationType type) {
-        NotificationGroupManager.getInstance()
-                .getNotificationGroup(CalibrationService.NOTIFICATION_GROUP)
-                .createNotification(message("send.notify.title"), content, type)
-                .notify(project);
+    public void notifyUser(String content, NotificationType type) {
+        IdeAlerts.notify(project, message("send.notify.title"), content, type);
     }
 
     private static void onUi(Runnable runnable) {

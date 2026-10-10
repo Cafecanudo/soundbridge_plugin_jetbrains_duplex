@@ -3,13 +3,20 @@
 ## [Unreleased]
 
 ### Adicionado
+- Fase 6.1: caixa **Enviar automaticamente ao selecionar** na Tool Window (por projeto). Marcada, o SoundBridge
+  Enviar do menu de contexto já inicia o envio; sem modo calibrado ou com envio/calibração em andamento,
+  não envia e avisa por notificação.
+- Fase 6.1, ajustes da Tool Window: título **SoundBridge Enviar**, aberta por padrão do lado direito, sem o
+  botão Limpar; barra de progresso verde, 100% ao concluir cada arquivo e vermelha em falha ou
+  cancelamento; tempos em h:mm:ss (alerta, log e tempo restante); alertas de envio e calibração também
+  como notificação do sistema operacional quando a IDE não está em foco.
 - Fase 6: envio pela Tool Window. **Enviar** roda o SoundBridge em background (barra de status), com
   **Cancelar**, barra de progresso (fração, KB/s, tempo restante, arquivo atual e contador), log e
   notificação no fim. Itens em pastas diferentes viram um comando por destino, em sequência, todos menos o
   último com `--more` (a estrutura do projeto chega igual do outro lado). Envio e calibração não rodam ao
   mesmo tempo (mesma placa).
 - Fase 5: ação **SoundBridge Enviar** no menu de contexto do Project (arquivos, pastas, seleção múltipla) e
-  Tool Window **SoundBridge** (embaixo) com o formulário de envio: itens; modo unidirecional ou
+  Tool Window **SoundBridge Enviar** (lado direito) com o formulário de envio: itens; modo unidirecional ou
   bidirecional, habilitado só quando calibrado; parâmetros do modo (perfil uni digitado ou calibração bi
   das mesmas placas); destino (pasta do item a partir da raiz do projeto, editável); compressão; MCS
   (o do Settings, automático ou fixo); e o comando que será executado, com `--tx` e `--dest` entre aspas.

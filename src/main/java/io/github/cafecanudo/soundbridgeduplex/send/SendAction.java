@@ -35,7 +35,7 @@ public final class SendAction extends AnAction implements DumbAware {
         if (project == null || items.isEmpty()) {
             return;
         }
-        SendDraft.getInstance(project).setItems(items);
+        SendDraft.getInstance(project).selectFromMenu(items);
         ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(TOOL_WINDOW_ID);
         if (window != null) {
             window.activate(null);

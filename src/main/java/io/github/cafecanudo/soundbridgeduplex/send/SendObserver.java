@@ -7,4 +7,6 @@ public interface SendObserver {
     void onRunningChanged(boolean running);
 
     void onProgress(SendProgress progress);
+
+    void onFinished(SendOutcome outcome);
 }

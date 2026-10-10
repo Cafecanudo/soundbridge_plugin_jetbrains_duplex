@@ -31,7 +31,8 @@ class SendEventReaderTest {
                 + "\"ok\": true, \"seconds\": 84.4, \"size\": 2048, \"rounds\": 2, \"acks_lost\": 0, \"mcs_trace\": [7, 6]}"));
 
         assertEquals(new SendFileResult("b.bin", true, 84.4, 2048, 6), update.result());
-        assertEquals(List.of("OK · b.bin · 1:24"), update.log());
+        assertEquals(new SendProgress("b.bin", "", 1.0, null, null, "concluído"), update.progress());
+        assertEquals(List.of("OK · b.bin · 0:01:24"), update.log());
     }
 
     @Test
@@ -40,13 +41,14 @@ class SendEventReaderTest {
                 + "\"side\": \"tx\", \"files\": 3, \"ok\": 2, \"seconds\": 61.0}"));
 
         assertNull(update.result());
-        assertEquals(List.of("2/3 arquivos enviados · 1:01"), update.log());
+        assertEquals(List.of("2/3 arquivos enviados · 0:01:01"), update.log());
     }
 
     @Test
     void formatsMinutesAndSeconds() {
-        assertEquals("0:05", SendEventReader.formatTime(4.6));
-        assertEquals("15:00", SendEventReader.formatTime(900));
+        assertEquals("0:00:05", SendEventReader.formatTime(4.6));
+        assertEquals("0:15:00", SendEventReader.formatTime(900));
+        assertEquals("1:02:03", SendEventReader.formatTime(3723));
     }
 
     private static CliEvent event(String json) {

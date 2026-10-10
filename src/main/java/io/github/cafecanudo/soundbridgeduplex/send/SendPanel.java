@@ -1,9 +1,12 @@
 package io.github.cafecanudo.soundbridgeduplex.send;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.options.ShowSettingsUtil;
+import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBRadioButton;
@@ -64,7 +67,6 @@ final class SendPanel {
     private final Project project;
     private final DefaultListModel<Path> itemsModel = new DefaultListModel<>();
     private final JBList<Path> itemsList = new JBList<>(itemsModel);
-    private final JButton clearButton = new JButton(message("send.items.clear"));
     private final JBRadioButton oneWayRadio = new JBRadioButton(message("send.mode.uni"));
     private final JBRadioButton twoWayRadio = new JBRadioButton(message("send.mode.bi"));
     private final ButtonGroup modeGroup = new ButtonGroup();
@@ -77,6 +79,7 @@ final class SendPanel {
     private final JBTextArea commandArea = new JBTextArea(COMMAND_ROWS, 0);
     private final JButton sendButton = new JButton(message("send.start"));
     private final JButton cancelButton = new JButton(message("send.cancel"));
+    private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
     private final JBLabel progressLabel = new JBLabel(message("send.progress.idle"));
     private final JBTextArea logArea = new JBTextArea(LOG_ROWS, 0);
@@ -94,9 +97,9 @@ final class SendPanel {
         commandArea.setEditable(false);
         commandArea.setLineWrap(true);
         logArea.setEditable(false);
+        progressBar.setForeground(ColorProgressBar.GREEN);
         modeGroup.add(oneWayRadio);
         modeGroup.add(twoWayRadio);
-        clearButton.addActionListener(e -> draft().setItems(List.of()));
         configureButton.addActionListener(e -> openSettings());
         oneWayRadio.addActionListener(e -> applyModeMcs());
         twoWayRadio.addActionListener(e -> applyModeMcs());
@@ -105,6 +108,9 @@ final class SendPanel {
         destinationField.getDocument().addDocumentListener(onChange(this::refresh));
         sendButton.addActionListener(e -> start());
         cancelButton.addActionListener(e -> sendService().cancel());
+        autoSendCheck.setSelected(settings().autoSend());
+        autoSendCheck.setToolTipText(message("send.autoSend.tooltip"));
+        autoSendCheck.addActionListener(e -> settings().setAutoSend(autoSendCheck.isSelected()));
         draft().addListener(draftListener);
         sendService().addObserver(sendObserver);
         calibrationService().addObserver(calibrationObserver);
@@ -132,6 +138,17 @@ final class SendPanel {
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
                 : DestinationResolver.defaultDestination(projectBase(), items, Files::isDirectory));
         applySettings();
+        if (draft().consumeAutoSendRequest() && settings().autoSend()) {
+            autoStart();
+        }
+    }
+
+    private void autoStart() {
+        if (request().isEmpty()) {
+            sendService().notifyUser(message("send.autoSend.notStarted", message("send.mode.none")), NotificationType.WARNING);
+            return;
+        }
+        start();
     }
 
     private void applySettings() {
@@ -178,6 +195,7 @@ final class SendPanel {
     private void start() {
         request().ifPresent(request -> {
             logArea.setText("");
+            progressBar.setForeground(ColorProgressBar.GREEN);
             progressBar.setValue(0);
             progressLabel.setText(message("send.progress.idle"));
             sendService().start(request);
@@ -307,7 +325,6 @@ final class SendPanel {
         JPanel form = FormBuilder.createFormBuilder()
                 .addComponent(new TitledSeparator(message("send.section.send")))
                 .addLabeledComponent(message("send.items"), itemsPanel)
-                .addComponentToRightColumn(row(clearButton))
                 .addLabeledComponent(message("send.mode"), row(oneWayRadio, twoWayRadio, configureButton))
                 .addComponentToRightColumn(modeHint)
                 .addLabeledComponent(message("send.parameters"), parametersLabel)
@@ -315,7 +332,7 @@ final class SendPanel {
                 .addLabeledComponent(message("send.zip"), row(zipCombo))
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
                 .addLabeledComponent(message("send.command"), new JBScrollPane(commandArea))
-                .addComponentToRightColumn(row(sendButton, cancelButton))
+                .addComponentToRightColumn(row(sendButton, cancelButton, autoSendCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
                 .addLabeledComponent(message("send.log"), new JBScrollPane(logArea))
@@ -412,6 +429,16 @@ final class SendPanel {
         @Override
         public void onProgress(SendProgress progress) {
             showProgress(progress);
+        }
+
+        @Override
+        public void onFinished(SendOutcome outcome) {
+            progressBar.setIndeterminate(false);
+            if (outcome.succeeded()) {
+                progressBar.setValue(PROGRESS_SCALE);
+            } else {
+                progressBar.setForeground(ColorProgressBar.RED);
+            }
         }
     }
 

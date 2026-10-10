@@ -22,7 +22,7 @@
         <notificationGroup id="SoundBridge" displayType="BALLOON"/>
         <toolWindow
                 id="SoundBridge"
-                anchor="bottom"
+                anchor="right"
                 icon="AllIcons.Actions.Upload"
                 factoryClass="io.github.cafecanudo.soundbridgeduplex.send.SoundBridgeToolWindowFactory"/>
     </extensions>
