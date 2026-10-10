@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Adicionado
+- Fase 5: ação **SoundBridge Enviar** no menu de contexto do Project (arquivos, pastas, seleção múltipla) e
+  Tool Window **SoundBridge** (embaixo) com o formulário de envio: itens; modo unidirecional ou
+  bidirecional, habilitado só quando calibrado; parâmetros do modo (perfil uni digitado ou calibração bi
+  das mesmas placas); destino (pasta do item a partir da raiz do projeto, editável); compressão; MCS
+  (o do Settings, automático ou fixo); e o comando que será executado, com `--tx` e `--dest` entre aspas.
+  O envio em si entra na fase 6.
 - Opção "Bidirecional" na calibração (por projeto). Desmarcada: só a seção Unidirecional (e a entrada some da
   tela). Marcada: Unidirecional e Bidirecional. Unidirecional: botão "Calibrar só a ida" (`--calibrate-uni`,
   sondagem pela saída) e campos mono, banda, pico e MCS para digitar os valores mostrados no PC que recebe.

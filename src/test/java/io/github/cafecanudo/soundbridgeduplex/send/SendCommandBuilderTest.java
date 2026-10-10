@@ -1,0 +1,63 @@
+package io.github.cafecanudo.soundbridgeduplex.send;
+
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
+import io.github.cafecanudo.soundbridgeduplex.calibration.LinkChoice;
+import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
+import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class SendCommandBuilderTest {
+
+    private static final List<Path> ITEMS = List.of(Path.of("C:/p/a.txt"), Path.of("C:/p/docs"));
+    private static final String JOINED = Path.of("C:/p/a.txt") + ";" + Path.of("C:/p/docs");
+    private static final ProjectConfig UNI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", false);
+    private static final ProjectConfig BI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true);
+    private static final UniProfile UNI_PROFILE = new UniProfile(true, 7000.0, 0.003, 1);
+    private static final LinkChoice BI_CHOICE = new LinkChoice(0.2, false, 22000.0, 9, 41.0, List.of(), true, List.of());
+
+    @Test
+    void uniUsesTypedProfileAndOmitsInput() {
+        assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003", "--mcs", "1"),
+                SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), withMcs(1), ITEMS));
+    }
+
+    @Test
+    void biUsesCalibrationOfSameDevices() {
+        Optional<CalibrationProfile> profile = Optional.of(new CalibrationProfile("dq8f", "v2yh", "2026-10-09 20:00", BI_CHOICE));
+
+        assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--bi", "--in", "v2yh",
+                        "--band-high", "22000", "--peak", "0.2", "--mcs", "9"),
+                SendCommandBuilder.arguments(BI, UNI_PROFILE, profile, withMcs(9), ITEMS));
+    }
+
+    @Test
+    void biIgnoresCalibrationOfOtherDevices() {
+        Optional<CalibrationProfile> profile = Optional.of(new CalibrationProfile("ggxj", "v2yh", "2026-10-09 20:00", BI_CHOICE));
+
+        assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--bi", "--in", "v2yh"),
+                SendCommandBuilder.arguments(BI, UNI_PROFILE, profile, SendOptions.DEFAULT, ITEMS));
+    }
+
+    @Test
+    void formOptionsOverrideMcsAndCompression() {
+        SendOptions auto = new SendOptions("fotos/2026", null, McsSelection.AUTO);
+        SendOptions fixed = new SendOptions("", 6, McsSelection.fixed(3));
+
+        assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003",
+                        "--auto", "--dest", "fotos/2026", "--no-zip"),
+                SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), auto, ITEMS));
+        assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003",
+                        "--mcs", "3", "--zip-level", "6"),
+                SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), fixed, ITEMS));
+    }
+
+    private static SendOptions withMcs(int value) {
+        return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value));
+    }
+}
