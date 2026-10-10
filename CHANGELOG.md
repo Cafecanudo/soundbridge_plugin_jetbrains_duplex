@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Adicionado
+- Alertas de envio com o link **Detalhes**, que abre a Tool Window.
+- Balão de alerta (envio e calibração) some após 5 s; o alerta fica no painel Notifications da IDE.
+- Caixa **Mostrar esta janela ao enviar pelo menu** (por projeto, marcada por padrão). Desmarcada, o menu
+  envia direto, sem abrir a Tool Window, com o modo calibrado, o destino pela pasta do item, o MCS do
+  Settings, a última compressão (agora gravada por projeto) e o Substituir se existir.
 - Comando e log da Tool Window ocultos por padrão, com as caixas **Mostrar comando** e **Mostrar log** (por
   projeto).
 - Caixa **Substituir se existir** na Tool Window (por projeto), acima dos itens: passa `--force-repl` e o RX
@@ -10,7 +15,7 @@
 - Fase 6.1: caixa **Enviar automaticamente ao selecionar** na Tool Window (por projeto). Marcada, o SoundBridge
   Enviar do menu de contexto já inicia o envio; sem modo calibrado ou com envio/calibração em andamento,
   não envia e avisa por notificação.
-- Fase 6.1, ajustes da Tool Window: título **SoundBridge Enviar**, aberta por padrão do lado direito, sem o
+- Fase 6.1, ajustes da Tool Window: título **SoundBridge**, aberta por padrão do lado direito, sem o
   botão Limpar; barra de progresso verde, 100% ao concluir cada arquivo e vermelha em falha ou
   cancelamento; tempos em h:mm:ss (alerta, log e tempo restante); alertas de envio e calibração também
   como notificação do sistema operacional quando a IDE não está em foco.
@@ -20,7 +25,7 @@
   último com `--more` (a estrutura do projeto chega igual do outro lado). Envio e calibração não rodam ao
   mesmo tempo (mesma placa).
 - Fase 5: ação **SoundBridge Enviar** no menu de contexto do Project (arquivos, pastas, seleção múltipla) e
-  Tool Window **SoundBridge Enviar** (lado direito) com o formulário de envio: itens; modo unidirecional ou
+  Tool Window **SoundBridge** (lado direito) com o formulário de envio: itens; modo unidirecional ou
   bidirecional, habilitado só quando calibrado; parâmetros do modo (perfil uni digitado ou calibração bi
   das mesmas placas); destino (pasta do item a partir da raiz do projeto, editável); compressão; MCS
   (o do Settings, automático ou fixo); e o comando que será executado, com `--tx` e `--dest` entre aspas.

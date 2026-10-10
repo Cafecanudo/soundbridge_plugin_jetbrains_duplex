@@ -7,6 +7,8 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowManager;
 import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 
@@ -99,7 +101,15 @@ public final class SendService {
     }
 
     public void notifyUser(String content, NotificationType type) {
-        IdeAlerts.notify(project, message("send.notify.title"), content, type);
+        IdeAlerts.notify(project, message("send.notify.title"), content, type, message("send.notify.open"),
+                this::openToolWindow);
+    }
+
+    private void openToolWindow() {
+        ToolWindow window = ToolWindowManager.getInstance(project).getToolWindow(SendAction.TOOL_WINDOW_ID);
+        if (window != null) {
+            window.activate(null);
+        }
     }
 
     private static void onUi(Runnable runnable) {

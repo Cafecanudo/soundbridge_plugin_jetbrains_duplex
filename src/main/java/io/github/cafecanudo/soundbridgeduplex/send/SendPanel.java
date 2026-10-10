@@ -81,6 +81,7 @@ final class SendPanel {
     private final JButton cancelButton = new JButton(message("send.cancel"));
     private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
     private final JBCheckBox replaceCheck = new JBCheckBox(message("send.replace"));
+    private final JBCheckBox showWindowCheck = new JBCheckBox(message("send.showWindow"));
     private final JBCheckBox showCommandCheck = new JBCheckBox(message("send.showCommand"));
     private final JBCheckBox showLogCheck = new JBCheckBox(message("send.showLog"));
     private final JBLabel commandLabel = new JBLabel(message("send.command"));
@@ -110,7 +111,10 @@ final class SendPanel {
         configureButton.addActionListener(e -> openSettings());
         oneWayRadio.addActionListener(e -> applyModeMcs());
         twoWayRadio.addActionListener(e -> applyModeMcs());
-        zipCombo.addActionListener(e -> refresh());
+        zipCombo.addActionListener(e -> {
+            settings().setZipLevel(options().zipLevel());
+            refresh();
+        });
         mcsCombo.addActionListener(e -> refresh());
         destinationField.getDocument().addDocumentListener(onChange(this::refresh));
         sendButton.addActionListener(e -> start());
@@ -128,6 +132,10 @@ final class SendPanel {
             settings().setShowLog(showLogCheck.isSelected());
             updateVisibility();
         });
+        showWindowCheck.setSelected(settings().showWindowOnSend());
+        showWindowCheck.setToolTipText(message("send.showWindow.tooltip"));
+        showWindowCheck.addActionListener(e -> settings().setShowWindowOnSend(showWindowCheck.isSelected()));
+        zipCombo.setSelectedItem(settings().zipLevel() == null ? message("send.zip.none") : settings().zipLevel());
         replaceCheck.setSelected(settings().replaceExisting());
         replaceCheck.setToolTipText(message("send.replace.tooltip"));
         replaceCheck.addActionListener(e -> {
@@ -357,6 +365,7 @@ final class SendPanel {
         itemsList.setVisibleRowCount(ITEM_ROWS);
         itemsPanel.add(new JBScrollPane(itemsList), BorderLayout.CENTER);
         JPanel form = FormBuilder.createFormBuilder()
+                .addComponent(showWindowCheck)
                 .addComponent(new TitledSeparator(message("send.section.send")))
                 .addComponentToRightColumn(replaceCheck)
                 .addLabeledComponent(message("send.items"), itemsPanel)
