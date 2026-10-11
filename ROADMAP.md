@@ -30,8 +30,13 @@ A decidir: JetBrains Marketplace (recomendado), repositório próprio (`updatePl
 
 ### 8.2 Skill do Claude para o SoundBridge
 
+> **A revisar com os perfis de enlace (sb-duplex 1.3.0b0).** Os padrões globais deixam de existir: a skill passa
+> a operar só com `--profile <nome>`, no formato de uso "/soundbridge --profile casa --fileDir c:/arquivo.zip",
+> enviando um ou vários arquivos e/ou pastas. Os itens abaixo que citam padrões (`--save-defaults`, bloco
+> `defaults`) serão reescritos para perfis na discussão da skill.
+
 Skill pessoal em `~/.claude/skills/sb-duplex/` que **só envia e recebe**, sempre com os padrões do
-SoundBridge da máquina (`--save-defaults`). Especificação aprovada:
+SoundBridge da máquina (`--save-defaults`). Especificação aprovada (antes dos perfis):
 
 1. **Pré-checagem:** `python -m soundbridge --list-devices --json` e leitura de `defaults`.
    - Enviar (uni) exige `out`; enviar bi (só a pedido) exige `out` e `in`; receber exige `in` (`dir` opcional:
@@ -50,6 +55,10 @@ SoundBridge da máquina (`--save-defaults`). Especificação aprovada:
 
 ### Pendências antes da fase 8
 
+- **Perfis de enlace no plugin** (depois do sb-duplex 1.3.0b0): o leitor do `--list-devices` aceitar o
+  `schema` 2 (sem `defaults`, com `profiles`); avaliar um campo **Perfil** no Envio e no Recebimento, que passe
+  `--profile` (o RX escolhe a pasta pelo perfil do manifesto) e possa substituir parte das configurações por
+  projeto. Até lá o plugin segue passando `--out`/`--in` explícitos, que continuam válidos.
 - `ColorProgressBar` obsoleta na 2026.2 (aparece no relatório de compatibilidade): trocar por barra própria.
 - `.gitattributes` com `gradlew eol=lf` (clone novo no Windows).
 - Testes no cabo: Recebimento (PC2 → PC1) e Substituir se existir (exige `sb-duplex` 1.2.0b4 no RX do PC2).
