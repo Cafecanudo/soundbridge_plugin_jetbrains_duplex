@@ -24,6 +24,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public static final class SettingsState {
         public String launcher = "";
+        public String profile = "";
         public String output = "";
         public String input = "";
         public String receiveDirectory = "";
@@ -77,7 +78,8 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
                 state.output,
                 state.input,
                 orDefault(state.receiveDirectory, projectDirectory()),
-                state.bidirectional);
+                state.bidirectional,
+                state.profile);
     }
 
     public void update(ProjectConfig config) {
@@ -86,6 +88,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         state.input = config.input();
         state.receiveDirectory = isProjectDirectory(config.receiveDirectory()) ? "" : config.receiveDirectory();
         state.bidirectional = config.bidirectional();
+        state.profile = config.profile();
     }
 
     public UniProfile uniProfile() {

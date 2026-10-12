@@ -26,6 +26,7 @@ public final class SendCommandBuilder {
         arguments.add("--tx");
         arguments.add(items.stream().map(Path::toString).collect(Collectors.joining(ITEM_SEPARATOR)));
         addOption(arguments, "--out", config.output());
+        addOption(arguments, "--profile", config.profile());
         if (config.bidirectional()) {
             arguments.add("--bi");
             addOption(arguments, "--in", config.input());

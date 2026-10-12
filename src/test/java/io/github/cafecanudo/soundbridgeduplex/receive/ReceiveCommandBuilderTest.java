@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ReceiveCommandBuilderTest {
 
-    private static final ProjectConfig CONFIG = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true);
+    private static final ProjectConfig CONFIG = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true, "");
     private static final LinkChoice CHOICE = new LinkChoice(0.0055, true, 5000.0, 1, 14.0, List.of(), true, List.of());
 
     @Test

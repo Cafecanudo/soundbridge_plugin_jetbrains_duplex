@@ -38,6 +38,6 @@ public enum SendMode {
 
     public ProjectConfig applyTo(ProjectConfig config) {
         return new ProjectConfig(config.launcher(), config.output(), config.input(), config.receiveDirectory(),
-                this == TWO_WAY);
+                this == TWO_WAY, config.profile());
     }
 }

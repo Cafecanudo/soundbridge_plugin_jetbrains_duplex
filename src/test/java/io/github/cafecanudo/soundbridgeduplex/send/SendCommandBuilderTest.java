@@ -16,8 +16,8 @@ class SendCommandBuilderTest {
 
     private static final List<Path> ITEMS = List.of(Path.of("C:/p/a.txt"), Path.of("C:/p/docs"));
     private static final String JOINED = Path.of("C:/p/a.txt") + ";" + Path.of("C:/p/docs");
-    private static final ProjectConfig UNI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", false);
-    private static final ProjectConfig BI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true);
+    private static final ProjectConfig UNI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", false, "");
+    private static final ProjectConfig BI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true, "");
     private static final UniProfile UNI_PROFILE = new UniProfile(true, 7000.0, 0.003, 1);
     private static final LinkChoice BI_CHOICE = new LinkChoice(0.2, false, 22000.0, 9, 41.0, List.of(), true, List.of());
 
@@ -25,6 +25,14 @@ class SendCommandBuilderTest {
     void uniUsesTypedProfileAndOmitsInput() {
         assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003", "--mcs", "1"),
                 SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), withMcs(1), ITEMS));
+    }
+
+    @Test
+    void sendsSelectedProfileName() {
+        ProjectConfig withProfile = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", false, "bancada");
+
+        assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--profile", "bancada"),
+                SendCommandBuilder.arguments(withProfile, UniProfile.EMPTY, Optional.empty(), SendOptions.DEFAULT, ITEMS));
     }
 
     @Test

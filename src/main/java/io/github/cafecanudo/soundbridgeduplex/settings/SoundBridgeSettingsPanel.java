@@ -9,6 +9,7 @@ import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -18,9 +19,11 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationOptions;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.client.DevicesDocument;
+import io.github.cafecanudo.soundbridgeduplex.client.LinkProfile;
 import io.github.cafecanudo.soundbridgeduplex.client.SoundBridgeClient;
 
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -39,6 +42,7 @@ final class SoundBridgeSettingsPanel {
     private final JBTextField launcherField = new JBTextField();
     private final JButton testButton = new JButton(message("settings.launcher.test"));
     private final JBLabel versionLabel = new JBLabel();
+    private final ComboBox<ProfileItem> profileCombo = new ComboBox<>();
     private final DeviceComboBox outputCombo = new DeviceComboBox();
     private final DeviceComboBox inputCombo = new DeviceComboBox();
     private final JBLabel inputLabel = new JBLabel(message("settings.input"));
@@ -51,6 +55,8 @@ final class SoundBridgeSettingsPanel {
     private final JPanel root;
 
     private int generation;
+    private List<LinkProfile> profiles = List.of();
+    private boolean fillingProfiles;
 
     SoundBridgeSettingsPanel(Project project, String projectDirectory) {
         this.project = project;
@@ -61,6 +67,7 @@ final class SoundBridgeSettingsPanel {
         directoryField.addActionListener(e -> chooseDirectory());
         projectDirectoryButton.addActionListener(e -> directoryField.setText(projectDirectory));
         calibration = new CalibrationSection(project, this::config);
+        profileCombo.addActionListener(e -> profileSelected());
         outputCombo.addActionListener(e -> calibration.refreshProfileLabel());
         inputCombo.addActionListener(e -> calibration.refreshProfileLabel());
         calibration.setOnModeChanged(this::updateInputVisibility);
@@ -94,11 +101,12 @@ final class SoundBridgeSettingsPanel {
 
     ProjectConfig config() {
         return new ProjectConfig(launcherField.getText(), outputCombo.spec(), inputCombo.spec(), directoryField.getText(),
-                calibration.bidirectional());
+                calibration.bidirectional(), selectedProfile());
     }
 
     void load(ProjectConfig config) {
         launcherField.setText(config.launcher());
+        showProfiles(profiles, config.profile());
         outputCombo.show(List.of(), config.output());
         inputCombo.show(List.of(), config.input());
         directoryField.setText(config.receiveDirectory());
@@ -151,7 +159,42 @@ final class SoundBridgeSettingsPanel {
                 });
     }
 
+    private void showProfiles(List<LinkProfile> available, String selected) {
+        fillingProfiles = true;
+        profiles = available;
+        DefaultComboBoxModel<ProfileItem> model = new DefaultComboBoxModel<>();
+        model.addElement(ProfileItem.NONE);
+        available.forEach(profile -> model.addElement(new ProfileItem(profile.name())));
+        ProfileItem current = new ProfileItem(selected);
+        if (model.getIndexOf(current) < 0) {
+            model.addElement(current);
+        }
+        profileCombo.setModel(model);
+        profileCombo.setSelectedItem(current);
+        fillingProfiles = false;
+    }
+
+    private void profileSelected() {
+        if (fillingProfiles) {
+            return;
+        }
+        String name = selectedProfile();
+        profiles.stream().filter(profile -> profile.name().equals(name)).findFirst().ifPresent(profile -> {
+            if (!profile.input().isEmpty()) {
+                inputCombo.select(profile.input());
+            }
+            if (!profile.output().isEmpty()) {
+                outputCombo.select(profile.output());
+            }
+        });
+    }
+
+    private String selectedProfile() {
+        return profileCombo.getSelectedItem() instanceof ProfileItem item ? item.name() : "";
+    }
+
     private void showDevices(DevicesDocument document) {
+        showProfiles(document.profiles(), selectedProfile());
         outputCombo.show(document.outputs(), outputCombo.spec());
         inputCombo.show(document.inputs(), inputCombo.spec());
         devicesStatus.setText(message("settings.devices.loaded", document.outputs().size(), document.inputs().size()));
@@ -181,8 +224,10 @@ final class SoundBridgeSettingsPanel {
                 .addComponentToRightColumn(hint(message("settings.launcher.hint")))
                 .addComponentToRightColumn(versionLabel)
                 .addSeparator()
-                .addLabeledComponent(message("settings.output"), outputCombo)
+                .addLabeledComponent(message("settings.profile"), profileCombo)
+                .addComponentToRightColumn(hint(message("settings.profile.hint")))
                 .addLabeledComponent(inputLabel, inputCombo)
+                .addLabeledComponent(message("settings.output"), outputCombo)
                 .addComponentToRightColumn(hint(message("settings.devices.hint")))
                 .addComponentToRightColumn(row(devicesStatus, refreshButton))
                 .addSeparator()

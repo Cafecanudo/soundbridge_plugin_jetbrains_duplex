@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliException;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +19,14 @@ public record DevicesDocument(
         List<AudioDevice> inputs,
         Map<String, String> aliases,
         DeviceDefaults defaults,
+        List<LinkProfile> profiles,
         String configPath) {
 
     private static final String OUTPUTS = "outputs";
     private static final String INPUTS = "inputs";
     private static final String ALIASES = "aliases";
     private static final String DEFAULTS = "defaults";
+    private static final String PROFILES = "profiles";
     private static final String CONFIG = "config";
     private static final String DEFAULT_OUT = "out";
     private static final String DEFAULT_IN = "in";
@@ -40,6 +43,7 @@ public record DevicesDocument(
                     devices(root.getAsJsonArray(INPUTS)),
                     strings(root.getAsJsonObject(ALIASES)),
                     defaults(root.getAsJsonObject(DEFAULTS)),
+                    profiles(root.getAsJsonObject(PROFILES)),
                     text(root, CONFIG));
         } catch (JsonParseException | IllegalStateException | ClassCastException | NullPointerException e) {
             throw new CliException(SoundBridgeBundle.message("cli.invalidDevices", e.getMessage()), e);
@@ -59,7 +63,24 @@ public record DevicesDocument(
         return Map.copyOf(map);
     }
 
+    private static List<LinkProfile> profiles(JsonObject object) {
+        if (object == null) {
+            return List.of();
+        }
+        return object.entrySet().stream()
+                .map(entry -> {
+                    JsonObject fields = entry.getValue().getAsJsonObject();
+                    return new LinkProfile(entry.getKey(), text(fields, DEFAULT_OUT), text(fields, DEFAULT_IN),
+                            text(fields, DEFAULT_DIR));
+                })
+                .sorted(Comparator.comparing(LinkProfile::name))
+                .toList();
+    }
+
     private static DeviceDefaults defaults(JsonObject object) {
+        if (object == null) {
+            return new DeviceDefaults("", "", "");
+        }
         return new DeviceDefaults(text(object, DEFAULT_OUT), text(object, DEFAULT_IN), text(object, DEFAULT_DIR));
     }
 

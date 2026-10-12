@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SendModeTest {
 
-    private static final ProjectConfig UNI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", false);
-    private static final ProjectConfig BI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true);
+    private static final ProjectConfig UNI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", false, "");
+    private static final ProjectConfig BI = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true, "");
     private static final UniProfile UNI_PROFILE = new UniProfile(true, 7000.0, 0.003, 1);
     private static final LinkChoice CHOICE = new LinkChoice(0.2, false, 22000.0, 9, 41.0, List.of(), true, List.of());
     private static final Optional<CalibrationProfile> BI_PROFILE =

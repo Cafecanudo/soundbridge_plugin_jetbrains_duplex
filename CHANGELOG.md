@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Adicionado
+- Perfil do SoundBridge no Settings (lista **Perfil** acima de **Entrada** e **Saída**): o plugin não cria perfis,
+  só usa os existentes (`--save-profile` no SoundBridge). Escolher um perfil preenche entrada e saída; o envio
+  passa `--profile NOME` (o RX escolhe a pasta pelo perfil). O leitor do `--list-devices` aceita o `schema` 2
+  (`profiles`, sem `defaults`) e continua aceitando o 1. Exige `sb-duplex` 1.3.0b0 para listar e usar perfis.
 - Recebimento com opções na própria janela: modo (uni/bi), placas do Settings com Configurar…, pasta
   editável (grava a pasta de recepção do projeto), **Mostrar comando** e **Mostrar log**. No bidirecional, passa
   `--ack-peak` da calibração bidirecional das mesmas placas.

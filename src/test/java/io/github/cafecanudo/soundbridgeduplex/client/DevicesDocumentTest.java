@@ -39,6 +39,24 @@ class DevicesDocumentTest {
     }
 
     @Test
+    void parsesSchemaTwoProfilesWithoutDefaults() throws CliException {
+        DevicesDocument document = DevicesDocument.parse("""
+                {"schema": 2, "outputs": [], "inputs": [], "aliases": {},
+                 "profiles": {"lab": {"in": "x9aa"}, "bancada": {"out": "dq8f", "in": "v2yh", "dir": "D:/rx", "mcs": 8}},
+                 "config": "c.json"}
+                """);
+
+        assertEquals(List.of(new LinkProfile("bancada", "dq8f", "v2yh", "D:/rx"), new LinkProfile("lab", "", "x9aa", "")),
+                document.profiles());
+        assertEquals(new DeviceDefaults("", "", ""), document.defaults());
+    }
+
+    @Test
+    void schemaOneHasNoProfiles() throws CliException {
+        assertEquals(List.of(), DevicesDocument.parse(DOCUMENT).profiles());
+    }
+
+    @Test
     void rejectsTextOutput() {
         assertThrows(CliException.class, () -> DevicesDocument.parse("SAÍDAS (--out):"));
     }

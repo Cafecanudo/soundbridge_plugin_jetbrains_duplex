@@ -22,6 +22,16 @@ final class DeviceComboBox extends ComboBox<Object> {
         setSelectedItem(match != null ? match : value);
     }
 
+    void select(String value) {
+        for (int i = 0; i < model.getSize(); i++) {
+            if (model.getElementAt(i) instanceof AudioDevice device && device.id().equals(value)) {
+                setSelectedItem(device);
+                return;
+            }
+        }
+        setSelectedItem(value);
+    }
+
     String spec() {
         Object item = getEditor().getItem();
         if (item instanceof AudioDevice device) {
