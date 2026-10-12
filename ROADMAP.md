@@ -20,7 +20,6 @@ o CLI com `--json` e lê os eventos (`schema` 1). Nada do áudio é reimplementa
 
 ## Pendências antes da fase 8
 
-- `.gitattributes` com `gradlew eol=lf` (clone novo no Windows).
 - Testes no cabo: Recebimento (PC2 → PC1) e Substituir se existir (exige `sb-duplex` 1.2.0b4 no RX do PC2).
 
 ## Fase 8 — Distribuição do plugin
