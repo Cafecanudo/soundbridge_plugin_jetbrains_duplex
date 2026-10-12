@@ -10,6 +10,11 @@ import io.github.cafecanudo.soundbridgeduplex.send.SendDraft;
 public final class HistoryToolWindowFactory implements ToolWindowFactory, DumbAware {
 
     @Override
+    public void init(ToolWindow toolWindow) {
+        toolWindow.setShowStripeButton(true);
+    }
+
+    @Override
     public void createToolWindowContent(Project project, ToolWindow toolWindow) {
         HistoryPanel panel = new HistoryPanel(project, entry -> {
             SendDraft.getInstance(project).resend(entry);

@@ -34,7 +34,7 @@ O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas
 
 Na seção **Recebimento** da Tool Window, **Receber** deixa o SoundBridge escutando na pasta de recepção do
 projeto (com confirmação no modo bidirecional) até **Parar**. Durante um envio ou uma calibração o recebimento
-pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (↓), na árvore do Project e numa
+pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de download), na árvore do Project e numa
 notificação.
 
 ## Compatibilidade

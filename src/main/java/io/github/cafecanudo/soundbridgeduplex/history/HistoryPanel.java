@@ -12,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
+import javax.swing.table.TableColumn;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.util.Optional;
@@ -23,6 +24,10 @@ public final class HistoryPanel {
 
     private static final int VISIBLE_ROWS = 6;
     private static final int BUTTON_GAP = 6;
+    private static final int ITEMS_MIN_WIDTH = 200;
+    private static final int COLUMN_MIN_WIDTH = 24;
+    private static final int COLUMN_MAX_FACTOR = 3;
+    private static final int[] COLUMN_WIDTHS = {32, 0, 50, 50, 74, 54, 78, 82};
 
     private final Project project;
     private final HistoryTableModel model = new HistoryTableModel();
@@ -36,6 +41,7 @@ public final class HistoryPanel {
     public HistoryPanel(Project project, Consumer<HistoryEntry> resend) {
         this.project = project;
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        sizeColumns();
         table.getSelectionModel().addListSelectionListener(e -> updateButtons());
         resendButton.addActionListener(e -> selected().ifPresent(resend));
         logButton.addActionListener(e -> selected().ifPresent(entry -> new HistoryLogDialog(project, entry).show()));
@@ -51,6 +57,20 @@ public final class HistoryPanel {
 
     public void dispose() {
         history().removeListener(historyListener);
+    }
+
+    private void sizeColumns() {
+        for (int column = 0; column < COLUMN_WIDTHS.length; column++) {
+            TableColumn tableColumn = table.getColumnModel().getColumn(column);
+            if (column == HistoryTableModel.ITEMS) {
+                tableColumn.setMinWidth(JBUI.scale(ITEMS_MIN_WIDTH));
+                continue;
+            }
+            int width = JBUI.scale(COLUMN_WIDTHS[column]);
+            tableColumn.setMinWidth(JBUI.scale(COLUMN_MIN_WIDTH));
+            tableColumn.setMaxWidth(width * COLUMN_MAX_FACTOR);
+            tableColumn.setPreferredWidth(width);
+        }
     }
 
     private void reload() {

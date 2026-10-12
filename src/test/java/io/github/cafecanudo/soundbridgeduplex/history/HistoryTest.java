@@ -84,7 +84,7 @@ class HistoryTest {
     @Test
     void formatsColumns() {
         assertEquals("2026-10-10 14:32", HistoryFormat.date("2026-10-10 14:32:05"));
-        assertEquals("a.txt (+1)", HistoryFormat.items(List.of("C:/p/a.txt", "C:/p/b.txt")));
+        assertEquals("a.txt, b.txt", HistoryFormat.items(List.of("C:/p/a.txt", "C:/p/b.txt")));
         assertEquals("YTr.java", HistoryFormat.items(List.of("C:/p/YTr.java")));
         assertEquals("512 B", HistoryFormat.size(512));
         assertEquals("2.0 KB", HistoryFormat.size(2048));

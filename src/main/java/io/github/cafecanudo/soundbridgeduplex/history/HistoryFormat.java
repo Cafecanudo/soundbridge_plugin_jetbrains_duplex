@@ -6,6 +6,7 @@ import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
@@ -14,6 +15,7 @@ public final class HistoryFormat {
     private static final double KIB = 1024.0;
     private static final double MIB = KIB * KIB;
     private static final int DATE_TIME_LENGTH = 16;
+    private static final String ITEM_SEPARATOR = ", ";
 
     private HistoryFormat() {
     }
@@ -23,12 +25,12 @@ public final class HistoryFormat {
     }
 
     public static String items(List<String> items) {
-        if (items.isEmpty()) {
-            return "";
-        }
-        Path first = Path.of(items.get(0)).getFileName();
-        String name = first == null ? items.get(0) : first.toString();
-        return items.size() == 1 ? name : message("history.items.more", name, items.size() - 1);
+        return items.stream().map(HistoryFormat::fileName).collect(Collectors.joining(ITEM_SEPARATOR));
+    }
+
+    private static String fileName(String item) {
+        Path name = Path.of(item).getFileName();
+        return name == null ? item : name.toString();
     }
 
     public static String mode(SendMode mode) {

@@ -73,5 +73,10 @@
 - Só a calibração continua global: o perfil é do par de placas, não do projeto.
 - Textos da interface em `messages/SoundBridgeBundle.properties`, sem nomes de parâmetros da linha de comando.
 
+### Alterado
+- Histórico: a Tool Window aparece por padrão no painel inferior; direção com ícone (upload/download) numa coluna
+  estreita; coluna Data removida; **Itens** lista todos os arquivos e ocupa o espaço livre; colunas renomeadas e
+  estreitas (Mod, Arq, Tam, MCS, Duração, Status); todas redimensionáveis pelo usuário.
+
 ### Corrigido
 - Compilação Java em UTF-8 (o javac usava windows-1252 e corrompia textos acentuados).
