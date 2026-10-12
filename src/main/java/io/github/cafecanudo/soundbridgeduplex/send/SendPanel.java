@@ -2,7 +2,6 @@ package io.github.cafecanudo.soundbridgeduplex.send;
 
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.options.ShowSettingsUtil;
-import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBCheckBox;
@@ -14,6 +13,7 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
+import io.github.cafecanudo.soundbridgeduplex.ProgressColors;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationObserver;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
@@ -109,7 +109,7 @@ final class SendPanel {
         commandArea.setEditable(false);
         commandArea.setLineWrap(true);
         logArea.setEditable(false);
-        progressBar.setForeground(ColorProgressBar.GREEN);
+        progressBar.setForeground(ProgressColors.PASSED);
         modeGroup.add(oneWayRadio);
         modeGroup.add(twoWayRadio);
         configureButton.addActionListener(e -> openSettings());
@@ -239,7 +239,7 @@ final class SendPanel {
     private void start() {
         request().ifPresent(request -> {
             logArea.setText("");
-            progressBar.setForeground(ColorProgressBar.GREEN);
+            progressBar.setForeground(ProgressColors.PASSED);
             progressBar.setValue(0);
             progressLabel.setText(message("send.progress.idle"));
             sendService().start(request);
@@ -518,7 +518,7 @@ final class SendPanel {
             if (outcome.succeeded()) {
                 progressBar.setValue(PROGRESS_SCALE);
             } else {
-                progressBar.setForeground(ColorProgressBar.RED);
+                progressBar.setForeground(ProgressColors.FAILED);
             }
         }
     }

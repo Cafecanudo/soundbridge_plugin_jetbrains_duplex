@@ -77,6 +77,8 @@
 - Histórico: a Tool Window aparece por padrão no painel inferior; direção com ícone (upload/download) numa coluna
   estreita; coluna Data removida; **Itens** lista todos os arquivos e ocupa o espaço livre; colunas renomeadas e
   estreitas (Mod, Arq, Tam, MCS, Duração, Status); todas redimensionáveis pelo usuário.
+- Barra de progresso sem `ColorProgressBar` (obsoleta na 2026.2): cores do tema (`ProgressBar.passedColor` e
+  `ProgressBar.failedColor`), com o verde e o vermelho anteriores como reserva.
 
 ### Corrigido
 - Compilação Java em UTF-8 (o javac usava windows-1252 e corrompia textos acentuados).

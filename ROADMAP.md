@@ -15,11 +15,15 @@ o CLI com `--json` e lê os eventos (`schema` 1). Nada do áudio é reimplementa
 | 6 | Envio em background com progresso, log, cancelamento e fila por destino (`--more`) | ✅ |
 | 6.1 | Envio automático, envio direto sem janela, Substituir se existir, alertas (5 s, Detalhes, notificação do SO) | ✅ |
 | 7 | Histórico por projeto (Reenviar, Ver log, Limpar); Recebimento (`--rx --keep`, pausa durante envio); três Tool Windows | ✅ |
-| 8 | Distribuição e skill do Claude | ⏳ |
+| 8 | Distribuição do plugin | ⏳ |
+| 9 | Skill do Claude para o SoundBridge | ⏳ |
 
-## Fase 8 — Distribuição e skill do Claude
+## Pendências antes da fase 8
 
-### 8.1 Distribuição do plugin
+- `.gitattributes` com `gradlew eol=lf` (clone novo no Windows).
+- Testes no cabo: Recebimento (PC2 → PC1) e Substituir se existir (exige `sb-duplex` 1.2.0b4 no RX do PC2).
+
+## Fase 8 — Distribuição do plugin
 
 A decidir: JetBrains Marketplace (recomendado), repositório próprio (`updatePlugins.xml`) ou `.zip`.
 
@@ -28,7 +32,7 @@ A decidir: JetBrains Marketplace (recomendado), repositório próprio (`updatePl
 3. Assinatura (Marketplace): certificado e chave em variáveis de ambiente, nunca no repositório.
 4. `docs/PUBLICACAO.md` com o roteiro, como no `sb-duplex`.
 
-### 8.2 Skill do Claude para o SoundBridge
+## Fase 9 — Skill do Claude para o SoundBridge
 
 > **A revisar com os perfis de enlace (sb-duplex 1.3.0b0).** Os padrões globais deixam de existir: a skill passa
 > a operar só com `--profile <nome>`, no formato de uso "/soundbridge --profile casa --fileDir c:/arquivo.zip",
@@ -52,16 +56,6 @@ SoundBridge da máquina (`--save-defaults`). Especificação aprovada (antes dos
 5. **Autorização:** o pedido do usuário é a autorização para tocar áudio; a skill nunca envia nem recebe por
    iniciativa própria.
 6. **Versão mínima:** `sb-duplex` 1.2.0b2 (contrato `--json` com `schema`); avisa se a instalada for anterior.
-
-### Pendências antes da fase 8
-
-- **Perfis de enlace no plugin** (depois do sb-duplex 1.3.0b0): o leitor do `--list-devices` aceitar o
-  `schema` 2 (sem `defaults`, com `profiles`); avaliar um campo **Perfil** no Envio e no Recebimento, que passe
-  `--profile` (o RX escolhe a pasta pelo perfil do manifesto) e possa substituir parte das configurações por
-  projeto. Até lá o plugin segue passando `--out`/`--in` explícitos, que continuam válidos.
-- `ColorProgressBar` obsoleta na 2026.2 (aparece no relatório de compatibilidade): trocar por barra própria.
-- `.gitattributes` com `gradlew eol=lf` (clone novo no Windows).
-- Testes no cabo: Recebimento (PC2 → PC1) e Substituir se existir (exige `sb-duplex` 1.2.0b4 no RX do PC2).
 
 ## Backlog (em discussão)
 
