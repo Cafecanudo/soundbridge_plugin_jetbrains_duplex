@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
@@ -51,6 +52,7 @@ final class SoundBridgeSettingsPanel {
     private final JButton refreshButton = new JButton(message("settings.devices.refresh"));
     private final JBLabel devicesStatus = new JBLabel();
     private final JBLabel errorLabel = new JBLabel();
+    private final JBCheckBox warnUnsentCheck = new JBCheckBox(message("settings.warnUnsent"));
     private final CalibrationSection calibration;
     private final JPanel root;
 
@@ -102,6 +104,14 @@ final class SoundBridgeSettingsPanel {
     ProjectConfig config() {
         return new ProjectConfig(launcherField.getText(), outputCombo.spec(), inputCombo.spec(), directoryField.getText(),
                 calibration.bidirectional(), selectedProfile());
+    }
+
+    boolean warnUnsent() {
+        return warnUnsentCheck.isSelected();
+    }
+
+    void loadWarnUnsent(boolean value) {
+        warnUnsentCheck.setSelected(value);
     }
 
     void load(ProjectConfig config) {
@@ -234,6 +244,8 @@ final class SoundBridgeSettingsPanel {
                 .addLabeledComponent(message("settings.directory"), row(directoryField, projectDirectoryButton))
                 .addComponentToRightColumn(hint(message("settings.directory.hint")))
                 .addComponent(errorLabel)
+                .addComponent(warnUnsentCheck)
+                .addComponent(hint(message("settings.warnUnsent.hint")))
                 .addSeparator()
                 .addComponent(calibration.component())
                 .getPanel();

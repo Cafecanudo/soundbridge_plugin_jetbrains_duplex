@@ -10,9 +10,11 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliExitCode;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliListener;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliProcess;
 import io.github.cafecanudo.soundbridgeduplex.receive.ReceiveService;
+import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -44,8 +46,13 @@ final class SendTask extends Task.Backgroundable {
         service.attach(indicator);
         receiverPaused = ReceiveService.getInstance(getProject()).pauseForTransmit();
         startedAt = System.nanoTime();
-        for (List<String> arguments : request.commands()) {
-            CliExitCode code = runCommand(arguments, indicator);
+        for (int i = 0; i < request.commands().size(); i++) {
+            Map<String, String> fingerprint = i < request.jobs().size()
+                    ? SentRegistry.fingerprint(request.jobs().get(i)) : Map.of();
+            CliExitCode code = runCommand(request.commands().get(i), indicator);
+            if (code == CliExitCode.OK) {
+                SoundBridgeProjectSettings.getInstance(getProject()).recordSent(fingerprint);
+            }
             if (cancelled || code != CliExitCode.OK) {
                 if (!cancelled && failure.get() == null) {
                     failure.set(message("send.notify.exit", code.code()));

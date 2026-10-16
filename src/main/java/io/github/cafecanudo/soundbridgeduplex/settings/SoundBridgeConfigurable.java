@@ -34,6 +34,7 @@ public final class SoundBridgeConfigurable implements Configurable {
         return !panel.config().equals(settings().config())
                 || !panel.calibrationOptions().equals(settings().calibrationOptions())
                 || !panel.uniProfile().equals(settings().uniProfile())
+                || panel.warnUnsent() != settings().warnUnsentOnCommit()
                 || panel.uniError().isPresent();
     }
 
@@ -46,11 +47,13 @@ public final class SoundBridgeConfigurable implements Configurable {
         settings().update(panel.config());
         settings().updateUniProfile(panel.uniProfile());
         settings().updateCalibrationOptions(panel.calibrationOptions());
+        settings().setWarnUnsentOnCommit(panel.warnUnsent());
     }
 
     @Override
     public void reset() {
         panel.load(settings().config());
+        panel.loadWarnUnsent(settings().warnUnsentOnCommit());
         panel.loadCalibration(settings().calibrationOptions(), settings().calibrationProfile(), settings().uniProfile());
     }
 

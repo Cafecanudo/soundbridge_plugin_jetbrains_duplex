@@ -14,7 +14,9 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -47,6 +49,8 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean showWindowOnSend = true;
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
         public List<String> history = new ArrayList<>();
+        public boolean warnUnsentOnCommit = true;
+        public Map<String, String> sent = new HashMap<>();
     }
 
     private static final int NO_ZIP = -1;
@@ -204,6 +208,24 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setHistory(List<String> entries) {
         state.history = new ArrayList<>(entries);
+    }
+
+    public boolean warnUnsentOnCommit() {
+        return state.warnUnsentOnCommit;
+    }
+
+    public void setWarnUnsentOnCommit(boolean value) {
+        state.warnUnsentOnCommit = value;
+    }
+
+    public synchronized Map<String, String> sent() {
+        return state.sent == null ? Map.of() : Map.copyOf(state.sent);
+    }
+
+    public synchronized void recordSent(Map<String, String> states) {
+        Map<String, String> updated = state.sent == null ? new HashMap<>() : new HashMap<>(state.sent);
+        updated.putAll(states);
+        state.sent = updated;
     }
 
     public String projectDirectory() {

@@ -30,11 +30,18 @@ aquele envio e mostra o comando que será executado. **Enviar** roda em backgrou
 **Cancelar**; itens em pastas diferentes são enviados um destino por vez, mantendo a estrutura do projeto.
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
 
-Na Tool Window **Commit** (e em Local Changes), o mesmo **SoundBridge Enviar** aparece no menu das alterações:
+Na Tool Window **Commit** (e em Local Changes), o **SoundBridge Enviar** do menu das alterações abre uma janela
+com a árvore de alterações do projeto (como a do Commit, com checkbox), já marcando o que foi selecionado:
 arquivos novos e modificados são enviados; **apagados** viram `--delete` (o RX apaga o arquivo de mesmo caminho,
 de vez); **renomeados ou movidos** apagam o caminho antigo e enviam o novo. As exclusões vão primeiro e o
 destino é sempre o caminho no projeto (campo de subpasta travado). No formulário e no Histórico os itens
 apagados aparecem com ✕, e o Reenviar repete as exclusões. Exige `sb-duplex` 1.4.0b0.
+
+No commit, o plugin avisa o que ainda não foi enviado: cada envio OK grava o conteúdo enviado (SHA-256 por
+arquivo, ou "apagado"), e cada arquivo recebido também conta. Se uma alteração do commit difere do registro,
+a mesma janela mostra todas as alterações do projeto (com os não versionados) e marca as não enviadas do commit, e oferece **Enviar e comitar**
+(envia o que estiver marcado), **Comitar assim mesmo** e **Cancelar**. Liga e desliga em *Settings > Tools > SoundBridge* (ligado por padrão;
+só avisa com a saída configurada). No unidirecional, OK quer dizer enviado, sem confirmação do RX.
 
 ## Recebimento
 

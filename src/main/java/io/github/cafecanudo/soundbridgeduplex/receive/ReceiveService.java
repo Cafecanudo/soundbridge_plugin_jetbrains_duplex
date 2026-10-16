@@ -22,6 +22,7 @@ import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
 import io.github.cafecanudo.soundbridgeduplex.send.SendEventReader;
 import io.github.cafecanudo.soundbridgeduplex.send.SendService;
+import io.github.cafecanudo.soundbridgeduplex.send.SentRegistry;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -31,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
@@ -165,7 +167,10 @@ public final class ReceiveService implements Disposable {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
         onUi(() -> SendHistory.getInstance(project).add(HistoryEntry.ofReceived(timestamp, file)));
         if (file.ok() && !file.path().isEmpty()) {
-            refresh(Path.of(file.path()));
+            Path path = Path.of(file.path());
+            SentRegistry.state(path).ifPresent(state ->
+                    SoundBridgeProjectSettings.getInstance(project).recordSent(Map.of(SentRegistry.key(path), state)));
+            refresh(path);
         }
         String text = message(file.ok() ? "receive.notify.received" : "receive.notify.incomplete", file.name(),
                 SendEventReader.formatTime(file.seconds()));

@@ -3,6 +3,12 @@
 ## [Unreleased]
 
 ### Adicionado
+- Aviso no commit de alterações não enviadas (`CheckinHandlerFactory`, na dependência opcional do VCS): cada
+  comando de envio OK grava o SHA-256 de cada arquivo enviado (pastas expandidas) ou "apagado"; arquivos
+  recebidos também entram. No commit, uma janela com a árvore de alterações (`SimpleAsyncChangesBrowser`, com
+  checkbox) mostra todas as alterações do projeto, com os não versionados, e marca as não enviadas do commit: Enviar e comitar, Comitar assim mesmo e Cancelar. O
+  menu do Commit abre a mesma janela com todas as alterações do projeto e a seleção já marcada. Opção em *Settings > Tools > SoundBridge*, ligada por padrão e ativa só com a
+  saída configurada.
 - **SoundBridge Enviar** no menu das alterações da Tool Window Commit e do Local Changes (dependência opcional
   `com.intellij.modules.vcs`): novos e modificados são enviados; apagados viram `--delete` no RX; renomeados ou
   movidos apagam o caminho antigo e enviam o novo. Exclusões primeiro (renomeação só de maiúsculas no

@@ -41,7 +41,7 @@ final class QuickSend {
         List<List<String>> commands = SendCommandBuilder.commands(effective, settings.uniProfile(),
                 settings.calibrationProfile(), options, jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), destination, options);
-        service.start(new SendRequest(effective.launcher(), commands, labels(selection.sends()),
+        service.start(new SendRequest(effective.launcher(), commands, jobs, labels(selection.sends()),
                 labels(selection.deletions()), snapshot));
     }
 

@@ -8,13 +8,15 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.VcsDataKeys;
 import com.intellij.openapi.vcs.changes.Change;
-import com.intellij.openapi.vcs.changes.ContentRevision;
+import com.intellij.openapi.vcs.changes.ChangeListManager;
+import com.intellij.openapi.vcs.changes.CurrentContentRevision;
 import com.intellij.openapi.vfs.VirtualFile;
-import io.github.cafecanudo.soundbridgeduplex.send.PathChange;
+import com.intellij.vcsUtil.VcsUtil;
 import io.github.cafecanudo.soundbridgeduplex.send.SendAction;
 import io.github.cafecanudo.soundbridgeduplex.send.SendSelection;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,25 +35,39 @@ public final class ChangesSendAction extends AnAction implements DumbAware {
     @Override
     public void actionPerformed(AnActionEvent event) {
         Project project = event.getProject();
-        SendSelection selection = selection(event);
-        if (project != null && !selection.isEmpty()) {
-            SendAction.send(project, selection);
+        if (project == null || selection(event).isEmpty()) {
+            return;
+        }
+        List<Change> selected = new ArrayList<>(selectedChanges(event));
+        selected.addAll(unversioned(project, event));
+        List<Change> all = ProjectChanges.all(project, selected);
+        ChangesSendDialog dialog = new ChangesSendDialog(project, ChangesSendDialog.Mode.MENU, all,
+                ProjectChanges.matching(all, selected));
+        if (dialog.showAndGet() && !dialog.selection().isEmpty()) {
+            SendAction.send(project, dialog.selection());
         }
     }
 
     private static SendSelection selection(AnActionEvent event) {
+        return SendSelection.fromChanges(ChangePaths.of(selectedChanges(event)), localFiles(event));
+    }
+
+    private static List<Change> selectedChanges(AnActionEvent event) {
         Change[] changes = event.getData(VcsDataKeys.CHANGES);
-        List<PathChange> paths = changes == null ? List.of()
-                : Arrays.stream(changes).map(ChangesSendAction::paths).toList();
-        return SendSelection.fromChanges(paths, localFiles(event));
+        return changes == null ? List.of() : Arrays.asList(changes);
     }
 
-    private static PathChange paths(Change change) {
-        return new PathChange(path(change.getBeforeRevision()), path(change.getAfterRevision()));
-    }
-
-    private static Path path(ContentRevision revision) {
-        return revision == null ? null : Path.of(revision.getFile().getPath());
+    private static List<Change> unversioned(Project project, AnActionEvent event) {
+        VirtualFile[] files = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY);
+        if (files == null) {
+            return List.of();
+        }
+        ChangeListManager manager = ChangeListManager.getInstance(project);
+        return Arrays.stream(files)
+                .filter(VirtualFile::isInLocalFileSystem)
+                .filter(file -> manager.getChange(file) == null)
+                .map(file -> new Change(null, CurrentContentRevision.create(VcsUtil.getFilePath(file))))
+                .toList();
     }
 
     private static List<Path> localFiles(AnActionEvent event) {

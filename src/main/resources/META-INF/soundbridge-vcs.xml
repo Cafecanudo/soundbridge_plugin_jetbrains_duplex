@@ -1,4 +1,7 @@
 <idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <checkinHandlerFactory implementation="io.github.cafecanudo.soundbridgeduplex.vcs.UnsentCheckinHandlerFactory"/>
+    </extensions>
     <actions>
         <action
                 id="SoundBridge.SendChanges"

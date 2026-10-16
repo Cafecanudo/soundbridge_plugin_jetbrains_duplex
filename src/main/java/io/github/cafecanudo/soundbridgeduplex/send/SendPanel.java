@@ -233,7 +233,7 @@ final class SendPanel {
         List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
                 settings.calibrationProfile(), options(), jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
-        return Optional.of(new SendRequest(config.launcher(), commands, QuickSend.labels(selection.sends()),
+        return Optional.of(new SendRequest(config.launcher(), commands, jobs, QuickSend.labels(selection.sends()),
                 QuickSend.labels(selection.deletions()), snapshot));
     }
 
