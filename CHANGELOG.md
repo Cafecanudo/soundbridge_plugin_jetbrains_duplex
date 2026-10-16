@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.6-SNAPSHOT] — 2026-10-16
+
 ### Adicionado
 - **Enviar os arquivos de uma pasta um a um** no Settings (ligado por padrão): ligado, a pasta é listada e cada
   arquivo vai num comando; desligado, a pasta vai num único `--tx` e vira uma linha só no Histórico (com os
