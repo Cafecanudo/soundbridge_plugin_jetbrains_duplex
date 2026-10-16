@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.3-SNAPSHOT] — 2026-10-16
+
 ### Corrigido
 - Modo de envio: a escolha do usuário (Uni/Bi) é gravada no projeto e prevalece; o formulário não volta mais
   sozinho para o bidirecional ao abrir a Tool Window ou trocar os itens. O envio direto (sem janela) usa a mesma
