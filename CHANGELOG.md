@@ -2,13 +2,15 @@
 
 ## [Unreleased]
 
+## [1.0.2-SNAPSHOT] — 2026-10-16
+
 ### Adicionado
 - **Solicitar reenvio** no menu de botão direito do Histórico, para qualquer arquivo recebido (com OK ou falha):
   o plugin manda `--tx NOME --dest SUB --request`, retoma (ou liga) o Recebimento e, quando o arquivo volta,
   **atualiza a mesma linha** do Histórico; sem resposta em 2 min, avisa. O menu também tem Reenviar para os
   enviados. No outro PC, **Atender pedidos de reenvio** no Recebimento (bi, ligado por padrão) passa `--serve`.
   O Histórico guarda o caminho do manifesto (`remote_name`); entradas antigas usam o caminho relativo à pasta de
-  recepção. Exige `sb-duplex` com `--request`/`--serve` (próxima versão).
+  recepção. Exige `sb-duplex` 1.4.0b1 (`--request`/`--serve`).
 
 ## [1.0.1-SNAPSHOT] — 2026-10-16
 
@@ -19,7 +21,7 @@
   fim. Uni mede só a ida (mono, banda, pico, MCS) com **Copiar parâmetros** para o TX do outro PC; bi responde à
   calibração completa e mostra chegada, saída (com os testes) e o perfil onde foi gravada. A escuta normal
   (Receber) também mostra a última calibração recebida. No bidirecional o RX passa `--profile` (o
-  `--calibrate-save` do outro PC grava neste perfil). Exige `sb-duplex` com o `choice` em JSON (próxima versão).
+  `--calibrate-save` do outro PC grava neste perfil). Exige `sb-duplex` 1.4.0b1 para os detalhes do bidirecional (`choice` em JSON).
 - **Não mostrar novamente** na janela do aviso no commit (vale ao comitar ou enviar; Cancelar ignora); para voltar
   a mostrar, *Settings > Tools > SoundBridge > Avisar no commit alterações não enviadas*.
 - Aviso no commit de alterações não enviadas (`CheckinHandlerFactory`, na dependência opcional do VCS): cada
