@@ -9,7 +9,7 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
-import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
+import io.github.cafecanudo.soundbridgeduplex.history.SentEntries;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
 
 import java.time.LocalDateTime;
@@ -92,10 +92,9 @@ public final class SendService {
         onUi(() -> observers.forEach(observer -> observer.onProgress(progress)));
     }
 
-    void finish(SendRequest request, SendOutcome outcome) {
+    void finish(SendRequest request, SendOutcome outcome, List<SentFile> files) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
-        SendHistory.getInstance(project).add(HistoryEntry.of(timestamp, request.itemLabels(), request.deletedLabels(),
-                request.snapshot(), outcome, log()));
+        SendHistory.getInstance(project).addAll(SentEntries.of(timestamp, request, files, outcome, log()));
         indicator.set(null);
         running.set(false);
         notifyRunning(false);

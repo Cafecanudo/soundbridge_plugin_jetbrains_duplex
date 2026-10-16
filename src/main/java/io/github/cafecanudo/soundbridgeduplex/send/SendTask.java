@@ -13,6 +13,7 @@ import io.github.cafecanudo.soundbridgeduplex.receive.ReceiveService;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -30,6 +31,8 @@ final class SendTask extends Task.Backgroundable {
     private final SendRequest request;
     private final SendService service;
     private final List<SendFileResult> results = new CopyOnWriteArrayList<>();
+    private final List<SentFile> sentFiles = new CopyOnWriteArrayList<>();
+    private volatile int currentCommand;
     private final AtomicReference<String> failure = new AtomicReference<>();
     private volatile boolean cancelled;
     private long startedAt;
@@ -49,6 +52,7 @@ final class SendTask extends Task.Backgroundable {
         for (int i = 0; i < request.commands().size(); i++) {
             Map<String, String> fingerprint = i < request.jobs().size()
                     ? SentRegistry.fingerprint(request.jobs().get(i)) : Map.of();
+            currentCommand = i;
             CliExitCode code = runCommand(request.commands().get(i), indicator);
             if (code == CliExitCode.OK) {
                 SoundBridgeProjectSettings.getInstance(getProject()).recordSent(fingerprint);
@@ -68,7 +72,7 @@ final class SendTask extends Task.Backgroundable {
             ReceiveService.getInstance(getProject()).resumeAfterTransmit();
         }
         double seconds = (System.nanoTime() - startedAt) / NANOS_PER_SECOND;
-        service.finish(request, new SendOutcome(results, seconds, cancelled, failure.get()));
+        service.finish(request, new SendOutcome(results, seconds, cancelled, failure.get()), sentFiles);
     }
 
     private CliExitCode runCommand(List<String> arguments, ProgressIndicator indicator) {
@@ -98,6 +102,7 @@ final class SendTask extends Task.Backgroundable {
         private final ProgressIndicator indicator;
         private final AtomicReference<CliExitCode> exit;
         private final SendEventReader reader = new SendEventReader();
+        private final List<String> fileLog = new ArrayList<>();
 
         private Listener(ProgressIndicator indicator, AtomicReference<CliExitCode> exit) {
             this.indicator = indicator;
@@ -108,8 +113,11 @@ final class SendTask extends Task.Backgroundable {
         public void onEvent(CliEvent event) {
             SendEventReader.Update update = reader.read(event);
             update.log().forEach(service::appendLog);
+            fileLog.addAll(update.log());
             if (update.result() != null) {
                 results.add(update.result());
+                sentFiles.add(new SentFile(currentCommand, update.result(), fileLog));
+                fileLog.clear();
             }
             if (update.progress() != null) {
                 showProgress(update.progress());
@@ -120,6 +128,7 @@ final class SendTask extends Task.Backgroundable {
         public void onText(String line, boolean error) {
             if (!line.isBlank()) {
                 service.appendLog(line);
+                fileLog.add(line);
             }
         }
 

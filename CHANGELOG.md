@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Alterado
+- Histórico com **uma linha por arquivo** enviado, mesmo enviando vários ou uma pasta: o plugin expande as pastas
+  em arquivos antes de montar os comandos e casa cada resultado do CLI com o seu arquivo (status, tamanho, tempo,
+  MCS e log só daquele arquivo; destino do grupo gravado na linha). Cada exclusão também vira uma linha. Arquivos
+  não alcançados ficam FALHA (ou CANCELADO). O Reenviar de uma linha reenvia só aquele arquivo, no mesmo destino.
+
+### Corrigido
+- Nomes com `[`, `*` ou `?` (ex.: `[id].ts`) eram tratados como curinga pelo CLI e falhavam; o plugin agora os
+  escapa nos envios.
+- Listas longas (pasta com muitos arquivos) são divididas em vários comandos (até 8 mil caracteres por `--tx`),
+  dentro do limite de linha de comando do Windows.
+
 ## [1.0.3-SNAPSHOT] — 2026-10-16
 
 ### Corrigido

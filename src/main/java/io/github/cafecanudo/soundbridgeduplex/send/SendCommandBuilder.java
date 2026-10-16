@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class SendCommandBuilder {
@@ -18,13 +20,15 @@ public final class SendCommandBuilder {
     private static final String REPLACE_FLAG = "--force-repl";
     private static final String DELETE_FLAG = "--delete";
     private static final String REQUEST_FLAG = "--request";
+    private static final Pattern GLOB_SPECIAL = Pattern.compile("[\\[*?]");
 
     private SendCommandBuilder() {
     }
 
     public static List<String> arguments(ProjectConfig config, UniProfile uniProfile,
                                          Optional<CalibrationProfile> biProfile, SendOptions options, List<Path> items) {
-        List<String> arguments = linkArguments(config, uniProfile, biProfile, options.mcs(), items);
+        List<String> arguments = linkArguments(config, uniProfile, biProfile, options.mcs(), items,
+                SendCommandBuilder::literal);
         addOption(arguments, "--dest", options.destination());
         addCompression(arguments, options);
         if (options.replaceExisting()) {
@@ -35,7 +39,7 @@ public final class SendCommandBuilder {
 
     public static List<String> deleteArguments(ProjectConfig config, UniProfile uniProfile,
                                                Optional<CalibrationProfile> biProfile, McsSelection mcs, SendJob job) {
-        List<String> arguments = linkArguments(config, uniProfile, biProfile, mcs, job.items());
+        List<String> arguments = linkArguments(config, uniProfile, biProfile, mcs, job.items(), Path::toString);
         addOption(arguments, "--dest", job.destination());
         arguments.add(DELETE_FLAG);
         return arguments;
@@ -43,7 +47,8 @@ public final class SendCommandBuilder {
 
     public static List<String> requestArguments(ProjectConfig config, UniProfile uniProfile,
                                                 Optional<CalibrationProfile> biProfile, Path item, String destination) {
-        List<String> arguments = linkArguments(config, uniProfile, biProfile, McsSelection.AUTO, List.of(item));
+        List<String> arguments = linkArguments(config, uniProfile, biProfile, McsSelection.AUTO, List.of(item),
+                Path::toString);
         addOption(arguments, "--dest", destination);
         arguments.add(REQUEST_FLAG);
         return arguments;
@@ -83,10 +88,10 @@ public final class SendCommandBuilder {
 
     private static List<String> linkArguments(ProjectConfig config, UniProfile uniProfile,
                                               Optional<CalibrationProfile> biProfile, McsSelection mcs,
-                                              List<Path> items) {
+                                              List<Path> items, Function<Path, String> render) {
         List<String> arguments = new ArrayList<>();
         arguments.add("--tx");
-        arguments.add(items.stream().map(Path::toString).collect(Collectors.joining(ITEM_SEPARATOR)));
+        arguments.add(items.stream().map(render).collect(Collectors.joining(ITEM_SEPARATOR)));
         addOption(arguments, "--out", config.output());
         addOption(arguments, "--profile", config.profile());
         if (config.bidirectional()) {
@@ -115,6 +120,10 @@ public final class SendCommandBuilder {
             arguments.add("--zip-level");
             arguments.add(options.zipLevel().toString());
         }
+    }
+
+    static String literal(Path item) {
+        return GLOB_SPECIAL.matcher(item.toString()).replaceAll("[$0]");
     }
 
     private static void addOption(List<String> arguments, String flag, String value) {

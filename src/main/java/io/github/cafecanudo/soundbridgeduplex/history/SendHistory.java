@@ -30,6 +30,15 @@ public final class SendHistory {
         listeners.forEach(Runnable::run);
     }
 
+    public void addAll(List<HistoryEntry> entries) {
+        List<String> stored = settings().history();
+        for (HistoryEntry entry : entries) {
+            stored = HistoryLog.add(stored, entry);
+        }
+        settings().setHistory(stored);
+        listeners.forEach(Runnable::run);
+    }
+
     public void replace(HistoryEntry old, HistoryEntry entry) {
         settings().setHistory(HistoryLog.replace(settings().history(), old, entry));
         listeners.forEach(Runnable::run);

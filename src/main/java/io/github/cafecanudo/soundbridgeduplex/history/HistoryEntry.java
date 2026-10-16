@@ -74,6 +74,14 @@ public record HistoryEntry(
                 size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log, "");
     }
 
+    public static HistoryEntry ofFile(String timestamp, String item, boolean delete, SendSnapshot snapshot,
+                                      SendFileResult result, SendStatus status, List<String> log) {
+        boolean ok = result != null && result.ok();
+        return new HistoryEntry(Direction.SENT, timestamp, delete ? List.of() : List.of(item),
+                delete ? List.of(item) : List.of(), snapshot, 1, ok ? 1 : 0, result == null ? 0 : result.size(),
+                result == null ? null : result.finalMcs(), result == null ? 0 : result.seconds(), status, log, "");
+    }
+
     public static HistoryEntry ofReceived(String timestamp, ReceivedFile file) {
         SendSnapshot snapshot = new SendSnapshot(file.bidirectional() ? SendMode.TWO_WAY : SendMode.ONE_WAY, "",
                 null, null, false);

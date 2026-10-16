@@ -19,7 +19,8 @@ final class QuickSend {
     private QuickSend() {
     }
 
-    static void run(Project project, SendSelection selection) {
+    static void run(Project project, SendSelection chosen) {
+        SendSelection selection = SendFiles.expand(chosen);
         SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
         ProjectConfig config = settings.config();
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
