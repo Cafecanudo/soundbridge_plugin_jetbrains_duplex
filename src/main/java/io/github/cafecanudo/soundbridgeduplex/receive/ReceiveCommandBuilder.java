@@ -18,6 +18,10 @@ public final class ReceiveCommandBuilder {
         if (options.bidirectional() && !config.output().isEmpty()) {
             arguments.add("--out");
             arguments.add(config.output());
+            if (!config.profile().isBlank()) {
+                arguments.add("--profile");
+                arguments.add(config.profile().strip());
+            }
             ackPeak(config, biProfile).ifPresent(peak -> {
                 arguments.add("--ack-peak");
                 arguments.add(peak.toString());

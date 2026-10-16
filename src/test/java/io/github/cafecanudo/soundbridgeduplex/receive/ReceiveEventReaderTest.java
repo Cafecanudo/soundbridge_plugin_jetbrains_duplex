@@ -61,6 +61,54 @@ class ReceiveEventReaderTest {
         assertEquals(List.of("calibração só de ida recebida: mono · 7 kHz · pico 0.003 · MCS 1"), update.log());
     }
 
+    @Test
+    void oneWayCalibrationBecomesCopyableResult() {
+        ReceiveEventReader.Update update = new ReceiveEventReader().read(event("{\"schema\": 2, \"event\": "
+                + "\"calibrate_uni\", \"mono\": false, \"band_high_hz\": 22000.0, \"peak\": 0.9, \"mcs\": 8, "
+                + "\"snr_db\": 35, \"warnings\": [], \"one_way\": true}"));
+
+        ReceivedCalibration calibration = update.calibration();
+        assertTrue(calibration.oneWay());
+        assertTrue(calibration.canCopy());
+        assertEquals("--band-high 22000 --peak 0.9 --mcs 8", calibration.txFlags());
+        assertEquals(ReceiveState.LISTENING, update.state());
+    }
+
+    @Test
+    void twoWayCalibrationCollectsArrivalDepartureAndProfile() {
+        ReceiveEventReader reader = new ReceiveEventReader();
+        String choice = "{\"peak\": 0.5, \"mono\": false, \"band_high_hz\": 22000.0, \"mcs\": 9, \"snr_db\": 40.0, "
+                + "\"warnings\": [], \"validated\": true, \"tests\": [{\"size\": 2048, \"passed\": 3, \"tested\": 3}]}";
+
+        ReceiveEventReader.Update stage = reader.read(event("{\"schema\": 2, \"event\": \"calibrate_stage\", "
+                + "\"stage\": \"sondagem recebida, medindo\"}"));
+        ReceiveEventReader.Update forward = reader.read(event("{\"schema\": 2, \"event\": \"calibrate_forward\", "
+                + "\"choice\": " + choice + "}"));
+        ReceiveEventReader.Update backward = reader.read(event("{\"schema\": 2, \"event\": \"calibrate_backward\", "
+                + "\"choice\": " + choice + ", \"saved\": true, \"profile\": \"casa\", \"sent_profile\": null}"));
+
+        assertEquals("sondagem recebida, medindo", stage.calibrationStage());
+        assertEquals(ReceiveState.CALIBRATING, forward.state());
+        assertNull(forward.calibration());
+        ReceivedCalibration calibration = backward.calibration();
+        assertFalse(calibration.oneWay());
+        assertFalse(calibration.canCopy());
+        assertEquals(9, calibration.arrival().mcs());
+        assertEquals(1, calibration.departure().tests().size());
+        assertEquals("casa", calibration.savedProfile());
+        assertNull(calibration.sentProfile());
+    }
+
+    @Test
+    void choiceAsTextFromOldCliHasNoDetails() {
+        ReceiveEventReader.Update update = new ReceiveEventReader().read(event("{\"schema\": 2, \"event\": "
+                + "\"calibrate_backward\", \"choice\": \"LinkChoice(peak=0.5)\", \"saved\": false, \"profile\": null, "
+                + "\"sent_profile\": null}"));
+
+        assertNull(update.calibration().departure());
+        assertNull(update.calibration().arrival());
+    }
+
     private static CliEvent event(String json) {
         return CliEventParser.parse(json).orElseThrow();
     }

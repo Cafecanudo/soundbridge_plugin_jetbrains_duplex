@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Adicionado
+- **Calibrar** no Recebimento, ao lado de Receber: escuta uma calibração iniciada no outro PC e para sozinho no
+  fim. Uni mede só a ida (mono, banda, pico, MCS) com **Copiar parâmetros** para o TX do outro PC; bi responde à
+  calibração completa e mostra chegada, saída (com os testes) e o perfil onde foi gravada. A escuta normal
+  (Receber) também mostra a última calibração recebida. No bidirecional o RX passa `--profile` (o
+  `--calibrate-save` do outro PC grava neste perfil). Exige `sb-duplex` com o `choice` em JSON (próxima versão).
 - **Não mostrar novamente** na janela do aviso no commit (vale ao comitar ou enviar; Cancelar ignora); para voltar
   a mostrar, *Settings > Tools > SoundBridge > Avisar no commit alterações não enviadas*.
 - Aviso no commit de alterações não enviadas (`CheckinHandlerFactory`, na dependência opcional do VCS): cada

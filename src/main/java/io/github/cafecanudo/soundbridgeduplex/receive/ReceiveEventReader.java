@@ -1,5 +1,7 @@
 package io.github.cafecanudo.soundbridgeduplex.receive;
 
+import com.google.gson.JsonElement;
+import io.github.cafecanudo.soundbridgeduplex.calibration.LinkChoice;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliEvent;
 import io.github.cafecanudo.soundbridgeduplex.send.SendEventReader;
 import io.github.cafecanudo.soundbridgeduplex.send.SendProgress;
@@ -12,9 +14,14 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
 public final class ReceiveEventReader {
 
-    public record Update(List<String> log, ReceiveState state, SendProgress progress, ReceivedFile received) {
+    public record Update(List<String> log, ReceiveState state, SendProgress progress, ReceivedFile received,
+                         String calibrationStage, ReceivedCalibration calibration) {
 
         static final Update NONE = new Update(List.of(), null, null, null);
+
+        Update(List<String> log, ReceiveState state, SendProgress progress, ReceivedFile received) {
+            this(log, state, progress, received, null, null);
+        }
     }
 
     private static final String RX_SIDE = "rx";
@@ -23,6 +30,7 @@ public final class ReceiveEventReader {
     private final List<String> fileLog = new ArrayList<>();
     private String currentName = "";
     private boolean bidirectional;
+    private LinkChoice arrival;
 
     public Update read(CliEvent event) {
         return switch (event.name()) {
@@ -31,7 +39,10 @@ public final class ReceiveEventReader {
             case "progress" -> new Update(List.of(), ReceiveState.RECEIVING, progress(event), null);
             case "result" -> result(event);
             case "more_timeout" -> log(message("receive.log.moreTimeout"), ReceiveState.LISTENING);
-            case "calibrate_uni" -> log(oneWayCalibration(event), null);
+            case "calibrate_stage" -> calibrationStage(event);
+            case "calibrate_uni" -> oneWayResult(event);
+            case "calibrate_forward" -> forward(event);
+            case "calibrate_backward" -> backward(event);
             default -> Update.NONE;
         };
     }
@@ -77,6 +88,41 @@ public final class ReceiveEventReader {
         fileLog.clear();
         currentName = "";
         return new Update(List.of(line), ReceiveState.LISTENING, null, received);
+    }
+
+    private Update calibrationStage(CliEvent event) {
+        String stage = event.string("stage").orElse("");
+        return new Update(List.of(message("receive.log.calibrationStage", stage)), ReceiveState.CALIBRATING, null, null,
+                stage, null);
+    }
+
+    private Update oneWayResult(CliEvent event) {
+        ReceivedCalibration calibration = new ReceivedCalibration("", event.bool("one_way").orElse(true),
+                LinkChoice.fromJson(event.data()), null, null, null);
+        arrival = null;
+        return new Update(List.of(oneWayCalibration(event)), ReceiveState.LISTENING, null, null, null, calibration);
+    }
+
+    private Update forward(CliEvent event) {
+        arrival = choice(event);
+        String summary = arrival == null ? message("receive.calibration.unknown") : arrival.summary();
+        return new Update(List.of(message("receive.log.calibrationForward", summary)), ReceiveState.CALIBRATING, null,
+                null, null, null);
+    }
+
+    private Update backward(CliEvent event) {
+        LinkChoice departure = choice(event);
+        ReceivedCalibration calibration = new ReceivedCalibration("", false, arrival, departure,
+                event.string("profile").orElse(null), event.string("sent_profile").orElse(null));
+        arrival = null;
+        String summary = departure == null ? message("receive.calibration.unknown") : departure.summary();
+        return new Update(List.of(message("receive.log.calibrationBackward", summary)), ReceiveState.LISTENING, null,
+                null, null, calibration);
+    }
+
+    private static LinkChoice choice(CliEvent event) {
+        JsonElement element = event.data().get("choice");
+        return element != null && element.isJsonObject() ? LinkChoice.fromJson(element.getAsJsonObject()) : null;
     }
 
     private Update log(String line, ReceiveState state) {

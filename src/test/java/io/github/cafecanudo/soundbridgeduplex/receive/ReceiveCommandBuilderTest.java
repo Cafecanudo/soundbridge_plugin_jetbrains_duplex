@@ -36,4 +36,14 @@ class ReceiveCommandBuilderTest {
         assertEquals(List.of("--rx", "D:/rx", "--in", "v2yh", "--keep", "--out", "dq8f"),
                 ReceiveCommandBuilder.arguments(CONFIG, new ReceiveOptions(true, "D:/rx"), other));
     }
+
+    @Test
+    void profileGoesOnlyWithTwoWay() {
+        ProjectConfig withProfile = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true, "casa");
+
+        assertEquals(List.of("--rx", "C:/p", "--in", "v2yh", "--keep", "--out", "dq8f", "--profile", "casa"),
+                ReceiveCommandBuilder.arguments(withProfile, new ReceiveOptions(true, "C:/p"), Optional.empty()));
+        assertEquals(List.of("--rx", "C:/p", "--in", "v2yh", "--keep"),
+                ReceiveCommandBuilder.arguments(withProfile, new ReceiveOptions(false, "C:/p"), Optional.empty()));
+    }
 }

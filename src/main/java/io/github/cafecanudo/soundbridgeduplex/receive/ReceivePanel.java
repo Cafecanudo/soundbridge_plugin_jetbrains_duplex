@@ -1,6 +1,7 @@
 package io.github.cafecanudo.soundbridgeduplex.receive;
 
 import com.intellij.openapi.fileChooser.FileChooser;
+import com.intellij.openapi.ide.CopyPasteManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ShowSettingsUtil;
@@ -36,6 +37,7 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.ArrayList;
@@ -64,6 +66,10 @@ public final class ReceivePanel {
     private final TextFieldWithBrowseButton directoryField = new TextFieldWithBrowseButton();
     private final JButton startButton = new JButton(message("receive.start"));
     private final JButton stopButton = new JButton(message("receive.stop"));
+    private final JButton calibrateButton = new JButton(message("receive.calibrate"));
+    private final JBLabel calibrationTitle = new JBLabel(message("receive.calibration.title"));
+    private final JBLabel calibrationLabel = new JBLabel();
+    private final JButton copyButton = new JButton(message("receive.calibration.copy"));
     private final JBLabel stateLabel = new JBLabel();
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
     private final JBLabel progressLabel = new JBLabel(message("send.progress.idle"));
@@ -98,6 +104,10 @@ public final class ReceivePanel {
             }
         });
         startButton.addActionListener(e -> service().start(options()));
+        calibrateButton.setToolTipText(message("receive.calibrate.tooltip"));
+        calibrateButton.addActionListener(e -> service().startCalibration(options()));
+        copyButton.setToolTipText(message("receive.calibration.copy.tooltip"));
+        copyButton.addActionListener(e -> copyCalibration());
         stopButton.addActionListener(e -> service().stop());
         showCommandCheck.setSelected(settings().showReceiveCommand());
         showCommandCheck.addActionListener(e -> {
@@ -115,6 +125,7 @@ public final class ReceivePanel {
         root.addAncestorListener(onShown(this::loadSettings));
         loadSettings();
         showState(service().state());
+        showCalibration(service().lastCalibration());
         updateVisibility();
     }
 
@@ -187,9 +198,11 @@ public final class ReceivePanel {
     }
 
     private void showState(ReceiveState state) {
-        stateLabel.setText(state.label());
+        boolean waitingCalibration = state == ReceiveState.LISTENING && service().isCalibrateOnly();
+        stateLabel.setText(waitingCalibration ? message("receive.state.waitingCalibration") : state.label());
         boolean active = state != ReceiveState.STOPPED;
         startButton.setEnabled(!active);
+        calibrateButton.setEnabled(!active);
         stopButton.setEnabled(active);
         oneWayRadio.setEnabled(!active);
         twoWayRadio.setEnabled(!active && !settings().config().output().isEmpty());
@@ -218,6 +231,31 @@ public final class ReceivePanel {
         progressLabel.setText(String.join(PART_SEPARATOR, parts));
     }
 
+    private void showCalibrationStage(String stage) {
+        progressBar.setIndeterminate(true);
+        progressLabel.setText(message("receive.calibration.stage", stage));
+    }
+
+    private void showCalibration(ReceivedCalibration calibration) {
+        boolean present = calibration != null;
+        calibrationTitle.setVisible(present);
+        calibrationLabel.setVisible(present);
+        copyButton.setVisible(present && calibration.canCopy());
+        if (present) {
+            progressBar.setIndeterminate(false);
+            progressLabel.setText(message("receive.calibration.done"));
+            calibrationLabel.setText(ReceiveCalibrationText.html(calibration));
+        }
+        root.revalidate();
+    }
+
+    private void copyCalibration() {
+        ReceivedCalibration calibration = service().lastCalibration();
+        if (calibration != null && calibration.canCopy()) {
+            CopyPasteManager.getInstance().setContents(new StringSelection(calibration.txFlags()));
+        }
+    }
+
     private void appendLog(String line) {
         logArea.append(line + LINE_BREAK);
         logArea.setCaretPosition(logArea.getDocument().getLength());
@@ -240,10 +278,12 @@ public final class ReceivePanel {
                 .addLabeledComponent(message("receive.folder"), directoryField)
                 .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
-                .addComponentToRightColumn(row(startButton, stopButton))
+                .addComponentToRightColumn(row(startButton, calibrateButton, stopButton))
                 .addLabeledComponent(message("receive.state"), stateLabel)
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
+                .addLabeledComponent(calibrationTitle, calibrationLabel)
+                .addComponentToRightColumn(row(copyButton))
                 .addLabeledComponent(logLabel, logScroll)
                 .getPanel();
         form.setBorder(JBUI.Borders.empty(8));
@@ -308,6 +348,16 @@ public final class ReceivePanel {
         @Override
         public void onProgress(SendProgress progress) {
             showProgress(progress);
+        }
+
+        @Override
+        public void onCalibrationStage(String stage) {
+            showCalibrationStage(stage);
+        }
+
+        @Override
+        public void onCalibration(ReceivedCalibration calibration) {
+            showCalibration(calibration);
         }
     }
 }

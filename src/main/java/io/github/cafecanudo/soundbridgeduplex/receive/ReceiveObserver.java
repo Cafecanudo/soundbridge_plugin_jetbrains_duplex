@@ -9,4 +9,10 @@ public interface ReceiveObserver {
     void onStateChanged(ReceiveState state);
 
     void onProgress(SendProgress progress);
+
+    default void onCalibrationStage(String stage) {
+    }
+
+    default void onCalibration(ReceivedCalibration calibration) {
+    }
 }

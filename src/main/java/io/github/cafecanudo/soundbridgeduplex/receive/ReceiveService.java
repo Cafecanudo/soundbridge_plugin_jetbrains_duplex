@@ -52,6 +52,8 @@ public final class ReceiveService implements Disposable {
     private volatile boolean wanted;
     private volatile boolean paused;
     private volatile ReceiveOptions options;
+    private volatile boolean calibrateOnly;
+    private volatile ReceivedCalibration lastCalibration;
 
     public ReceiveService(Project project) {
         this.project = project;
@@ -77,7 +79,23 @@ public final class ReceiveService implements Disposable {
         observers.remove(observer);
     }
 
-    public synchronized void start(ReceiveOptions requested) {
+    public boolean isCalibrateOnly() {
+        return calibrateOnly;
+    }
+
+    public ReceivedCalibration lastCalibration() {
+        return lastCalibration;
+    }
+
+    public void start(ReceiveOptions requested) {
+        start(requested, false);
+    }
+
+    public void startCalibration(ReceiveOptions requested) {
+        start(requested, true);
+    }
+
+    private synchronized void start(ReceiveOptions requested, boolean calibration) {
         if (process != null && process.isRunning()) {
             return;
         }
@@ -91,6 +109,7 @@ public final class ReceiveService implements Disposable {
             return;
         }
         options = requested;
+        calibrateOnly = calibration;
         wanted = true;
         launch(config);
     }
@@ -177,6 +196,16 @@ public final class ReceiveService implements Disposable {
         notifyUser(text, file.ok() ? NotificationType.INFORMATION : NotificationType.WARNING);
     }
 
+    private void calibrated(ReceivedCalibration calibration) {
+        ReceivedCalibration stamped = calibration.at(LocalDateTime.now().format(TIMESTAMP));
+        lastCalibration = stamped;
+        onUi(() -> observers.forEach(observer -> observer.onCalibration(stamped)));
+        notifyUser(message("receive.notify.calibrated"), NotificationType.INFORMATION);
+        if (calibrateOnly) {
+            stop();
+        }
+    }
+
     private static void refresh(Path path) {
         Path candidate = path;
         VirtualFile existing = null;
@@ -238,6 +267,12 @@ public final class ReceiveService implements Disposable {
             }
             if (update.received() != null) {
                 received(update.received());
+            }
+            if (update.calibrationStage() != null) {
+                onUi(() -> observers.forEach(observer -> observer.onCalibrationStage(update.calibrationStage())));
+            }
+            if (update.calibration() != null) {
+                calibrated(update.calibration());
             }
         }
 

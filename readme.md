@@ -50,6 +50,11 @@ projeto (com confirmação no modo bidirecional) até **Parar**. Durante um envi
 pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de download), na árvore do Project e numa
 notificação.
 
+**Calibrar**, ao lado de Receber, escuta uma calibração iniciada no outro PC e para sozinho no fim. No modo
+**uni** mede só a ida e mostra mono, banda, pico e MCS, com **Copiar parâmetros** para digitar no TX do outro
+PC; no **bi** responde à calibração completa e mostra chegada, saída e o perfil onde foi gravada (com
+`--calibrate-save` no outro PC). O resultado fica em "Última calibração".
+
 ## Compatibilidade
 
 - Todas as IDEs JetBrains (depende só de `com.intellij.modules.platform`).
