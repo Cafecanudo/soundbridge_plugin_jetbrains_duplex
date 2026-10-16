@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.4-SNAPSHOT] — 2026-10-16
+
 ### Alterado
 - Histórico com **uma linha por arquivo** enviado, mesmo enviando vários ou uma pasta: o plugin expande as pastas
   em arquivos antes de montar os comandos e casa cada resultado do CLI com o seu arquivo (status, tamanho, tempo,
