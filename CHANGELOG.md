@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.7-SNAPSHOT] — 2026-10-16
+
 ### Adicionado
 - Coluna **#** no início do Histórico com o número da linha (1 = mais recente).
 
