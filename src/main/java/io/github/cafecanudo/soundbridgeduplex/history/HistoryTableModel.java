@@ -13,7 +13,7 @@ public final class HistoryTableModel extends AbstractTableModel {
     public static final int ITEMS = 2;
 
     private static final List<String> COLUMNS = List.of(
-            "history.column.number", "history.column.direction", "history.column.items", "history.column.mode", "history.column.files",
+            "history.column.number", "history.column.direction", "history.column.items", "history.column.mode",
             "history.column.size", "history.column.mcs", "history.column.duration", "history.column.status");
 
     private List<HistoryEntry> entries = List.of();
@@ -58,10 +58,9 @@ public final class HistoryTableModel extends AbstractTableModel {
             case DIRECTION -> entry.direction().icon();
             case ITEMS -> HistoryFormat.items(entry.items(), entry.deleted());
             case 3 -> HistoryFormat.mode(entry.snapshot().mode());
-            case 4 -> HistoryFormat.files(entry);
-            case 5 -> HistoryFormat.size(entry.size());
-            case 6 -> HistoryFormat.mcs(entry.finalMcs());
-            case 7 -> HistoryFormat.duration(entry.seconds());
+            case 4 -> HistoryFormat.size(entry.size());
+            case 5 -> HistoryFormat.mcs(entry.finalMcs());
+            case 6 -> HistoryFormat.duration(entry.seconds());
             default -> entry.status().label();
         };
     }

@@ -32,7 +32,7 @@ public final class HistoryPanel {
     private static final int ITEMS_MIN_WIDTH = 200;
     private static final int COLUMN_MIN_WIDTH = 24;
     private static final int COLUMN_MAX_FACTOR = 3;
-    private static final int[] COLUMN_WIDTHS = {40, 32, 0, 50, 50, 74, 54, 78, 82};
+    private static final int[] COLUMN_WIDTHS = {40, 32, 0, 50, 74, 54, 78, 82};
 
     private final Project project;
     private final HistoryTableModel model = new HistoryTableModel();

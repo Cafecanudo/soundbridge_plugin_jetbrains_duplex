@@ -44,10 +44,6 @@ public final class HistoryFormat {
         return message(mode == SendMode.TWO_WAY ? "history.mode.bi" : "history.mode.uni");
     }
 
-    public static String files(HistoryEntry entry) {
-        return entry.okFiles() + "/" + entry.files();
-    }
-
     public static String size(long bytes) {
         if (bytes < KIB) {
             return bytes + " B";

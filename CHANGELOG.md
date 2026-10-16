@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Alterado
+- Coluna **Arq** removida do Histórico (com uma linha por arquivo ela ficou redundante).
+
 ## [1.0.7-SNAPSHOT] — 2026-10-16
 
 ### Adicionado
