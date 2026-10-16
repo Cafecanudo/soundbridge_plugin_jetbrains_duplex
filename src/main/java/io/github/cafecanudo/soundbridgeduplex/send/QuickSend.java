@@ -20,7 +20,8 @@ final class QuickSend {
     }
 
     static void run(Project project, SendSelection chosen) {
-        SendSelection selection = SendFiles.expand(chosen);
+        SendSelection selection = SendFiles.prepare(chosen,
+                SoundBridgeProjectSettings.getInstance(project).expandFolders());
         SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
         ProjectConfig config = settings.config();
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
@@ -43,7 +44,7 @@ final class QuickSend {
                 settings.calibrationProfile(), options, jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), destination, options);
         service.start(new SendRequest(effective.launcher(), commands, jobs, labels(selection.sends()),
-                labels(selection.deletions()), snapshot));
+                labels(selection.deletions()), snapshot, settings.commandDelayMs()));
     }
 
     static List<String> labels(List<Path> paths) {

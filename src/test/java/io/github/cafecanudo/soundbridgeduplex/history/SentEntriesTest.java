@@ -61,4 +61,24 @@ class SentEntriesTest {
         return new SendRequest("python -m soundbridge", List.of(List.of(), List.of(), List.of()), jobs, List.of(),
                 List.of(), SNAPSHOT);
     }
+
+    @Test
+    void folderSentWholeIsOneEntryWithItsFilesSummed() {
+        Path folder = Path.of("C:/p/docs");
+        SendRequest request = new SendRequest("python -m soundbridge", List.of(List.of()),
+                List.of(new SendJob(List.of(folder), "docs")), List.of(), List.of(), SNAPSHOT);
+        List<SentFile> files = List.of(
+                new SentFile(0, new SendFileResult("a.txt", true, 1.0, 100, 7), List.of("a")),
+                new SentFile(0, new SendFileResult("b.txt", true, 2.0, 200, 6), List.of("b")));
+
+        List<HistoryEntry> entries = SentEntries.of("t", request, files, new SendOutcome(List.of(), 3.0, false, null),
+                List.of(), folder::equals);
+
+        assertEquals(1, entries.size());
+        assertEquals(List.of(folder.toString()), entries.get(0).items());
+        assertEquals(2, entries.get(0).files());
+        assertEquals(300, entries.get(0).size());
+        assertEquals(SendStatus.OK, entries.get(0).status());
+        assertEquals("docs", entries.get(0).snapshot().destination());
+    }
 }

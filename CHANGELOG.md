@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Enviar os arquivos de uma pasta um a um** no Settings (ligado por padrão): ligado, a pasta é listada e cada
+  arquivo vai num comando; desligado, a pasta vai num único `--tx` e vira uma linha só no Histórico (com os
+  arquivos somados).
+- **Intervalo entre comandos (ms)** no Settings (padrão 1000, até 60000): espera entre um `--tx` e o próximo da
+  mesma fila; o Cancelar interrompe a espera.
+- **Notificações do sistema operacional** em *Settings > Tools > SoundBridge* (por projeto, ligada por padrão):
+  desmarcada, os avisos do SoundBridge ficam só dentro da IDE, mesmo com ela fora de foco.
+
 ## [1.0.5-SNAPSHOT] — 2026-10-16
 
 ### Alterado

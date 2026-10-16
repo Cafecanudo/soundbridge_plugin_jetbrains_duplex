@@ -50,6 +50,10 @@ final class SendTask extends Task.Backgroundable {
         receiverPaused = ReceiveService.getInstance(getProject()).pauseForTransmit();
         startedAt = System.nanoTime();
         for (int i = 0; i < request.commands().size(); i++) {
+            if (i > 0 && !pause(request.commandDelayMs(), indicator)) {
+                cancelled = true;
+                return;
+            }
             Map<String, String> fingerprint = i < request.jobs().size()
                     ? SentRegistry.fingerprint(request.jobs().get(i)) : Map.of();
             currentCommand = i;
@@ -64,6 +68,22 @@ final class SendTask extends Task.Backgroundable {
                 return;
             }
         }
+    }
+
+    private static boolean pause(int millis, ProgressIndicator indicator) {
+        long deadline = System.currentTimeMillis() + millis;
+        while (System.currentTimeMillis() < deadline) {
+            if (indicator.isCanceled()) {
+                return false;
+            }
+            try {
+                Thread.sleep(Math.min(POLL_MILLIS, Math.max(1, deadline - System.currentTimeMillis())));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return !indicator.isCanceled();
     }
 
     @Override

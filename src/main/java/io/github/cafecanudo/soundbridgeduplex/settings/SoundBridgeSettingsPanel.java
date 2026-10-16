@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
+import com.intellij.ui.JBIntSpinner;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -39,6 +40,8 @@ final class SoundBridgeSettingsPanel {
 
     private static final String HTML_LINE_BREAK = "<br>";
 
+    private static final int COMMAND_DELAY_STEP_MS = 100;
+
     private final Project project;
     private final String projectDirectory;
     private final JBTextField launcherField = new JBTextField();
@@ -54,6 +57,11 @@ final class SoundBridgeSettingsPanel {
     private final JBLabel devicesStatus = new JBLabel();
     private final JBLabel errorLabel = new JBLabel();
     private final JBCheckBox warnUnsentCheck = new JBCheckBox(message("settings.warnUnsent"));
+    private final JBCheckBox osNotificationsCheck = new JBCheckBox(message("settings.osNotifications"));
+    private final JBCheckBox expandFoldersCheck = new JBCheckBox(message("settings.expandFolders"));
+    private final JBIntSpinner commandDelaySpinner = new JBIntSpinner(
+            SoundBridgeProjectSettings.DEFAULT_COMMAND_DELAY_MS, 0, SoundBridgeProjectSettings.MAX_COMMAND_DELAY_MS,
+            COMMAND_DELAY_STEP_MS);
     private final CalibrationSection calibration;
     private final JPanel root;
 
@@ -113,6 +121,27 @@ final class SoundBridgeSettingsPanel {
 
     void loadWarnUnsent(boolean value) {
         warnUnsentCheck.setSelected(value);
+    }
+
+    boolean expandFolders() {
+        return expandFoldersCheck.isSelected();
+    }
+
+    int commandDelayMs() {
+        return commandDelaySpinner.getNumber();
+    }
+
+    void loadSending(boolean expandFolders, int commandDelayMs) {
+        expandFoldersCheck.setSelected(expandFolders);
+        commandDelaySpinner.setNumber(commandDelayMs);
+    }
+
+    boolean osNotifications() {
+        return osNotificationsCheck.isSelected();
+    }
+
+    void loadOsNotifications(boolean value) {
+        osNotificationsCheck.setSelected(value);
     }
 
     void load(ProjectConfig config) {
@@ -258,6 +287,13 @@ final class SoundBridgeSettingsPanel {
                 .addComponent(errorLabel)
                 .addComponent(warnUnsentCheck)
                 .addComponent(hint(message("settings.warnUnsent.hint")))
+                .addComponent(osNotificationsCheck)
+                .addComponent(hint(message("settings.osNotifications.hint")))
+                .addSeparator()
+                .addComponent(expandFoldersCheck)
+                .addComponent(hint(message("settings.expandFolders.hint")))
+                .addLabeledComponent(message("settings.commandDelay"), commandDelaySpinner)
+                .addComponentToRightColumn(hint(message("settings.commandDelay.hint")))
                 .addSeparator()
                 .addComponent(calibration.component())
                 .getPanel();

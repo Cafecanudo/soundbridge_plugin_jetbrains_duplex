@@ -8,6 +8,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.SystemNotifications;
 import com.intellij.util.concurrency.AppExecutorUtil;
+import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
 import java.util.concurrent.TimeUnit;
 
@@ -37,12 +38,17 @@ public final class IdeAlerts {
                 .createNotification(title, content, type);
     }
 
+    private static boolean osNotifications(Project project) {
+        return project == null || project.isDisposed()
+                || SoundBridgeProjectSettings.getInstance(project).osNotifications();
+    }
+
     private static void show(Project project, Notification notification, String title, String content) {
         notification.notify(project);
         AppExecutorUtil.getAppScheduledExecutorService().schedule(
                 () -> ApplicationManager.getApplication().invokeLater(notification::hideBalloon),
                 BALLOON_SECONDS, TimeUnit.SECONDS);
-        if (!ApplicationManager.getApplication().isActive()) {
+        if (!ApplicationManager.getApplication().isActive() && osNotifications(project)) {
             SystemNotifications.getInstance().notify(NOTIFICATION_GROUP, title, content);
         }
     }

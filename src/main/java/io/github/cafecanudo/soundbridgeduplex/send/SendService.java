@@ -12,6 +12,7 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.history.SentEntries;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
 
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -94,7 +95,8 @@ public final class SendService {
 
     void finish(SendRequest request, SendOutcome outcome, List<SentFile> files) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
-        SendHistory.getInstance(project).addAll(SentEntries.of(timestamp, request, files, outcome, log()));
+        SendHistory.getInstance(project).addAll(SentEntries.of(timestamp, request, files, outcome, log(),
+                Files::isDirectory));
         indicator.set(null);
         running.set(false);
         notifyRunning(false);

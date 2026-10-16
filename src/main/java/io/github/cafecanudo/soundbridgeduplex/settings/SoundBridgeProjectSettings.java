@@ -52,12 +52,17 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
         public List<String> history = new ArrayList<>();
         public boolean warnUnsentOnCommit = true;
+        public boolean osNotifications = true;
+        public boolean expandFolders = true;
+        public int commandDelayMs = DEFAULT_COMMAND_DELAY_MS;
         public boolean serveRequests = true;
         public String sendMode = "";
         public Map<String, String> sent = new HashMap<>();
     }
 
     private static final int NO_ZIP = -1;
+    public static final int DEFAULT_COMMAND_DELAY_MS = 1000;
+    public static final int MAX_COMMAND_DELAY_MS = 60000;
 
     private final Project project;
     private SettingsState state = new SettingsState();
@@ -228,6 +233,30 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setServeRequests(boolean value) {
         state.serveRequests = value;
+    }
+
+    public boolean expandFolders() {
+        return state.expandFolders;
+    }
+
+    public void setExpandFolders(boolean value) {
+        state.expandFolders = value;
+    }
+
+    public int commandDelayMs() {
+        return Math.max(0, Math.min(MAX_COMMAND_DELAY_MS, state.commandDelayMs));
+    }
+
+    public void setCommandDelayMs(int value) {
+        state.commandDelayMs = Math.max(0, Math.min(MAX_COMMAND_DELAY_MS, value));
+    }
+
+    public boolean osNotifications() {
+        return state.osNotifications;
+    }
+
+    public void setOsNotifications(boolean value) {
+        state.osNotifications = value;
     }
 
     public boolean warnUnsentOnCommit() {

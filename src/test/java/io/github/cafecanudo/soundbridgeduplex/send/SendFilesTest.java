@@ -39,4 +39,14 @@ class SendFilesTest {
         assertEquals("C:/p/[[]id].ts", SendCommandBuilder.literal(Path.of("C:/p/[id].ts")).replace('\\', '/'));
         assertEquals("[[]a]-[[]b].txt", SendCommandBuilder.literal(Path.of("[a]-[b].txt")));
     }
+
+    @Test
+    void prepareKeepsTheFolderWhenNotExpanding() throws IOException {
+        Path docs = Files.createDirectories(folder.resolve("docs"));
+        Path inner = Files.writeString(docs.resolve("a.txt"), "a");
+        SendSelection selection = SendSelection.of(List.of(docs));
+
+        assertEquals(List.of(docs), SendFiles.prepare(selection, false).sends());
+        assertEquals(List.of(inner), SendFiles.prepare(selection, true).sends());
+    }
 }

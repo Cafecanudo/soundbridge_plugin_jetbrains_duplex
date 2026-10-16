@@ -18,6 +18,10 @@ public final class SendFiles {
         return new SendSelection(expand(selection.sends()), selection.deletions());
     }
 
+    public static SendSelection prepare(SendSelection selection, boolean expandFolders) {
+        return expandFolders ? expand(selection) : selection;
+    }
+
     public static List<Path> expand(List<Path> items) {
         Set<Path> files = new LinkedHashSet<>();
         items.forEach(item -> files.addAll(filesOf(item)));

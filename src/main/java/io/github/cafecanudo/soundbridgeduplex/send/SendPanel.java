@@ -173,7 +173,7 @@ final class SendPanel {
     }
 
     private void showItems(SendSelection chosen) {
-        SendSelection selection = SendFiles.expand(chosen);
+        SendSelection selection = SendFiles.prepare(chosen, settings().expandFolders());
         itemsModel.clear();
         selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true)));
         selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false)));
@@ -247,7 +247,7 @@ final class SendPanel {
                 settings.calibrationProfile(), options(), jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
         return Optional.of(new SendRequest(config.launcher(), commands, jobs, QuickSend.labels(selection.sends()),
-                QuickSend.labels(selection.deletions()), snapshot));
+                QuickSend.labels(selection.deletions()), snapshot, settings.commandDelayMs()));
     }
 
     private void start() {
