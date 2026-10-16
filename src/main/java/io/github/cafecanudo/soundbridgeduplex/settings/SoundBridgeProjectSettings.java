@@ -11,9 +11,11 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationOptions;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
+import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOptions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +53,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public List<String> history = new ArrayList<>();
         public boolean warnUnsentOnCommit = true;
         public boolean serveRequests = true;
+        public String sendMode = "";
         public Map<String, String> sent = new HashMap<>();
     }
 
@@ -209,6 +212,14 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setHistory(List<String> entries) {
         state.history = new ArrayList<>(entries);
+    }
+
+    public Optional<SendMode> sendMode() {
+        return Arrays.stream(SendMode.values()).filter(mode -> mode.name().equals(state.sendMode)).findFirst();
+    }
+
+    public void setSendMode(SendMode mode) {
+        state.sendMode = mode.name();
     }
 
     public boolean serveRequests() {

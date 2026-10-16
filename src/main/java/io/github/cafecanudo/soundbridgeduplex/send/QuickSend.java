@@ -23,7 +23,7 @@ final class QuickSend {
         SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
         ProjectConfig config = settings.config();
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
-        Optional<SendMode> mode = SendMode.preferred(config, calibrated);
+        Optional<SendMode> mode = SendMode.preferred(config, calibrated, settings.sendMode());
         SendService service = SendService.getInstance(project);
         if (mode.isEmpty()) {
             service.notifyUser(message("send.autoSend.notStarted", message("send.mode.none")), NotificationType.WARNING);

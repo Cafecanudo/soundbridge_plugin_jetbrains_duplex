@@ -13,7 +13,7 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliProcess;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
@@ -25,11 +25,13 @@ final class RequestTask extends Task.Backgroundable {
 
     private final String launcher;
     private final List<String> arguments;
-    private final Consumer<Boolean> onDone;
+    private final BiConsumer<Boolean, String> onDone;
     private final AtomicReference<CliExitCode> exit = new AtomicReference<>(CliExitCode.UNKNOWN);
+    private final AtomicReference<String> lastLine = new AtomicReference<>("");
     private volatile boolean receiverPaused;
 
-    RequestTask(Project project, String launcher, List<String> arguments, String name, Consumer<Boolean> onDone) {
+    RequestTask(Project project, String launcher, List<String> arguments, String name,
+                BiConsumer<Boolean, String> onDone) {
         super(project, message("request.task.title", name), true);
         this.launcher = launcher;
         this.arguments = List.copyOf(arguments);
@@ -53,6 +55,7 @@ final class RequestTask extends Task.Backgroundable {
             process.waitFor(CANCEL_WAIT_MILLIS);
         } catch (ExecutionException e) {
             exit.set(CliExitCode.UNKNOWN);
+            lastLine.set(e.getMessage());
         }
     }
 
@@ -61,17 +64,21 @@ final class RequestTask extends Task.Backgroundable {
         if (receiverPaused) {
             ReceiveService.getInstance(getProject()).resumeAfterTransmit();
         }
-        onDone.accept(exit.get() == CliExitCode.OK);
+        onDone.accept(exit.get() == CliExitCode.OK, lastLine.get());
     }
 
     private final class Listener implements CliListener {
 
         @Override
         public void onEvent(CliEvent event) {
+            event.string("message").filter(text -> !text.isBlank()).ifPresent(lastLine::set);
         }
 
         @Override
         public void onText(String line, boolean error) {
+            if (!line.isBlank()) {
+                lastLine.set(line.strip());
+            }
         }
 
         @Override

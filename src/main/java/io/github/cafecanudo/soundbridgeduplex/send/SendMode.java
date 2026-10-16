@@ -28,6 +28,11 @@ public enum SendMode {
         return modes;
     }
 
+    public static Optional<SendMode> preferred(ProjectConfig config, Set<SendMode> calibrated,
+                                               Optional<SendMode> chosen) {
+        return chosen.filter(calibrated::contains).or(() -> preferred(config, calibrated));
+    }
+
     public static Optional<SendMode> preferred(ProjectConfig config, Set<SendMode> calibrated) {
         SendMode configured = config.bidirectional() ? TWO_WAY : ONE_WAY;
         if (calibrated.contains(configured)) {

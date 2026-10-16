@@ -67,7 +67,7 @@ public final class ResendRequestService {
                 settings().calibrationProfile(), Path.of(target.file()), target.destination());
         requesting = true;
         ProgressManager.getInstance().run(new RequestTask(project, config.launcher(), arguments, name,
-                ok -> finished(ok, name, entry)));
+                (ok, detail) -> finished(ok, detail, name, entry)));
     }
 
     boolean complete(ReceivedFile file, HistoryEntry received) {
@@ -102,10 +102,11 @@ public final class ResendRequestService {
         return base.relativize(normalized).toString().replace('\\', '/');
     }
 
-    private void finished(boolean ok, String name, HistoryEntry entry) {
+    private void finished(boolean ok, String detail, String name, HistoryEntry entry) {
         requesting = false;
         if (!ok) {
-            notifyUser(message("request.notify.failed", name), NotificationType.WARNING);
+            notifyUser(message("request.notify.failed", name, detail.isBlank() ? message("request.notify.noDetail") : detail),
+                    NotificationType.WARNING);
             return;
         }
         ReceiveService receive = ReceiveService.getInstance(project);

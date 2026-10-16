@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Corrigido
+- Modo de envio: a escolha do usuário (Uni/Bi) é gravada no projeto e prevalece; o formulário não volta mais
+  sozinho para o bidirecional ao abrir a Tool Window ou trocar os itens. O envio direto (sem janela) usa a mesma
+  escolha.
+- Reenviar do Histórico: o modo e o MCS do envio original não são mais sobrescritos ao abrir a Tool Window; com
+  Envio automático ligado, o reenvio começa sozinho.
+- Falha no Solicitar reenvio mostra o motivo (última linha do SoundBridge) na notificação, em vez de só pedir
+  para conferir comando e cabos.
+
 ## [1.0.2-SNAPSHOT] — 2026-10-16
 
 ### Adicionado

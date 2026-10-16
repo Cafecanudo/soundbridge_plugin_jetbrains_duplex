@@ -113,8 +113,8 @@ final class SendPanel {
         modeGroup.add(oneWayRadio);
         modeGroup.add(twoWayRadio);
         configureButton.addActionListener(e -> openSettings());
-        oneWayRadio.addActionListener(e -> applyModeMcs());
-        twoWayRadio.addActionListener(e -> applyModeMcs());
+        oneWayRadio.addActionListener(e -> modeChosen());
+        twoWayRadio.addActionListener(e -> modeChosen());
         zipCombo.addActionListener(e -> {
             settings().setZipLevel(options().zipLevel());
             refresh();
@@ -200,11 +200,23 @@ final class SendPanel {
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
         enableMode(oneWayRadio, calibrated.contains(SendMode.ONE_WAY));
         enableMode(twoWayRadio, calibrated.contains(SendMode.TWO_WAY));
-        modeGroup.clearSelection();
-        SendMode.preferred(config, calibrated)
-                .ifPresent(mode -> (mode == SendMode.ONE_WAY ? oneWayRadio : twoWayRadio).setSelected(true));
         modeHint.setText(calibrated.isEmpty() ? message("send.mode.none") : "");
+        if (selectedMode().filter(calibrated::contains).isPresent()) {
+            refresh();
+            return;
+        }
+        modeGroup.clearSelection();
+        SendMode.preferred(config, calibrated, settings.sendMode()).ifPresent(this::selectMode);
         applyModeMcs();
+    }
+
+    private void modeChosen() {
+        selectedMode().ifPresent(settings()::setSendMode);
+        applyModeMcs();
+    }
+
+    private void selectMode(SendMode mode) {
+        (mode == SendMode.ONE_WAY ? oneWayRadio : twoWayRadio).setSelected(true);
     }
 
     private void applyModeMcs() {
@@ -264,12 +276,16 @@ final class SendPanel {
         }
         draft().setSelection(new SendSelection(existing, entry.deleted().stream().map(Path::of).toList()));
         applySnapshot(entry.snapshot());
+        if (settings().autoSend()) {
+            autoStart();
+        }
     }
 
     private void applySnapshot(SendSnapshot snapshot) {
         JBRadioButton radio = snapshot.mode() == SendMode.ONE_WAY ? oneWayRadio : twoWayRadio;
         if (radio.isEnabled()) {
             radio.setSelected(true);
+            applyModeMcs();
         }
         if (!perItemDestination && !snapshot.destination().isEmpty()) {
             destinationField.setText(snapshot.destination());

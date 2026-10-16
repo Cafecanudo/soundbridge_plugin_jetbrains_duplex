@@ -46,4 +46,14 @@ class SendModeTest {
         assertEquals(Optional.of(SendMode.TWO_WAY), SendMode.preferred(UNI, onlyBi));
         assertEquals(Optional.empty(), SendMode.preferred(BI, SendMode.calibrated(BI, UniProfile.EMPTY, Optional.empty())));
     }
+
+    @Test
+    void userChoiceWinsWhenCalibrated() {
+        Set<SendMode> both = Set.of(SendMode.ONE_WAY, SendMode.TWO_WAY);
+
+        assertEquals(Optional.of(SendMode.ONE_WAY), SendMode.preferred(BI, both, Optional.of(SendMode.ONE_WAY)));
+        assertEquals(Optional.of(SendMode.TWO_WAY), SendMode.preferred(BI, both, Optional.empty()));
+        assertEquals(Optional.of(SendMode.ONE_WAY),
+                SendMode.preferred(BI, Set.of(SendMode.ONE_WAY), Optional.of(SendMode.TWO_WAY)));
+    }
 }
