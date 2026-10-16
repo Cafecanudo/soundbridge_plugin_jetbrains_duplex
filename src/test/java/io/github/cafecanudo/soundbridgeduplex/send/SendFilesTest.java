@@ -7,10 +7,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SendFilesTest {
 
@@ -34,19 +32,6 @@ class SendFilesTest {
         Path gone = folder.resolve("old.txt");
 
         assertEquals(List.of(gone), SendFiles.expand(new SendSelection(List.of(), List.of(gone))).deletions());
-    }
-
-    @Test
-    void longGroupsAreSplitIntoSeveralCommands() {
-        List<Path> items = IntStream.range(0, 400).mapToObj(i -> folder.resolve("arquivo-" + i + "-" + "x".repeat(40)))
-                .toList();
-
-        List<SendJob> jobs = SendPlan.jobs(folder, items, path -> false, "");
-
-        assertTrue(jobs.size() > 1);
-        assertEquals(items, jobs.stream().flatMap(job -> job.items().stream()).toList());
-        jobs.forEach(job -> assertTrue(String.join(";", job.items().stream().map(Path::toString).toList()).length()
-                <= SendPlan.MAX_ITEMS_CHARS));
     }
 
     @Test

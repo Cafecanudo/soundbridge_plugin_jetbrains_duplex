@@ -27,7 +27,9 @@ os eventos `--json`.
 Botão direito em arquivos ou pastas no Project → **SoundBridge Enviar**. A Tool Window **SoundBridge** abre com os
 itens, o modo e os parâmetros do projeto; o formulário ajusta subpasta no destino, compressão e MCS só para
 aquele envio e mostra o comando que será executado. **Enviar** roda em background, com progresso, log e
-**Cancelar**; itens em pastas diferentes são enviados um destino por vez, mantendo a estrutura do projeto.
+**Cancelar**. Uma pasta selecionada aparece na lista com todos os seus arquivos (recursivo), e **cada arquivo é
+enviado num comando próprio** (encadeados com `--more`), mantendo a estrutura do projeto; o Histórico tem uma
+linha por arquivo.
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
 
 Na Tool Window **Commit** (e em Local Changes), o **SoundBridge Enviar** do menu das alterações abre uma janela

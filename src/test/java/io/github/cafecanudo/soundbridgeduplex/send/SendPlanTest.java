@@ -19,19 +19,21 @@ class SendPlanTest {
     private static final Set<Path> DIRECTORIES = Set.of(FOLDER);
 
     @Test
-    void sameFolderIsOneJobWithTypedDestination() {
+    void sameFolderIsOneCommandPerFileWithTypedDestination() {
         List<SendJob> jobs = SendPlan.jobs(BASE, List.of(FILE_A, FILE_B), DIRECTORIES::contains, "custom/dest");
 
-        assertEquals(List.of(new SendJob(List.of(FILE_A, FILE_B), "custom/dest")), jobs);
-        assertFalse(SendPlan.perItem(jobs));
+        assertEquals(List.of(new SendJob(List.of(FILE_A), "custom/dest"), new SendJob(List.of(FILE_B), "custom/dest")),
+                jobs);
+        assertFalse(SendPlan.perItemDestination(BASE, SendSelection.of(List.of(FILE_A, FILE_B)), DIRECTORIES::contains));
     }
 
     @Test
-    void differentFoldersAreOneJobPerDestination() {
+    void differentFoldersAreOneCommandPerFileWithItsDestination() {
         List<SendJob> jobs = SendPlan.jobs(BASE, List.of(FILE_A, FOLDER, FILE_B), DIRECTORIES::contains, "ignored");
 
-        assertEquals(List.of(new SendJob(List.of(FILE_A, FILE_B), "src/sss"), new SendJob(List.of(FOLDER), "src/outro")), jobs);
-        assertTrue(SendPlan.perItem(jobs));
+        assertEquals(List.of(new SendJob(List.of(FILE_A), "src/sss"), new SendJob(List.of(FILE_B), "src/sss"),
+                new SendJob(List.of(FOLDER), "src/outro")), jobs);
+        assertTrue(SendPlan.perItemDestination(BASE, SendSelection.of(List.of(FILE_A, FOLDER)), DIRECTORIES::contains));
     }
 
     @Test

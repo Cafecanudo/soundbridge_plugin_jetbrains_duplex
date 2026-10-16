@@ -172,11 +172,12 @@ final class SendPanel {
         calibrationService().removeObserver(calibrationObserver);
     }
 
-    private void showItems(SendSelection selection) {
+    private void showItems(SendSelection chosen) {
+        SendSelection selection = SendFiles.expand(chosen);
         itemsModel.clear();
         selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true)));
         selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false)));
-        perItemDestination = SendPlan.perItemDestination(projectBase(), SendFiles.expand(selection), Files::isDirectory);
+        perItemDestination = SendPlan.perItemDestination(projectBase(), selection, Files::isDirectory);
         destinationField.setEnabled(!perItemDestination);
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
                 : DestinationResolver.defaultDestination(projectBase(), selection.sends(), Files::isDirectory));
@@ -241,7 +242,7 @@ final class SendPanel {
         SoundBridgeProjectSettings settings = settings();
         ProjectConfig config = mode.get().applyTo(settings.config());
         String typed = perItemDestination ? "" : destinationField.getText();
-        List<SendJob> jobs = SendPlan.jobs(projectBase(), SendFiles.expand(selection), Files::isDirectory, typed);
+        List<SendJob> jobs = SendPlan.jobs(projectBase(), selection, Files::isDirectory, typed);
         List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
                 settings.calibrationProfile(), options(), jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
@@ -251,6 +252,7 @@ final class SendPanel {
 
     private void start() {
         request().ifPresent(request -> {
+            selectedMode().ifPresent(settings()::setSendMode);
             logArea.setText("");
             progressBar.setForeground(ProgressColors.PASSED);
             progressBar.setValue(0);

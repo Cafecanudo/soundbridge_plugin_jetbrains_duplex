@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Alterado
+- **Um comando por arquivo:** cada arquivo (e cada exclusão) vai num `--tx` próprio, encadeado com `--more`;
+  nenhum comando leva vários arquivos. Sai a divisão de listas longas, que deixou de ser necessária.
+- Pasta selecionada aparece na lista do formulário já expandida em todos os seus arquivos (recursivo). O campo de
+  subpasta continua editável quando todos estão na mesma pasta.
+
+### Corrigido
+- Modo de envio: além do clique em Uni/Bi, o modo usado em cada envio fica gravado no projeto.
+
 ## [1.0.4-SNAPSHOT] — 2026-10-16
 
 ### Alterado
