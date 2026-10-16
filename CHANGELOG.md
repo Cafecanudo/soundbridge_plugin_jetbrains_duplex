@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.5-SNAPSHOT] — 2026-10-16
+
 ### Alterado
 - **Um comando por arquivo:** cada arquivo (e cada exclusão) vai num `--tx` próprio, encadeado com `--more`;
   nenhum comando leva vários arquivos. Sai a divisão de listas longas, que deixou de ser necessária.
