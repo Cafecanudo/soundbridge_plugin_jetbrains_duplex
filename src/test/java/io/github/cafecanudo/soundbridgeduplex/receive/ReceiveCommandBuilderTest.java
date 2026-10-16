@@ -38,6 +38,12 @@ class ReceiveCommandBuilderTest {
     }
 
     @Test
+    void serveAddsFlagOnTwoWay() {
+        assertEquals(List.of("--rx", "C:/p", "--in", "v2yh", "--keep", "--out", "dq8f", "--serve"),
+                ReceiveCommandBuilder.arguments(CONFIG, new ReceiveOptions(true, "C:/p", true), Optional.empty()));
+    }
+
+    @Test
     void profileGoesOnlyWithTwoWay() {
         ProjectConfig withProfile = new ProjectConfig("python -m soundbridge", "dq8f", "v2yh", "C:/p", true, "casa");
 

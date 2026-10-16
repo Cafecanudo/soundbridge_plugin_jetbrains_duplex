@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Solicitar reenvio** no menu de botão direito do Histórico, para qualquer arquivo recebido (com OK ou falha):
+  o plugin manda `--tx NOME --dest SUB --request`, retoma (ou liga) o Recebimento e, quando o arquivo volta,
+  **atualiza a mesma linha** do Histórico; sem resposta em 2 min, avisa. O menu também tem Reenviar para os
+  enviados. No outro PC, **Atender pedidos de reenvio** no Recebimento (bi, ligado por padrão) passa `--serve`.
+  O Histórico guarda o caminho do manifesto (`remote_name`); entradas antigas usam o caminho relativo à pasta de
+  recepção. Exige `sb-duplex` com `--request`/`--serve` (próxima versão).
+
 ## [1.0.1-SNAPSHOT] — 2026-10-16
 
 ### Adicionado

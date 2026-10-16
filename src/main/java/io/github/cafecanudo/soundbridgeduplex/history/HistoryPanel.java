@@ -1,10 +1,13 @@
 package io.github.cafecanudo.soundbridgeduplex.history;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.JBMenuItem;
+import com.intellij.openapi.ui.JBPopupMenu;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBUI;
+import io.github.cafecanudo.soundbridgeduplex.receive.ResendRequestService;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -15,6 +18,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.table.TableColumn;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -44,6 +49,7 @@ public final class HistoryPanel {
         sizeColumns();
         table.getSelectionModel().addListSelectionListener(e -> updateButtons());
         resendButton.addActionListener(e -> selected().ifPresent(resend));
+        installPopup(resend);
         logButton.addActionListener(e -> selected().ifPresent(entry -> new HistoryLogDialog(project, entry).show()));
         clearButton.addActionListener(e -> confirmClear());
         history().addListener(historyListener);
@@ -71,6 +77,46 @@ public final class HistoryPanel {
             tableColumn.setMaxWidth(width * COLUMN_MAX_FACTOR);
             tableColumn.setPreferredWidth(width);
         }
+    }
+
+    private void installPopup(Consumer<HistoryEntry> resend) {
+        JBMenuItem resendItem = new JBMenuItem(message("history.resend"));
+        JBMenuItem requestItem = new JBMenuItem(message("history.request"));
+        resendItem.addActionListener(e -> selected().ifPresent(resend));
+        requestItem.addActionListener(e -> selected().ifPresent(entry -> requests().request(entry)));
+        JBPopupMenu popup = new JBPopupMenu();
+        popup.add(resendItem);
+        popup.add(requestItem);
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent event) {
+                showPopup(event);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent event) {
+                showPopup(event);
+            }
+
+            private void showPopup(MouseEvent event) {
+                if (!event.isPopupTrigger()) {
+                    return;
+                }
+                int row = table.rowAtPoint(event.getPoint());
+                if (row < 0) {
+                    return;
+                }
+                table.setRowSelectionInterval(row, row);
+                Optional<HistoryEntry> entry = selected();
+                resendItem.setEnabled(entry.filter(item -> item.direction() == Direction.SENT).isPresent());
+                requestItem.setEnabled(entry.filter(requests()::canRequest).isPresent());
+                popup.show(table, event.getX(), event.getY());
+            }
+        });
+    }
+
+    private ResendRequestService requests() {
+        return ResendRequestService.getInstance(project);
     }
 
     private void reload() {

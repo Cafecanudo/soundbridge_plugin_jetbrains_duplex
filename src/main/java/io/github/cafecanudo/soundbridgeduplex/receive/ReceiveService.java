@@ -184,7 +184,12 @@ public final class ReceiveService implements Disposable {
 
     private void received(ReceivedFile file) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
-        onUi(() -> SendHistory.getInstance(project).add(HistoryEntry.ofReceived(timestamp, file)));
+        HistoryEntry entry = HistoryEntry.ofReceived(timestamp, file);
+        onUi(() -> {
+            if (!ResendRequestService.getInstance(project).complete(file, entry)) {
+                SendHistory.getInstance(project).add(entry);
+            }
+        });
         if (file.ok() && !file.path().isEmpty()) {
             Path path = Path.of(file.path());
             SentRegistry.state(path).ifPresent(state ->

@@ -50,6 +50,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public int zipLevel = SendOptions.DEFAULT_ZIP_LEVEL;
         public List<String> history = new ArrayList<>();
         public boolean warnUnsentOnCommit = true;
+        public boolean serveRequests = true;
         public Map<String, String> sent = new HashMap<>();
     }
 
@@ -208,6 +209,14 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setHistory(List<String> entries) {
         state.history = new ArrayList<>(entries);
+    }
+
+    public boolean serveRequests() {
+        return state.serveRequests;
+    }
+
+    public void setServeRequests(boolean value) {
+        state.serveRequests = value;
     }
 
     public boolean warnUnsentOnCommit() {

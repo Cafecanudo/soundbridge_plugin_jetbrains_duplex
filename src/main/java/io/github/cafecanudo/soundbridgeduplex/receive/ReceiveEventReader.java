@@ -39,6 +39,7 @@ public final class ReceiveEventReader {
             case "progress" -> new Update(List.of(), ReceiveState.RECEIVING, progress(event), null);
             case "result" -> result(event);
             case "more_timeout" -> log(message("receive.log.moreTimeout"), ReceiveState.LISTENING);
+            case "serve" -> log(message("receive.log.serving", event.string("name").orElse("")), ReceiveState.SERVING);
             case "calibrate_stage" -> calibrationStage(event);
             case "calibrate_uni" -> oneWayResult(event);
             case "calibrate_forward" -> forward(event);
@@ -77,6 +78,10 @@ public final class ReceiveEventReader {
         }
         if (event.bool("test").orElse(false)) {
             return log(message("receive.log.test"), ReceiveState.LISTENING);
+        }
+        if (event.bool("request").orElse(false)) {
+            String served = event.string("served").orElse("");
+            return log(message("receive.log.served." + served, event.string("name").orElse("")), ReceiveState.LISTENING);
         }
         boolean ok = event.bool("ok").orElse(false);
         String name = event.string("name").orElse(currentName);

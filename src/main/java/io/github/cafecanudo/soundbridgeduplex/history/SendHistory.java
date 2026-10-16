@@ -30,6 +30,11 @@ public final class SendHistory {
         listeners.forEach(Runnable::run);
     }
 
+    public void replace(HistoryEntry old, HistoryEntry entry) {
+        settings().setHistory(HistoryLog.replace(settings().history(), old, entry));
+        listeners.forEach(Runnable::run);
+    }
+
     public void clear() {
         settings().setHistory(List.of());
         listeners.forEach(Runnable::run);

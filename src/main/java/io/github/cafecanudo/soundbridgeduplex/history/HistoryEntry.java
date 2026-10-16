@@ -30,7 +30,8 @@ public record HistoryEntry(
         Integer finalMcs,
         double seconds,
         SendStatus status,
-        List<String> log) {
+        List<String> log,
+        String remoteName) {
 
     public static final int MAX_LOG_LINES = 200;
 
@@ -50,11 +51,13 @@ public record HistoryEntry(
     private static final String SECONDS = "seconds";
     private static final String STATUS = "status";
     private static final String LOG = "log";
+    private static final String REMOTE_NAME = "remote_name";
 
     public HistoryEntry {
         items = List.copyOf(items);
         deleted = List.copyOf(deleted);
         log = List.copyOf(log.size() > MAX_LOG_LINES ? log.subList(log.size() - MAX_LOG_LINES, log.size()) : log);
+        remoteName = Objects.requireNonNullElse(remoteName, "");
     }
 
     public static HistoryEntry of(String timestamp, List<String> items, SendSnapshot snapshot, SendOutcome outcome,
@@ -68,7 +71,7 @@ public record HistoryEntry(
         Integer finalMcs = results.isEmpty() ? null : results.get(results.size() - 1).finalMcs();
         long size = results.stream().mapToLong(SendFileResult::size).sum();
         return new HistoryEntry(Direction.SENT, timestamp, items, deleted, snapshot, results.size(), (int) outcome.okCount(),
-                size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log);
+                size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log, "");
     }
 
     public static HistoryEntry ofReceived(String timestamp, ReceivedFile file) {
@@ -76,7 +79,7 @@ public record HistoryEntry(
                 null, null, false);
         String item = file.path().isEmpty() ? file.name() : file.path();
         return new HistoryEntry(Direction.RECEIVED, timestamp, List.of(item), List.of(), snapshot, 1, file.ok() ? 1 : 0,
-                file.size(), null, file.seconds(), file.ok() ? SendStatus.OK : SendStatus.FAILED, file.log());
+                file.size(), null, file.seconds(), file.ok() ? SendStatus.OK : SendStatus.FAILED, file.log(), file.name());
     }
 
     public String toJson() {
@@ -97,6 +100,7 @@ public record HistoryEntry(
         object.addProperty(SECONDS, seconds);
         object.addProperty(STATUS, status.name());
         object.add(LOG, strings(log));
+        object.addProperty(REMOTE_NAME, remoteName);
         return object.toString();
     }
 
@@ -111,7 +115,7 @@ public record HistoryEntry(
             return Optional.of(new HistoryEntry(direction, o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
                     deleted, snapshot, o.get(FILES).getAsInt(), o.get(OK_FILES).getAsInt(), o.get(SIZE).getAsLong(),
                     integer(o, FINAL_MCS), o.get(SECONDS).getAsDouble(), SendStatus.valueOf(o.get(STATUS).getAsString()),
-                    strings(o.getAsJsonArray(LOG))));
+                    strings(o.getAsJsonArray(LOG)), o.has(REMOTE_NAME) ? o.get(REMOTE_NAME).getAsString() : ""));
         } catch (JsonParseException | IllegalStateException | IllegalArgumentException | NullPointerException e) {
             return Optional.empty();
         }

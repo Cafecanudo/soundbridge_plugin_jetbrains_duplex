@@ -77,6 +77,9 @@ class HistoryTest {
         assertEquals(Direction.RECEIVED, received.direction());
         assertEquals(List.of("C:/p/src/Main.java"), received.items());
         assertEquals(received, HistoryEntry.fromJson(received.toJson()).orElseThrow());
+        assertEquals(file.name(), received.remoteName());
+        String withoutName = received.toJson().replace(",\"remote_name\":\"" + file.name() + "\"", "");
+        assertEquals("", HistoryEntry.fromJson(withoutName).orElseThrow().remoteName());
         String legacy = entry("t", new SendOutcome(FILES, 1.0, false, null)).toJson().replace("\"direction\":\"SENT\",", "");
         assertEquals(Direction.SENT, HistoryEntry.fromJson(legacy).orElseThrow().direction());
     }

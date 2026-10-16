@@ -7,6 +7,7 @@ public enum ReceiveState {
     LISTENING,
     RECEIVING,
     CALIBRATING,
+    SERVING,
     PAUSED;
 
     public String label() {
@@ -15,6 +16,7 @@ public enum ReceiveState {
             case LISTENING -> message("receive.state.listening");
             case RECEIVING -> message("receive.state.receiving");
             case CALIBRATING -> message("receive.state.calibrating");
+            case SERVING -> message("receive.state.serving");
             case PAUSED -> message("receive.state.paused");
         };
     }

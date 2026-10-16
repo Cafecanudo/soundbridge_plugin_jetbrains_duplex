@@ -92,6 +92,12 @@ class SendCommandBuilderTest {
                 "--zip-level", "6", "--force-repl"), commands.get(1));
     }
 
+    @Test
+    void requestUsesLinkOptionsDestinationAndRequestFlag() {
+        assertEquals(List.of("--tx", "Main.java", "--out", "dq8f", "--dest", "src", "--request"),
+                SendCommandBuilder.requestArguments(UNI, UniProfile.EMPTY, Optional.empty(), Path.of("Main.java"), "src"));
+    }
+
     private static SendOptions withMcs(int value) {
         return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value), false);
     }

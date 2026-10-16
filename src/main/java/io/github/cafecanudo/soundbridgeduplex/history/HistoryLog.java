@@ -18,6 +18,17 @@ public final class HistoryLog {
         return updated;
     }
 
+    public static List<String> replace(List<String> stored, HistoryEntry old, HistoryEntry entry) {
+        List<String> updated = new ArrayList<>(stored);
+        for (int i = 0; i < updated.size(); i++) {
+            if (HistoryEntry.fromJson(updated.get(i)).filter(old::equals).isPresent()) {
+                updated.set(i, entry.toJson());
+                return updated;
+            }
+        }
+        return add(stored, entry);
+    }
+
     public static List<HistoryEntry> read(List<String> stored) {
         return stored.stream().map(HistoryEntry::fromJson).flatMap(Optional::stream).toList();
     }

@@ -55,6 +55,11 @@ notificação.
 PC; no **bi** responde à calibração completa e mostra chegada, saída e o perfil onde foi gravada (com
 `--calibrate-save` no outro PC). O resultado fica em "Última calibração".
 
+**Solicitar reenvio** (botão direito num recebido do Histórico, com OK ou falha) pede o arquivo de volta ao outro
+PC, que precisa estar com o Recebimento em **bi** e **Atender pedidos de reenvio** marcado. O outro PC espera
+alguns segundos e devolve o arquivo; aqui o Recebimento retoma (ou liga sozinho) e a mesma linha do Histórico é
+atualizada com o resultado.
+
 ## Compatibilidade
 
 - Todas as IDEs JetBrains (depende só de `com.intellij.modules.platform`).

@@ -17,6 +17,7 @@ public final class SendCommandBuilder {
     private static final String MORE_FLAG = "--more";
     private static final String REPLACE_FLAG = "--force-repl";
     private static final String DELETE_FLAG = "--delete";
+    private static final String REQUEST_FLAG = "--request";
 
     private SendCommandBuilder() {
     }
@@ -37,6 +38,14 @@ public final class SendCommandBuilder {
         List<String> arguments = linkArguments(config, uniProfile, biProfile, mcs, job.items());
         addOption(arguments, "--dest", job.destination());
         arguments.add(DELETE_FLAG);
+        return arguments;
+    }
+
+    public static List<String> requestArguments(ProjectConfig config, UniProfile uniProfile,
+                                                Optional<CalibrationProfile> biProfile, Path item, String destination) {
+        List<String> arguments = linkArguments(config, uniProfile, biProfile, McsSelection.AUTO, List.of(item));
+        addOption(arguments, "--dest", destination);
+        arguments.add(REQUEST_FLAG);
         return arguments;
     }
 

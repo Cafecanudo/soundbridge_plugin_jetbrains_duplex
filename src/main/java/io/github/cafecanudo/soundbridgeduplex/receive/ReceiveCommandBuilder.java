@@ -22,6 +22,9 @@ public final class ReceiveCommandBuilder {
                 arguments.add("--profile");
                 arguments.add(config.profile().strip());
             }
+            if (options.serve()) {
+                arguments.add("--serve");
+            }
             ackPeak(config, biProfile).ifPresent(peak -> {
                 arguments.add("--ack-peak");
                 arguments.add(peak.toString());

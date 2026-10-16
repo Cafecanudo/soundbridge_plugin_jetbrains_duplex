@@ -100,6 +100,20 @@ class ReceiveEventReaderTest {
     }
 
     @Test
+    void servedRequestIsLoggedAndIsNotAReceivedFile() {
+        ReceiveEventReader reader = new ReceiveEventReader();
+
+        ReceiveEventReader.Update serving = reader.read(event("{\"schema\": 2, \"event\": \"serve\", "
+                + "\"name\": \"src/Main.java\", \"path\": \"C:/p/src/Main.java\", \"size\": 10, \"bidirectional\": true}"));
+        ReceiveEventReader.Update result = reader.read(event("{\"schema\": 2, \"event\": \"result\", \"side\": \"rx\", "
+                + "\"ok\": true, \"request\": true, \"served\": \"sent\", \"name\": \"src/Main.java\"}"));
+
+        assertEquals(ReceiveState.SERVING, serving.state());
+        assertNull(result.received());
+        assertEquals(List.of("pedido de reenvio atendido: src/Main.java"), result.log());
+    }
+
+    @Test
     void choiceAsTextFromOldCliHasNoDetails() {
         ReceiveEventReader.Update update = new ReceiveEventReader().read(event("{\"schema\": 2, \"event\": "
                 + "\"calibrate_backward\", \"choice\": \"LinkChoice(peak=0.5)\", \"saved\": false, \"profile\": null, "
