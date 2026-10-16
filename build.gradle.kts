@@ -39,6 +39,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.processResources {
+    val pluginVersion = project.version.toString()
+    inputs.property("pluginVersion", pluginVersion)
+    filesMatching("**/plugin-info.properties") {
+        expand("pluginVersion" to pluginVersion)
+    }
+}
+
 intellijPlatform {
     pluginConfiguration {
         version = providers.gradleProperty("pluginVersion")

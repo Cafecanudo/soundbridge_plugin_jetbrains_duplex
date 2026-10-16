@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
+## [1.0.1-SNAPSHOT] — 2026-10-16
+
 ### Adicionado
+- **Versões** no topo de *Settings > Tools > SoundBridge*: versão do plugin (gravada no build pelo Gradle) e do
+  SoundBridge (`--version`, conferida ao abrir e no Testar; "não encontrado" se o comando falhar).
 - **Calibrar** no Recebimento, ao lado de Receber: escuta uma calibração iniciada no outro PC e para sozinho no
   fim. Uni mede só a ida (mono, banda, pico, MCS) com **Copiar parâmetros** para o TX do outro PC; bi responde à
   calibração completa e mostra chegada, saída (com os testes) e o perfil onde foi gravada. A escuta normal

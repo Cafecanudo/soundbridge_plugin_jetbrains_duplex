@@ -19,6 +19,7 @@ import com.intellij.util.ui.UIUtil;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationOptions;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
+import io.github.cafecanudo.soundbridgeduplex.PluginInfo;
 import io.github.cafecanudo.soundbridgeduplex.client.DevicesDocument;
 import io.github.cafecanudo.soundbridgeduplex.client.LinkProfile;
 import io.github.cafecanudo.soundbridgeduplex.client.SoundBridgeClient;
@@ -121,7 +122,7 @@ final class SoundBridgeSettingsPanel {
         inputCombo.show(List.of(), config.input());
         directoryField.setText(config.receiveDirectory());
         calibration.setBidirectional(config.bidirectional());
-        versionLabel.setText("");
+        checkVersion(false);
         refreshDevices();
     }
 
@@ -154,19 +155,29 @@ final class SoundBridgeSettingsPanel {
 
     private void testLauncher() {
         clearError();
-        versionLabel.setText(message("settings.version.running"));
+        checkVersion(true);
+    }
+
+    private void checkVersion(boolean reportError) {
+        showVersions(message("settings.version.running"));
         testButton.setEnabled(false);
         SoundBridgeClient client = new SoundBridgeClient(launcherField.getText().strip());
         BackgroundTask.run(client::version,
                 version -> {
                     testButton.setEnabled(true);
-                    versionLabel.setText(version);
+                    showVersions(version);
                 },
                 error -> {
                     testButton.setEnabled(true);
-                    versionLabel.setText("");
-                    showError(error);
+                    showVersions(message("settings.versions.notFound"));
+                    if (reportError) {
+                        showError(error);
+                    }
                 });
+    }
+
+    private void showVersions(String script) {
+        versionLabel.setText(message("settings.versions.value", PluginInfo.version(), script));
     }
 
     private void showProfiles(List<LinkProfile> available, String selected) {
@@ -230,9 +241,10 @@ final class SoundBridgeSettingsPanel {
 
     private JPanel buildLayout() {
         JPanel form = FormBuilder.createFormBuilder()
+                .addLabeledComponent(message("settings.versions"), versionLabel)
+                .addSeparator()
                 .addLabeledComponent(message("settings.launcher"), row(launcherField, testButton))
                 .addComponentToRightColumn(hint(message("settings.launcher.hint")))
-                .addComponentToRightColumn(versionLabel)
                 .addSeparator()
                 .addLabeledComponent(message("settings.profile"), profileCombo)
                 .addComponentToRightColumn(hint(message("settings.profile.hint")))
