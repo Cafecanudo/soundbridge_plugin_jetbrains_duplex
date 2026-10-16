@@ -40,7 +40,7 @@ apagados aparecem com ✕, e o Reenviar repete as exclusões. Exige `sb-duplex` 
 No commit, o plugin avisa o que ainda não foi enviado: cada envio OK grava o conteúdo enviado (SHA-256 por
 arquivo, ou "apagado"), e cada arquivo recebido também conta. Se uma alteração do commit difere do registro,
 a mesma janela mostra todas as alterações do projeto (com os não versionados) e marca as não enviadas do commit, e oferece **Enviar e comitar**
-(envia o que estiver marcado), **Comitar assim mesmo** e **Cancelar**. Liga e desliga em *Settings > Tools > SoundBridge* (ligado por padrão;
+(envia o que estiver marcado), **Comitar assim mesmo** e **Cancelar**, além de **Não mostrar novamente**. Liga e desliga em *Settings > Tools > SoundBridge* (ligado por padrão;
 só avisa com a saída configurada). No unidirecional, OK quer dizer enviado, sem confirmação do RX.
 
 ## Recebimento

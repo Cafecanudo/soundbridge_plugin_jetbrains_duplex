@@ -41,6 +41,9 @@ final class UnsentCheckinHandler extends CheckinHandler {
         ChangesSendDialog dialog = new ChangesSendDialog(project, ChangesSendDialog.Mode.COMMIT, all,
                 ProjectChanges.matching(all, unsent));
         dialog.show();
+        if (dialog.dontShowAgain() && dialog.getExitCode() != ChangesSendDialog.CANCEL_EXIT_CODE) {
+            settings.setWarnUnsentOnCommit(false);
+        }
         if (dialog.isOK()) {
             SendAction.send(project, dialog.selection());
             return ReturnResult.COMMIT;

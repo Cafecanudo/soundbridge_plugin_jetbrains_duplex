@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Adicionado
+- **Não mostrar novamente** na janela do aviso no commit (vale ao comitar ou enviar; Cancelar ignora); para voltar
+  a mostrar, *Settings > Tools > SoundBridge > Avisar no commit alterações não enviadas*.
 - Aviso no commit de alterações não enviadas (`CheckinHandlerFactory`, na dependência opcional do VCS): cada
   comando de envio OK grava o SHA-256 de cada arquivo enviado (pastas expandidas) ou "apagado"; arquivos
   recebidos também entram. No commit, uma janela com a árvore de alterações (`SimpleAsyncChangesBrowser`, com

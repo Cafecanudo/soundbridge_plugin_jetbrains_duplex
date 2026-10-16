@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ui.SimpleAsyncChangesBrowser;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.JBUI;
 import io.github.cafecanudo.soundbridgeduplex.send.SendSelection;
@@ -31,6 +32,7 @@ final class ChangesSendDialog extends DialogWrapper {
     private final Mode mode;
     private final SimpleAsyncChangesBrowser browser;
     private final JBLabel header = new JBLabel();
+    private final JBCheckBox dontShowCheck = new JBCheckBox(message("changes.dialog.dontShow"));
     private final List<Change> initial;
     private boolean touched;
 
@@ -48,6 +50,10 @@ final class ChangesSendDialog extends DialogWrapper {
         updateState();
     }
 
+    boolean dontShowAgain() {
+        return dontShowCheck.isSelected();
+    }
+
     SendSelection selection() {
         return SendSelection.fromChanges(ChangePaths.of(included()), List.of());
     }
@@ -58,6 +64,17 @@ final class ChangesSendDialog extends DialogWrapper {
         JPanel panel = new JPanel(new BorderLayout(0, JBUI.scale(GAP)));
         panel.add(header, BorderLayout.NORTH);
         panel.add(browser, BorderLayout.CENTER);
+        return panel;
+    }
+
+    @Override
+    protected JPanel createSouthAdditionalPanel() {
+        if (mode != Mode.COMMIT) {
+            return null;
+        }
+        dontShowCheck.setToolTipText(message("changes.dialog.dontShow.tooltip"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(dontShowCheck, BorderLayout.WEST);
         return panel;
     }
 
