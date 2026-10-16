@@ -94,8 +94,8 @@ public final class SendService {
 
     void finish(SendRequest request, SendOutcome outcome) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
-        SendHistory.getInstance(project).add(HistoryEntry.of(timestamp, request.itemLabels(), request.snapshot(),
-                outcome, log()));
+        SendHistory.getInstance(project).add(HistoryEntry.of(timestamp, request.itemLabels(), request.deletedLabels(),
+                request.snapshot(), outcome, log()));
         indicator.set(null);
         running.set(false);
         notifyRunning(false);

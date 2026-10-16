@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
@@ -26,6 +27,12 @@ public final class HistoryFormat {
 
     public static String items(List<String> items) {
         return items.stream().map(HistoryFormat::fileName).collect(Collectors.joining(ITEM_SEPARATOR));
+    }
+
+    public static String items(List<String> items, List<String> deleted) {
+        return Stream.concat(deleted.stream().map(item -> message("history.items.deleted", fileName(item))),
+                        items.stream().map(HistoryFormat::fileName))
+                .collect(Collectors.joining(ITEM_SEPARATOR));
     }
 
     private static String fileName(String item) {

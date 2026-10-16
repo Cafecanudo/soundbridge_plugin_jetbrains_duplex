@@ -65,8 +65,8 @@ final class SendPanel {
     private static final String PART_SEPARATOR = " · ";
 
     private final Project project;
-    private final DefaultListModel<Path> itemsModel = new DefaultListModel<>();
-    private final JBList<Path> itemsList = new JBList<>(itemsModel);
+    private final DefaultListModel<SendItem> itemsModel = new DefaultListModel<>();
+    private final JBList<SendItem> itemsList = new JBList<>(itemsModel);
     private final JBRadioButton oneWayRadio = new JBRadioButton(message("send.mode.uni"));
     private final JBRadioButton twoWayRadio = new JBRadioButton(message("send.mode.bi"));
     private final ButtonGroup modeGroup = new ButtonGroup();
@@ -91,7 +91,7 @@ final class SendPanel {
     private final JBTextArea logArea = new JBTextArea(LOG_ROWS, 0);
     private final JBScrollPane commandScroll = new JBScrollPane(commandArea);
     private final JBScrollPane logScroll = new JBScrollPane(logArea);
-    private final Consumer<List<Path>> draftListener = this::showItems;
+    private final Consumer<SendSelection> draftListener = this::showItems;
     private final Consumer<HistoryEntry> resendListener = entry -> {
         draft().consumeResend();
         resend(entry);
@@ -154,7 +154,7 @@ final class SendPanel {
         updateVisibility();
         root.addAncestorListener(onShown(this::applySettings));
         sendService().log().forEach(this::appendLog);
-        showItems(draft().items());
+        showItems(draft().selection());
         HistoryEntry pending = draft().consumeResend();
         if (pending != null) {
             resend(pending);
@@ -172,13 +172,14 @@ final class SendPanel {
         calibrationService().removeObserver(calibrationObserver);
     }
 
-    private void showItems(List<Path> items) {
+    private void showItems(SendSelection selection) {
         itemsModel.clear();
-        items.forEach(itemsModel::addElement);
-        perItemDestination = SendPlan.perItem(SendPlan.jobs(projectBase(), items, Files::isDirectory, ""));
+        selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true)));
+        selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false)));
+        perItemDestination = SendPlan.perItemDestination(projectBase(), selection, Files::isDirectory);
         destinationField.setEnabled(!perItemDestination);
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
-                : DestinationResolver.defaultDestination(projectBase(), items, Files::isDirectory));
+                : DestinationResolver.defaultDestination(projectBase(), selection.sends(), Files::isDirectory));
         applySettings();
         if (draft().consumeAutoSendRequest() && settings().autoSend()) {
             autoStart();
@@ -215,25 +216,25 @@ final class SendPanel {
         parametersLabel.setText(selectedMode().map(mode -> describe(parameters(mode)))
                 .orElse(message("send.parameters.none")));
         commandArea.setText(request().map(SendPanel::preview)
-                .orElse(message(currentItems().isEmpty() ? "send.items.empty" : "send.mode.none")));
+                .orElse(message(currentSelection().isEmpty() ? "send.items.empty" : "send.mode.none")));
         updateButtons();
     }
 
     private Optional<SendRequest> request() {
         Optional<SendMode> mode = selectedMode();
-        List<Path> items = currentItems();
-        if (items.isEmpty() || mode.isEmpty()) {
+        SendSelection selection = currentSelection();
+        if (selection.isEmpty() || mode.isEmpty()) {
             return Optional.empty();
         }
         SoundBridgeProjectSettings settings = settings();
         ProjectConfig config = mode.get().applyTo(settings.config());
         String typed = perItemDestination ? "" : destinationField.getText();
-        List<SendJob> jobs = SendPlan.jobs(projectBase(), items, Files::isDirectory, typed);
+        List<SendJob> jobs = SendPlan.jobs(projectBase(), selection, Files::isDirectory, typed);
         List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
                 settings.calibrationProfile(), options(), jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
-        return Optional.of(new SendRequest(config.launcher(), commands, items.stream().map(Path::toString).toList(),
-                snapshot));
+        return Optional.of(new SendRequest(config.launcher(), commands, QuickSend.labels(selection.sends()),
+                QuickSend.labels(selection.deletions()), snapshot));
     }
 
     private void start() {
@@ -261,7 +262,7 @@ final class SendPanel {
         if (missing > 0) {
             sendService().notifyUser(message("history.resend.missing", missing), NotificationType.WARNING);
         }
-        draft().setItems(existing);
+        draft().setSelection(new SendSelection(existing, entry.deleted().stream().map(Path::of).toList()));
         applySnapshot(entry.snapshot());
     }
 
@@ -283,7 +284,7 @@ final class SendPanel {
     private void updateButtons() {
         boolean sending = sendService().isRunning();
         boolean calibrating = calibrationService().isRunning();
-        sendButton.setEnabled(!sending && !calibrating && selectedMode().isPresent() && !currentItems().isEmpty());
+        sendButton.setEnabled(!sending && !calibrating && selectedMode().isPresent() && !currentSelection().isEmpty());
         cancelButton.setEnabled(sending);
     }
 
@@ -335,12 +336,14 @@ final class SendPanel {
                 replaceCheck.isSelected());
     }
 
-    private List<Path> currentItems() {
-        List<Path> items = new ArrayList<>();
+    private SendSelection currentSelection() {
+        List<Path> sends = new ArrayList<>();
+        List<Path> deletions = new ArrayList<>();
         for (int i = 0; i < itemsModel.size(); i++) {
-            items.add(itemsModel.get(i));
+            SendItem item = itemsModel.get(i);
+            (item.delete() ? deletions : sends).add(item.path());
         }
-        return items;
+        return new SendSelection(sends, deletions);
     }
 
     private Path projectBase() {

@@ -38,4 +38,17 @@ class SendPlanTest {
     void noItemsNoJobs() {
         assertEquals(List.of(), SendPlan.jobs(BASE, List.of(), DIRECTORIES::contains, ""));
     }
+
+    @Test
+    void deletionsComeFirstAndForcePerItemDestinations() {
+        Path gone = BASE.resolve("lib/old.java");
+        SendSelection selection = new SendSelection(List.of(FILE_A), List.of(gone, FILE_B));
+
+        List<SendJob> jobs = SendPlan.jobs(BASE, selection, DIRECTORIES::contains, "ignored");
+
+        assertEquals(List.of(new SendJob(List.of(gone), "lib", true), new SendJob(List.of(FILE_B), "src/sss", true),
+                new SendJob(List.of(FILE_A), "src/sss")), jobs);
+        assertTrue(SendPlan.perItemDestination(BASE, selection, DIRECTORIES::contains));
+        assertFalse(SendPlan.perItemDestination(BASE, SendSelection.of(List.of(FILE_A)), DIRECTORIES::contains));
+    }
 }

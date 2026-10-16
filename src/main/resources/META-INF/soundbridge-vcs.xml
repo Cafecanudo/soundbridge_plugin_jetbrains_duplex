@@ -1,0 +1,10 @@
+<idea-plugin>
+    <actions>
+        <action
+                id="SoundBridge.SendChanges"
+                class="io.github.cafecanudo.soundbridgeduplex.vcs.ChangesSendAction"
+                icon="AllIcons.Actions.Upload">
+            <add-to-group group-id="ChangesViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

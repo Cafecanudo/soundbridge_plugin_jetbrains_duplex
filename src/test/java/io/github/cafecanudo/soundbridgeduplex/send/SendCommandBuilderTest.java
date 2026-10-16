@@ -78,6 +78,20 @@ class SendCommandBuilderTest {
         assertEquals(List.of("--tx", Path.of("C:/p/lib").toString(), "--out", "dq8f", "--dest", "lib"), commands.get(1));
     }
 
+    @Test
+    void deleteJobsUseDeleteFlagWithoutCompressionOrReplace() {
+        List<SendJob> jobs = List.of(new SendJob(List.of(Path.of("C:/p/src/old.java")), "src", true),
+                new SendJob(List.of(Path.of("C:/p/src/a.java")), "src"));
+        SendOptions options = new SendOptions("", 6, McsSelection.AUTO, true);
+
+        List<List<String>> commands = SendCommandBuilder.commands(UNI, UniProfile.EMPTY, Optional.empty(), options, jobs);
+
+        assertEquals(List.of("--tx", Path.of("C:/p/src/old.java").toString(), "--out", "dq8f", "--dest", "src",
+                "--delete", "--more"), commands.get(0));
+        assertEquals(List.of("--tx", Path.of("C:/p/src/a.java").toString(), "--out", "dq8f", "--dest", "src",
+                "--zip-level", "6", "--force-repl"), commands.get(1));
+    }
+
     private static SendOptions withMcs(int value) {
         return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value), false);
     }

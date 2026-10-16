@@ -30,6 +30,12 @@ aquele envio e mostra o comando que será executado. **Enviar** roda em backgrou
 **Cancelar**; itens em pastas diferentes são enviados um destino por vez, mantendo a estrutura do projeto.
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
 
+Na Tool Window **Commit** (e em Local Changes), o mesmo **SoundBridge Enviar** aparece no menu das alterações:
+arquivos novos e modificados são enviados; **apagados** viram `--delete` (o RX apaga o arquivo de mesmo caminho,
+de vez); **renomeados ou movidos** apagam o caminho antigo e enviam o novo. As exclusões vão primeiro e o
+destino é sempre o caminho no projeto (campo de subpasta travado). No formulário e no Histórico os itens
+apagados aparecem com ✕, e o Reenviar repete as exclusões. Exige `sb-duplex` 1.4.0b0.
+
 ## Recebimento
 
 Na seção **Recebimento** da Tool Window, **Receber** deixa o SoundBridge escutando na pasta de recepção do

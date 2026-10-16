@@ -82,10 +82,21 @@ class HistoryTest {
     }
 
     @Test
+    void deletedItemsRoundTripAndLegacyEntriesHaveNone() {
+        HistoryEntry entry = HistoryEntry.of("t", List.of("C:/p/a.txt"), List.of("C:/p/old.java"), SNAPSHOT,
+                new SendOutcome(FILES, 1.0, false, null), List.of());
+
+        assertEquals(entry, HistoryEntry.fromJson(entry.toJson()).orElseThrow());
+        String legacy = entry.toJson().replace("\"deleted\":[\"C:/p/old.java\"],", "");
+        assertEquals(List.of(), HistoryEntry.fromJson(legacy).orElseThrow().deleted());
+    }
+
+    @Test
     void formatsColumns() {
         assertEquals("2026-10-10 14:32", HistoryFormat.date("2026-10-10 14:32:05"));
         assertEquals("a.txt, b.txt", HistoryFormat.items(List.of("C:/p/a.txt", "C:/p/b.txt")));
         assertEquals("YTr.java", HistoryFormat.items(List.of("C:/p/YTr.java")));
+        assertEquals("✕ old.java, a.txt", HistoryFormat.items(List.of("C:/p/a.txt"), List.of("C:/p/old.java")));
         assertEquals("512 B", HistoryFormat.size(512));
         assertEquals("2.0 KB", HistoryFormat.size(2048));
         assertEquals("1.5 MB", HistoryFormat.size(1572864));

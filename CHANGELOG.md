@@ -3,6 +3,11 @@
 ## [Unreleased]
 
 ### Adicionado
+- **SoundBridge Enviar** no menu das alterações da Tool Window Commit e do Local Changes (dependência opcional
+  `com.intellij.modules.vcs`): novos e modificados são enviados; apagados viram `--delete` no RX; renomeados ou
+  movidos apagam o caminho antigo e enviam o novo. Exclusões primeiro (renomeação só de maiúsculas no
+  Windows), agrupadas por destino, com destino sempre por item. Formulário e Histórico mostram os apagados com
+  ✕; o Reenviar repete as exclusões. Exige `sb-duplex` 1.4.0b0.
 - Perfil do SoundBridge no Settings (lista **Perfil** acima de **Entrada** e **Saída**): o plugin não cria perfis,
   só usa os existentes (`--save-profile` no SoundBridge). Escolher um perfil preenche entrada e saída; o envio
   passa `--profile NOME` (o RX escolhe a pasta pelo perfil). O leitor do `--list-devices` aceita o `schema` 2

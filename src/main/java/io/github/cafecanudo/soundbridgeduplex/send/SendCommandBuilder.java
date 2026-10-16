@@ -16,31 +16,27 @@ public final class SendCommandBuilder {
     private static final String ITEM_SEPARATOR = ";";
     private static final String MORE_FLAG = "--more";
     private static final String REPLACE_FLAG = "--force-repl";
+    private static final String DELETE_FLAG = "--delete";
 
     private SendCommandBuilder() {
     }
 
     public static List<String> arguments(ProjectConfig config, UniProfile uniProfile,
                                          Optional<CalibrationProfile> biProfile, SendOptions options, List<Path> items) {
-        List<String> arguments = new ArrayList<>();
-        arguments.add("--tx");
-        arguments.add(items.stream().map(Path::toString).collect(Collectors.joining(ITEM_SEPARATOR)));
-        addOption(arguments, "--out", config.output());
-        addOption(arguments, "--profile", config.profile());
-        if (config.bidirectional()) {
-            arguments.add("--bi");
-            addOption(arguments, "--in", config.input());
-        }
-        UniProfile parameters = txParameters(config, uniProfile, biProfile);
-        arguments.addAll(withMcs(parameters, options.mcs()).arguments());
-        if (options.mcs().kind() == McsSelection.Kind.AUTO && parameters.mcs() != null) {
-            arguments.add("--auto");
-        }
+        List<String> arguments = linkArguments(config, uniProfile, biProfile, options.mcs(), items);
         addOption(arguments, "--dest", options.destination());
         addCompression(arguments, options);
         if (options.replaceExisting()) {
             arguments.add(REPLACE_FLAG);
         }
+        return arguments;
+    }
+
+    public static List<String> deleteArguments(ProjectConfig config, UniProfile uniProfile,
+                                               Optional<CalibrationProfile> biProfile, McsSelection mcs, SendJob job) {
+        List<String> arguments = linkArguments(config, uniProfile, biProfile, mcs, job.items());
+        addOption(arguments, "--dest", job.destination());
+        arguments.add(DELETE_FLAG);
         return arguments;
     }
 
@@ -52,7 +48,9 @@ public final class SendCommandBuilder {
             SendJob job = jobs.get(i);
             SendOptions jobOptions = new SendOptions(job.destination(), options.zipLevel(), options.mcs(),
                     options.replaceExisting());
-            List<String> arguments = arguments(config, uniProfile, biProfile, jobOptions, job.items());
+            List<String> arguments = job.delete()
+                    ? deleteArguments(config, uniProfile, biProfile, options.mcs(), job)
+                    : arguments(config, uniProfile, biProfile, jobOptions, job.items());
             if (i < jobs.size() - 1) {
                 arguments.add(MORE_FLAG);
             }
@@ -72,6 +70,26 @@ public final class SendCommandBuilder {
                 .filter(LinkChoice::isUsable)
                 .map(choice -> new UniProfile(choice.mono(), choice.bandHighHz(), choice.peak(), choice.mcs()))
                 .orElse(UniProfile.EMPTY);
+    }
+
+    private static List<String> linkArguments(ProjectConfig config, UniProfile uniProfile,
+                                              Optional<CalibrationProfile> biProfile, McsSelection mcs,
+                                              List<Path> items) {
+        List<String> arguments = new ArrayList<>();
+        arguments.add("--tx");
+        arguments.add(items.stream().map(Path::toString).collect(Collectors.joining(ITEM_SEPARATOR)));
+        addOption(arguments, "--out", config.output());
+        addOption(arguments, "--profile", config.profile());
+        if (config.bidirectional()) {
+            arguments.add("--bi");
+            addOption(arguments, "--in", config.input());
+        }
+        UniProfile parameters = txParameters(config, uniProfile, biProfile);
+        arguments.addAll(withMcs(parameters, mcs).arguments());
+        if (mcs.kind() == McsSelection.Kind.AUTO && parameters.mcs() != null) {
+            arguments.add("--auto");
+        }
+        return arguments;
     }
 
     private static UniProfile withMcs(UniProfile parameters, McsSelection selection) {

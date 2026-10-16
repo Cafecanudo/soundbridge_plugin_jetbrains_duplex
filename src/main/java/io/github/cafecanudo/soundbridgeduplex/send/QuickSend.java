@@ -19,7 +19,7 @@ final class QuickSend {
     private QuickSend() {
     }
 
-    static void run(Project project, List<Path> items) {
+    static void run(Project project, SendSelection selection) {
         SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
         ProjectConfig config = settings.config();
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
@@ -31,17 +31,22 @@ final class QuickSend {
         }
         ProjectConfig effective = mode.get().applyTo(config);
         Path base = projectBase(project);
-        String destination = DestinationResolver.defaultDestination(base, items, Files::isDirectory);
-        List<SendJob> jobs = SendPlan.jobs(base, items, Files::isDirectory, destination);
+        boolean perItem = SendPlan.perItemDestination(base, selection, Files::isDirectory);
+        String destination = perItem ? "" : DestinationResolver.defaultDestination(base, selection.sends(), Files::isDirectory);
+        List<SendJob> jobs = SendPlan.jobs(base, selection, Files::isDirectory, destination);
         UniProfile parameters = SendCommandBuilder.txParameters(effective, settings.uniProfile(),
                 settings.calibrationProfile());
         SendOptions options = new SendOptions("", settings.zipLevel(), McsSelection.of(parameters.mcs()),
                 settings.replaceExisting());
         List<List<String>> commands = SendCommandBuilder.commands(effective, settings.uniProfile(),
                 settings.calibrationProfile(), options, jobs);
-        SendSnapshot snapshot = SendSnapshot.of(mode.get(), SendPlan.perItem(jobs) ? "" : destination, options);
-        service.start(new SendRequest(effective.launcher(), commands, items.stream().map(Path::toString).toList(),
-                snapshot));
+        SendSnapshot snapshot = SendSnapshot.of(mode.get(), destination, options);
+        service.start(new SendRequest(effective.launcher(), commands, labels(selection.sends()),
+                labels(selection.deletions()), snapshot));
+    }
+
+    static List<String> labels(List<Path> paths) {
+        return paths.stream().map(Path::toString).toList();
     }
 
     private static Path projectBase(Project project) {

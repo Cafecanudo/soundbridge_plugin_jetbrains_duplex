@@ -22,6 +22,7 @@ public record HistoryEntry(
         Direction direction,
         String timestamp,
         List<String> items,
+        List<String> deleted,
         SendSnapshot snapshot,
         int files,
         int okFiles,
@@ -36,6 +37,7 @@ public record HistoryEntry(
     private static final String DIRECTION = "direction";
     private static final String TIMESTAMP = "timestamp";
     private static final String ITEMS = "items";
+    private static final String DELETED = "deleted";
     private static final String MODE = "mode";
     private static final String DESTINATION = "destination";
     private static final String ZIP_LEVEL = "zip_level";
@@ -51,15 +53,21 @@ public record HistoryEntry(
 
     public HistoryEntry {
         items = List.copyOf(items);
+        deleted = List.copyOf(deleted);
         log = List.copyOf(log.size() > MAX_LOG_LINES ? log.subList(log.size() - MAX_LOG_LINES, log.size()) : log);
     }
 
     public static HistoryEntry of(String timestamp, List<String> items, SendSnapshot snapshot, SendOutcome outcome,
                                   List<String> log) {
+        return of(timestamp, items, List.of(), snapshot, outcome, log);
+    }
+
+    public static HistoryEntry of(String timestamp, List<String> items, List<String> deleted, SendSnapshot snapshot,
+                                  SendOutcome outcome, List<String> log) {
         List<SendFileResult> results = outcome.files();
         Integer finalMcs = results.isEmpty() ? null : results.get(results.size() - 1).finalMcs();
         long size = results.stream().mapToLong(SendFileResult::size).sum();
-        return new HistoryEntry(Direction.SENT, timestamp, items, snapshot, results.size(), (int) outcome.okCount(),
+        return new HistoryEntry(Direction.SENT, timestamp, items, deleted, snapshot, results.size(), (int) outcome.okCount(),
                 size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log);
     }
 
@@ -67,7 +75,7 @@ public record HistoryEntry(
         SendSnapshot snapshot = new SendSnapshot(file.bidirectional() ? SendMode.TWO_WAY : SendMode.ONE_WAY, "",
                 null, null, false);
         String item = file.path().isEmpty() ? file.name() : file.path();
-        return new HistoryEntry(Direction.RECEIVED, timestamp, List.of(item), snapshot, 1, file.ok() ? 1 : 0,
+        return new HistoryEntry(Direction.RECEIVED, timestamp, List.of(item), List.of(), snapshot, 1, file.ok() ? 1 : 0,
                 file.size(), null, file.seconds(), file.ok() ? SendStatus.OK : SendStatus.FAILED, file.log());
     }
 
@@ -76,6 +84,7 @@ public record HistoryEntry(
         object.addProperty(DIRECTION, direction.name());
         object.addProperty(TIMESTAMP, timestamp);
         object.add(ITEMS, strings(items));
+        object.add(DELETED, strings(deleted));
         object.addProperty(MODE, snapshot.mode().name());
         object.addProperty(DESTINATION, snapshot.destination());
         object.add(ZIP_LEVEL, number(snapshot.zipLevel()));
@@ -98,8 +107,9 @@ public record HistoryEntry(
                     o.get(DESTINATION).getAsString(), integer(o, ZIP_LEVEL), integer(o, MCS),
                     o.get(REPLACE).getAsBoolean());
             Direction direction = o.has(DIRECTION) ? Direction.valueOf(o.get(DIRECTION).getAsString()) : Direction.SENT;
+            List<String> deleted = o.has(DELETED) ? strings(o.getAsJsonArray(DELETED)) : List.of();
             return Optional.of(new HistoryEntry(direction, o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
-                    snapshot, o.get(FILES).getAsInt(), o.get(OK_FILES).getAsInt(), o.get(SIZE).getAsLong(),
+                    deleted, snapshot, o.get(FILES).getAsInt(), o.get(OK_FILES).getAsInt(), o.get(SIZE).getAsLong(),
                     integer(o, FINAL_MCS), o.get(SECONDS).getAsDouble(), SendStatus.valueOf(o.get(STATUS).getAsString()),
                     strings(o.getAsJsonArray(LOG))));
         } catch (JsonParseException | IllegalStateException | IllegalArgumentException | NullPointerException e) {

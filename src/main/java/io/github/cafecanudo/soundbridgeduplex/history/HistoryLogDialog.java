@@ -22,7 +22,7 @@ final class HistoryLogDialog extends DialogWrapper {
     HistoryLogDialog(Project project, HistoryEntry entry) {
         super(project, false);
         this.entry = entry;
-        setTitle(message("history.log.title", HistoryFormat.date(entry.timestamp()), HistoryFormat.items(entry.items())));
+        setTitle(message("history.log.title", HistoryFormat.date(entry.timestamp()), HistoryFormat.items(entry.items(), entry.deleted())));
         init();
     }
 

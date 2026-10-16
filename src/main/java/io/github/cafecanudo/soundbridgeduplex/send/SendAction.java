@@ -32,12 +32,16 @@ public final class SendAction extends AnAction implements DumbAware {
         if (project == null || items.isEmpty()) {
             return;
         }
+        send(project, SendSelection.of(items));
+    }
+
+    public static void send(Project project, SendSelection selection) {
         if (!SoundBridgeProjectSettings.getInstance(project).showWindowOnSend()) {
-            SendDraft.getInstance(project).setItems(items);
-            QuickSend.run(project, items);
+            SendDraft.getInstance(project).setSelection(selection);
+            QuickSend.run(project, selection);
             return;
         }
-        SendDraft.getInstance(project).selectFromMenu(items);
+        SendDraft.getInstance(project).selectFromMenu(selection);
         SoundBridgeToolWindowFactory.show(project);
     }
 
