@@ -121,6 +121,7 @@ final class SendPanel {
         });
         mcsCombo.addActionListener(e -> refresh());
         destinationField.getDocument().addDocumentListener(onChange(this::refresh));
+        destinationField.getEmptyText().setText(message("send.destination.root"));
         sendButton.addActionListener(e -> start());
         cancelButton.addActionListener(e -> sendService().cancel());
         autoSendCheck.setSelected(settings().autoSend());
@@ -174,10 +175,10 @@ final class SendPanel {
 
     private void showItems(SendSelection chosen) {
         SendSelection selection = SendFiles.prepare(chosen, settings().expandFolders());
-        itemsModel.clear();
-        selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true)));
-        selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false)));
         perItemDestination = SendPlan.perItemDestination(projectBase(), selection, Files::isDirectory);
+        itemsModel.clear();
+        selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true, itemDestination(path, true))));
+        selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false, itemDestination(path, false))));
         destinationField.setEnabled(!perItemDestination);
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
                 : DestinationResolver.defaultDestination(projectBase(), selection.sends(), Files::isDirectory));
@@ -185,6 +186,13 @@ final class SendPanel {
         if (draft().consumeAutoSendRequest() && settings().autoSend()) {
             autoStart();
         }
+    }
+
+    private String itemDestination(Path path, boolean delete) {
+        if (!perItemDestination) {
+            return null;
+        }
+        return DestinationResolver.defaultDestination(projectBase(), List.of(path), delete ? item -> false : Files::isDirectory);
     }
 
     private void autoStart() {
