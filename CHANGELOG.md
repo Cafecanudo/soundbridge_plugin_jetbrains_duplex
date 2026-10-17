@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.10-SNAPSHOT] — 2026-10-16
+
 ### Alterado
 - Formulário de envio mostra para onde cada arquivo vai: com destino por item (pastas diferentes ou pasta com
   subpastas), cada linha da lista de itens traz o destino (→ src/app, → (raiz)); o campo Destino vazio mostra a
