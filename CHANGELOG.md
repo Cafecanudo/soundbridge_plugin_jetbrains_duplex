@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Corrigido
+- O log do Envio é limpo no início de qualquer envio (botão Enviar, menu sem janela, Reenviar, Commit), não só
+  pelo botão do formulário.
+- O log do Recebimento é limpo ao clicar em Receber ou Calibrar (a retomada automática depois de um envio
+  continua sem limpar).
+
 ## [1.0.8-SNAPSHOT] — 2026-10-16
 
 ### Alterado

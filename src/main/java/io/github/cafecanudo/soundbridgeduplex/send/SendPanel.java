@@ -522,7 +522,9 @@ final class SendPanel {
 
         @Override
         public void onRunningChanged(boolean running) {
-            if (!running) {
+            if (running) {
+                logArea.setText("");
+            } else {
                 progressBar.setIndeterminate(false);
             }
             updateButtons();

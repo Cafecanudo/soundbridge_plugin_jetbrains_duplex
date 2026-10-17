@@ -111,6 +111,8 @@ public final class ReceiveService implements Disposable {
         options = requested;
         calibrateOnly = calibration;
         wanted = true;
+        log.clear();
+        onUi(() -> observers.forEach(ReceiveObserver::onLogCleared));
         launch(config);
     }
 

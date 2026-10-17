@@ -362,6 +362,11 @@ public final class ReceivePanel {
         }
 
         @Override
+        public void onLogCleared() {
+            logArea.setText("");
+        }
+
+        @Override
         public void onCalibrationStage(String stage) {
             showCalibrationStage(stage);
         }

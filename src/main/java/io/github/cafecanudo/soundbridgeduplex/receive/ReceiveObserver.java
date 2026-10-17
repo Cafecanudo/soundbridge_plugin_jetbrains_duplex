@@ -10,6 +10,9 @@ public interface ReceiveObserver {
 
     void onProgress(SendProgress progress);
 
+    default void onLogCleared() {
+    }
+
     default void onCalibrationStage(String stage) {
     }
 
