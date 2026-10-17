@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.9-SNAPSHOT] — 2026-10-16
+
 ### Corrigido
 - O log do Envio é limpo no início de qualquer envio (botão Enviar, menu sem janela, Reenviar, Commit), não só
   pelo botão do formulário.
