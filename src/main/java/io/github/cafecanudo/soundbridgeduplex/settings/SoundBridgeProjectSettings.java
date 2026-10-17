@@ -14,6 +14,7 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOptions;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -275,6 +276,11 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         Map<String, String> updated = state.sent == null ? new HashMap<>() : new HashMap<>(state.sent);
         updated.putAll(states);
         state.sent = updated;
+    }
+
+    public Path destinationBase() {
+        String directory = config().receiveDirectory();
+        return directory.isBlank() ? null : Path.of(directory.strip());
     }
 
     public String projectDirectory() {

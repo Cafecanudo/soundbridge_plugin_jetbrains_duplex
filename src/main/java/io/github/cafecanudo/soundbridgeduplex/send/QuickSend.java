@@ -32,7 +32,7 @@ final class QuickSend {
             return;
         }
         ProjectConfig effective = mode.get().applyTo(config);
-        Path base = projectBase(project);
+        Path base = settings.destinationBase();
         boolean perItem = SendPlan.perItemDestination(base, selection, Files::isDirectory);
         String destination = perItem ? "" : DestinationResolver.defaultDestination(base, selection.sends(), Files::isDirectory);
         List<SendJob> jobs = SendPlan.jobs(base, selection, Files::isDirectory, destination);
@@ -51,8 +51,4 @@ final class QuickSend {
         return paths.stream().map(Path::toString).toList();
     }
 
-    private static Path projectBase(Project project) {
-        String basePath = project.getBasePath();
-        return basePath == null ? null : Path.of(basePath);
-    }
 }

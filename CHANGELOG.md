@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Alterado
+- O destino (`--dest` e campo Destino) passa a ser calculado a partir da **Pasta de recepção** do Settings, e não
+  mais da raiz do projeto da IDE: com a pasta `c:/projetos/frontend`, o arquivo
+  `c:/projetos/frontend/src/nome/Main.java` vai com `--dest src/nome`. Sem pasta configurada, vale a do projeto;
+  arquivo fora da pasta vai sem `--dest` (raiz do RX).
+
 ## [1.0.10-SNAPSHOT] — 2026-10-16
 
 ### Alterado

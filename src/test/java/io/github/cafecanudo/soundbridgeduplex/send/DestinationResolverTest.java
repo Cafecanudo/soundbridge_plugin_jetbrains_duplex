@@ -40,4 +40,14 @@ class DestinationResolverTest {
     private static String resolve(List<Path> items) {
         return DestinationResolver.defaultDestination(BASE, items, DIRECTORIES::contains);
     }
+
+    @Test
+    void destinationComesFromTheReceiveFolder() {
+        Path receiveFolder = Path.of("c:/projetos/frontend");
+        Path file = Path.of("c:/projetos/frontend/src/nome/Main.java");
+
+        assertEquals("src/nome", DestinationResolver.defaultDestination(receiveFolder, List.of(file), path -> false));
+        assertEquals("", DestinationResolver.defaultDestination(receiveFolder,
+                List.of(Path.of("c:/outro/Main.java")), path -> false));
+    }
 }

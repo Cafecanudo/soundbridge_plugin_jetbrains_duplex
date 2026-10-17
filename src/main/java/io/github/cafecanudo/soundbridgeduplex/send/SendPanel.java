@@ -175,13 +175,13 @@ final class SendPanel {
 
     private void showItems(SendSelection chosen) {
         SendSelection selection = SendFiles.prepare(chosen, settings().expandFolders());
-        perItemDestination = SendPlan.perItemDestination(projectBase(), selection, Files::isDirectory);
+        perItemDestination = SendPlan.perItemDestination(destinationBase(), selection, Files::isDirectory);
         itemsModel.clear();
         selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true, itemDestination(path, true))));
         selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false, itemDestination(path, false))));
         destinationField.setEnabled(!perItemDestination);
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
-                : DestinationResolver.defaultDestination(projectBase(), selection.sends(), Files::isDirectory));
+                : DestinationResolver.defaultDestination(destinationBase(), selection.sends(), Files::isDirectory));
         applySettings();
         if (draft().consumeAutoSendRequest() && settings().autoSend()) {
             autoStart();
@@ -192,7 +192,7 @@ final class SendPanel {
         if (!perItemDestination) {
             return null;
         }
-        return DestinationResolver.defaultDestination(projectBase(), List.of(path), delete ? item -> false : Files::isDirectory);
+        return DestinationResolver.defaultDestination(destinationBase(), List.of(path), delete ? item -> false : Files::isDirectory);
     }
 
     private void autoStart() {
@@ -250,7 +250,7 @@ final class SendPanel {
         SoundBridgeProjectSettings settings = settings();
         ProjectConfig config = mode.get().applyTo(settings.config());
         String typed = perItemDestination ? "" : destinationField.getText();
-        List<SendJob> jobs = SendPlan.jobs(projectBase(), selection, Files::isDirectory, typed);
+        List<SendJob> jobs = SendPlan.jobs(destinationBase(), selection, Files::isDirectory, typed);
         List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
                 settings.calibrationProfile(), options(), jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
@@ -372,9 +372,8 @@ final class SendPanel {
         return new SendSelection(sends, deletions);
     }
 
-    private Path projectBase() {
-        String basePath = project.getBasePath();
-        return basePath == null ? null : Path.of(basePath);
+    private Path destinationBase() {
+        return settings().destinationBase();
     }
 
     private void openSettings() {
