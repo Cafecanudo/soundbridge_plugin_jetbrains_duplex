@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.11-SNAPSHOT] — 2026-10-16
+
 ### Alterado
 - O destino (`--dest` e campo Destino) passa a ser calculado a partir da **Pasta de recepção** do Settings, e não
   mais da raiz do projeto da IDE: com a pasta `c:/projetos/frontend`, o arquivo
