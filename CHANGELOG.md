@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Adicionado
+- Atalhos em dois toques com **Alt+Shift+K** (⌥⇧K no macOS): **E** Enviar, **V** Verificar, **R** Receber / Parar
+  (com as opções salvas do Recebimento) e **H** Histórico. Enviar e Verificar valem para a seleção do Project ou para
+  o arquivo aberto no editor.
+
+### Adicionado
+- Dialog do resultado da verificação com checkbox nos itens *não existe* e *diferente* e **Marcar faltantes e
+  diferentes**; com algum marcado, o OK vira **Reenviar (n)** e leva os arquivos ao formulário de envio. Numa
+  verificação recebida (?↓) o dialog continua só de leitura.
+
 ## [1.0.13-SNAPSHOT] — 2026-10-20
 
 ### Adicionado

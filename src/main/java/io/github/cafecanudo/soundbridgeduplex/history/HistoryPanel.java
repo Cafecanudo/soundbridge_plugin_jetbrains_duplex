@@ -47,10 +47,12 @@ public final class HistoryPanel {
     private final JButton logButton = new JButton(message("history.viewLog"));
     private final JButton clearButton = new JButton(message("history.clear"));
     private final Runnable historyListener = this::reload;
+    private final Consumer<ResendBatch> resend;
     private final JPanel root;
 
     public HistoryPanel(Project project, Consumer<ResendBatch> resend) {
         this.project = project;
+        this.resend = resend;
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         sizeColumns();
         table.getSelectionModel().addListSelectionListener(e -> updateButtons());
@@ -148,8 +150,13 @@ public final class HistoryPanel {
 
     private void showVerifyResult(HistoryEntry entry) {
         if (hasVerifyResult(entry)) {
-            new VerifyResultDialog(project, HistoryFormat.date(entry.timestamp()), entry.verified()).show();
+            Consumer<List<String>> action = entry.direction() == Direction.VERIFY_SENT ? this::resendPaths : null;
+            new VerifyResultDialog(project, HistoryFormat.date(entry.timestamp()), entry.verified(), action).show();
         }
+    }
+
+    private void resendPaths(List<String> paths) {
+        resend.accept(ResendBatch.ofPaths(paths, SoundBridgeProjectSettings.getInstance(project).destinationBase()));
     }
 
     private static boolean hasVerifyResult(HistoryEntry entry) {

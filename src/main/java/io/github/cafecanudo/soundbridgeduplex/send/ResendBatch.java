@@ -26,6 +26,11 @@ public record ResendBatch(SendSelection selection, SendSnapshot snapshot) {
         return new ResendBatch(new SendSelection(List.copyOf(sends), List.copyOf(deletions)), snapshot);
     }
 
+    public static ResendBatch ofPaths(List<String> paths, Path base) {
+        List<Path> sends = paths.stream().map(path -> resolve(base, path)).distinct().toList();
+        return new ResendBatch(new SendSelection(sends, List.of()), null);
+    }
+
     public static boolean hasProblems(HistoryEntry entry) {
         return entry.direction().isVerify()
                 && entry.verified().stream().anyMatch(item -> item.status() != VerifyStatus.EXISTS);

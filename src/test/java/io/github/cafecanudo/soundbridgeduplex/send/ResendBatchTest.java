@@ -53,6 +53,15 @@ class ResendBatchTest {
         assertFalse(ResendBatch.hasProblems(sent("C:/p/x.txt")));
     }
 
+    @Test
+    void markedPathsFromTheDialogResolveOnTheBaseWithoutSnapshot() {
+        ResendBatch batch = ResendBatch.ofPaths(List.of("src/b.txt", "src/c.txt", "src/b.txt"), BASE);
+
+        assertEquals(List.of(BASE.resolve("src/b.txt"), BASE.resolve("src/c.txt")), batch.selection().sends());
+        assertTrue(batch.selection().deletions().isEmpty());
+        assertNull(batch.snapshot());
+    }
+
     private static HistoryEntry sent(String item) {
         return new HistoryEntry(Direction.SENT, "t", List.of(item), List.of(), SNAPSHOT, 1, 1, 10, 7, 1.0,
                 SendStatus.OK, List.of(), "", List.of());

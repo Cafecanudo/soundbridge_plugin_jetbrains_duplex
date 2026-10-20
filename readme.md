@@ -48,7 +48,10 @@ do `--dest` do envio); itens fora dela ficam de fora, com aviso. Usa o modo, os 
 - **uni:** a linha fica *Solicitado* e uma notificação lembra de conferir o resultado no destino.
 
 No outro PC, o Recebimento registra a verificação no Histórico (ícone **?**) com o resultado. Duplo clique numa
-linha de verificação (ou **Ver resultado** no botão direito) abre o dialog. Listas longas vão em lotes (um
+linha de verificação (ou **Ver resultado** no botão direito) abre o dialog. No dialog de uma verificação feita
+daqui, os itens *não existe* e *diferente* têm checkbox (com **Marcar faltantes e diferentes** para todos): com algum
+marcado, o OK vira **Reenviar (n)** e leva esses arquivos ao formulário de envio, com as opções dele. Numa
+verificação recebida o dialog só mostra o resultado. Listas longas vão em lotes (um
 `--verify` por lote) para não passar do limite da linha de comando do Windows; o resultado é juntado numa linha
 só. Exige `sb-duplex` 1.4.0b4.
 
@@ -64,6 +67,17 @@ arquivo, ou "apagado"), e cada arquivo recebido também conta. Se uma alteraçã
 a mesma janela mostra todas as alterações do projeto (com os não versionados) e marca as não enviadas do commit, e oferece **Enviar e comitar**
 (envia o que estiver marcado), **Comitar assim mesmo** e **Cancelar**, além de **Não mostrar novamente**. Liga e desliga em *Settings > Tools > SoundBridge* (ligado por padrão;
 só avisa com a saída configurada). No unidirecional, OK quer dizer enviado, sem confirmação do RX.
+
+## Atalhos
+
+Atalhos em dois toques: **Alt+Shift+K** e depois a letra (no macOS, ⌥⇧K). Trocam em *Settings → Keymap*.
+
+| Atalho | Ação |
+|---|---|
+| Alt+Shift+K, E | Enviar o que estiver selecionado no Project (ou o arquivo aberto no editor) |
+| Alt+Shift+K, V | Verificar o selecionado (ou o arquivo aberto) |
+| Alt+Shift+K, R | Receber / Parar, com as opções salvas do Recebimento (modo, pasta, atender pedidos) |
+| Alt+Shift+K, H | Abrir o Histórico |
 
 ## Recebimento
 

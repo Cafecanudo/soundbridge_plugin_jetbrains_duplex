@@ -46,12 +46,32 @@
             <action
                     id="SoundBridge.Send"
                     class="io.github.cafecanudo.soundbridgeduplex.send.SendAction"
-                    icon="AllIcons.Actions.Upload"/>
+                    icon="AllIcons.Actions.Upload">
+                <keyboard-shortcut keymap="$default" first-keystroke="alt shift K" second-keystroke="E"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="E"/>
+            </action>
             <action
                     id="SoundBridge.Verify"
                     class="io.github.cafecanudo.soundbridgeduplex.send.VerifyAction"
-                    icon="AllIcons.Actions.Help"/>
+                    icon="AllIcons.Actions.Help">
+                <keyboard-shortcut keymap="$default" first-keystroke="alt shift K" second-keystroke="V"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="V"/>
+            </action>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </group>
+        <action
+                id="SoundBridge.ToggleReceive"
+                class="io.github.cafecanudo.soundbridgeduplex.receive.ToggleReceiveAction"
+                icon="AllIcons.Actions.Download">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift K" second-keystroke="R"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="R"/>
+        </action>
+        <action
+                id="SoundBridge.ShowHistory"
+                class="io.github.cafecanudo.soundbridgeduplex.history.ShowHistoryAction"
+                icon="AllIcons.Vcs.History">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift K" second-keystroke="H"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="H"/>
+        </action>
     </actions>
 </idea-plugin>

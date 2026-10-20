@@ -13,6 +13,7 @@ import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 import io.github.cafecanudo.soundbridgeduplex.history.SendStatus;
 import io.github.cafecanudo.soundbridgeduplex.history.SentEntries;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
+import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 import io.github.cafecanudo.soundbridgeduplex.verify.VerifyItem;
 import io.github.cafecanudo.soundbridgeduplex.verify.VerifyOutcome;
 import io.github.cafecanudo.soundbridgeduplex.verify.VerifyResultDialog;
@@ -151,9 +152,15 @@ public final class SendService {
         notifyRunning(false);
         onUi(() -> observers.forEach(observer -> observer.onVerified(outcome)));
         if (outcome.answered()) {
-            onUi(() -> new VerifyResultDialog(project, entry.timestamp(), outcome.items()).show());
+            onUi(() -> new VerifyResultDialog(project, entry.timestamp(), outcome.items(), this::resendPaths).show());
         }
         notifyVerify(outcome.summary(), outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);
+    }
+
+    private void resendPaths(List<String> paths) {
+        SendDraft.getInstance(project).resend(ResendBatch.ofPaths(paths,
+                SoundBridgeProjectSettings.getInstance(project).destinationBase()));
+        openToolWindow();
     }
 
     private HistoryEntry verifyEntry(VerifyRequest request, SendStatus status, List<VerifyItem> items,
