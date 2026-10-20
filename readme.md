@@ -77,8 +77,7 @@ só avisa com a saída configurada). No unidirecional, OK quer dizer enviado, se
 
 **SoundBridge → Ignorar no envio** (botão direito no Project, ou Alt+Shift+K, I) marca arquivos ou pastas que o
 SoundBridge nunca envia nem verifica, mesmo selecionados direto ou dentro de uma pasta; pasta ignorada inclui tudo
-dentro. No mesmo menu, **Não ignorar mais** desfaz. No Project o item fica cinza com *SoundBridge: ignorado*, e no
-formulário aparece com *· ignorado*. O filtro vale na hora do envio: os ignorados viram uma linha **Ignorado** no
+dentro. No mesmo menu, **Não ignorar mais** desfaz. No formulário o item aparece com *· ignorado*. O filtro vale na hora do envio: os ignorados viram uma linha **Ignorado** no
 Histórico, a notificação do fim conta quantos foram, e exclusões (Commit) de itens ignorados também são puladas.
 O aviso de alterações não enviadas no commit não considera os ignorados. A lista fica nas configurações do projeto
 na IDE (nenhum arquivo é criado no projeto) e aparece na aba **Ignorados** do Histórico, com **Não ignorar mais** e

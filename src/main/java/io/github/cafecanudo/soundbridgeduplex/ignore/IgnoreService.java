@@ -1,6 +1,5 @@
 package io.github.cafecanudo.soundbridgeduplex.ignore;
 
-import com.intellij.ide.projectView.ProjectView;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.Service;
@@ -69,7 +68,6 @@ public final class IgnoreService {
         cached = null;
         ApplicationManager.getApplication().invokeLater(() -> {
             if (!project.isDisposed()) {
-                ProjectView.getInstance(project).refresh();
                 listeners.forEach(Runnable::run);
             }
         }, ModalityState.any());

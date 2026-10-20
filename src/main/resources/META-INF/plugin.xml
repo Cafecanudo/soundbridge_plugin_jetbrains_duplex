@@ -23,7 +23,6 @@
                 instance="io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable"
                 displayName="SoundBridge"/>
         <notificationGroup id="SoundBridge" displayType="BALLOON"/>
-        <projectViewNodeDecorator implementation="io.github.cafecanudo.soundbridgeduplex.ignore.IgnoredNodeDecorator"/>
         <toolWindow
                 id="SoundBridge"
                 anchor="right"
