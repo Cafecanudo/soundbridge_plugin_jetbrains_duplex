@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.14-SNAPSHOT] — 2026-10-20
+
 ### Adicionado
 - Atalhos em dois toques com **Alt+Shift+K** (⌥⇧K no macOS): **E** Enviar, **V** Verificar, **R** Receber / Parar
   (com as opções salvas do Recebimento) e **H** Histórico. Enviar e Verificar valem para a seleção do Project ou para
