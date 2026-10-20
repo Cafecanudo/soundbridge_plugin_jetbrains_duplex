@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.12-SNAPSHOT] — 2026-10-20
+
 ### Adicionado
 - **Verificar** (`--verify`, sb-duplex 1.4.0b4): botão ao lado de Enviar e item **SoundBridge → Verificar** no
   botão direito do Project. Pastas são percorridas e os caminhos vão relativos à Pasta de recepção, em lotes de até
