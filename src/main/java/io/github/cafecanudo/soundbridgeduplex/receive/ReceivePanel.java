@@ -74,6 +74,7 @@ public final class ReceivePanel {
     private final JBLabel stateLabel = new JBLabel();
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
     private final JBLabel progressLabel = new JBLabel(message("send.progress.idle"));
+    private final JBLabel sequenceLabel = new JBLabel(message("receive.sequence.none"));
     private final JBCheckBox showCommandCheck = new JBCheckBox(message("send.showCommand"));
     private final JBCheckBox showLogCheck = new JBCheckBox(message("send.showLog"));
     private final JBLabel commandLabel = new JBLabel(message("send.command"));
@@ -293,6 +294,7 @@ public final class ReceivePanel {
                 .addLabeledComponent(message("receive.state"), stateLabel)
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
+                .addLabeledComponent(message("receive.sequence"), sequenceLabel)
                 .addLabeledComponent(calibrationTitle, calibrationLabel)
                 .addComponentToRightColumn(row(copyButton))
                 .addLabeledComponent(logLabel, logScroll)
@@ -374,6 +376,11 @@ public final class ReceivePanel {
         @Override
         public void onCalibration(ReceivedCalibration calibration) {
             showCalibration(calibration);
+        }
+
+        @Override
+        public void onSequence(int received, int failed, boolean open) {
+            sequenceLabel.setText(message(open ? "receive.sequence.open" : "receive.sequence.closed", received, failed));
         }
     }
 }

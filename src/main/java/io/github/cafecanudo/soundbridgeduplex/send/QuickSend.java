@@ -3,6 +3,8 @@ package io.github.cafecanudo.soundbridgeduplex.send;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreFilter;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreService;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -20,8 +22,10 @@ final class QuickSend {
     }
 
     static void run(Project project, SendSelection chosen) {
-        SendSelection selection = SendFiles.prepare(chosen,
-                SoundBridgeProjectSettings.getInstance(project).expandFolders());
+        IgnoreFilter.Result filtered = IgnoreFilter.apply(SendFiles.prepare(chosen,
+                SoundBridgeProjectSettings.getInstance(project).expandFolders()),
+                IgnoreService.getInstance(project).list(), Files::isDirectory);
+        SendSelection selection = filtered.kept();
         SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
         ProjectConfig config = settings.config();
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
@@ -33,9 +37,10 @@ final class QuickSend {
         }
         ProjectConfig effective = mode.get().applyTo(config);
         Path base = settings.destinationBase();
-        boolean perItem = SendPlan.perItemDestination(base, selection, Files::isDirectory);
-        String destination = perItem ? "" : DestinationResolver.defaultDestination(base, selection.sends(), Files::isDirectory);
-        List<SendJob> jobs = SendPlan.jobs(base, selection, Files::isDirectory, destination);
+        boolean perItem = !selection.isEmpty() && SendPlan.perItemDestination(base, selection, Files::isDirectory);
+        String destination = perItem || selection.isEmpty() ? ""
+                : DestinationResolver.defaultDestination(base, selection.sends(), Files::isDirectory);
+        List<SendJob> jobs = selection.isEmpty() ? List.of() : SendPlan.jobs(base, selection, Files::isDirectory, destination);
         UniProfile parameters = SendCommandBuilder.txParameters(effective, settings.uniProfile(),
                 settings.calibrationProfile());
         SendOptions options = new SendOptions("", settings.zipLevel(), McsSelection.of(parameters.mcs()),
@@ -44,7 +49,8 @@ final class QuickSend {
                 settings.calibrationProfile(), options, jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), destination, options);
         service.start(new SendRequest(effective.launcher(), commands, jobs, labels(selection.sends()),
-                labels(selection.deletions()), snapshot, settings.commandDelayMs()));
+                labels(selection.deletions()), snapshot, settings.commandDelayMs(), labels(filtered.ignoredSends()),
+                labels(filtered.ignoredDeletions())));
     }
 
     static List<String> labels(List<Path> paths) {

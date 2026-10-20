@@ -20,7 +20,6 @@ import io.github.cafecanudo.soundbridgeduplex.cli.CliListener;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliProcess;
 import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
-import io.github.cafecanudo.soundbridgeduplex.send.SendEventReader;
 import io.github.cafecanudo.soundbridgeduplex.send.SendService;
 import io.github.cafecanudo.soundbridgeduplex.send.SentRegistry;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
@@ -44,9 +43,11 @@ public final class ReceiveService implements Disposable {
     private static final long STOP_WAIT_MILLIS = 5000;
     private static final Path WORK_DIRECTORY = Path.of(System.getProperty("user.home"));
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String MORE_TIMEOUT = "more_timeout";
 
     private final Project project;
     private final List<ReceiveObserver> observers = new CopyOnWriteArrayList<>();
+    private final ReceiveSequence sequence = new ReceiveSequence();
     private final List<String> log = new CopyOnWriteArrayList<>();
     private volatile CliProcess process;
     private volatile ReceiveState state = ReceiveState.STOPPED;
@@ -199,9 +200,33 @@ public final class ReceiveService implements Disposable {
                     SoundBridgeProjectSettings.getInstance(project).recordSent(Map.of(SentRegistry.key(path), state)));
             refresh(path);
         }
-        String text = message(file.ok() ? "receive.notify.received" : "receive.notify.incomplete", file.name(),
-                SendEventReader.formatTime(file.seconds()));
-        notifyUser(text, file.ok() ? NotificationType.INFORMATION : NotificationType.WARNING);
+        List<ReceiveSequence.Notice> notices;
+        synchronized (sequence) {
+            notices = sequence.add(file);
+        }
+        publish(notices);
+    }
+
+    private void endSequence() {
+        List<ReceiveSequence.Notice> notices;
+        synchronized (sequence) {
+            notices = sequence.end();
+        }
+        publish(notices);
+    }
+
+    private void publish(List<ReceiveSequence.Notice> notices) {
+        int received;
+        int failed;
+        boolean open;
+        synchronized (sequence) {
+            received = sequence.received();
+            failed = sequence.failed();
+            open = sequence.isOpen();
+        }
+        onUi(() -> observers.forEach(observer -> observer.onSequence(received, failed, open)));
+        notices.forEach(notice -> notifyUser(notice.text(),
+                notice.warning() ? NotificationType.WARNING : NotificationType.INFORMATION));
     }
 
     private void verified(ReceivedVerification verification) {
@@ -236,6 +261,7 @@ public final class ReceiveService implements Disposable {
     }
 
     private void exited(CliExitCode code) {
+        endSequence();
         boolean expected;
         synchronized (this) {
             expected = paused || !wanted;
@@ -276,6 +302,9 @@ public final class ReceiveService implements Disposable {
         public void onEvent(CliEvent event) {
             ReceiveEventReader.Update update = reader.read(event);
             update.log().forEach(ReceiveService.this::appendLog);
+            if (MORE_TIMEOUT.equals(event.name())) {
+                endSequence();
+            }
             if (update.state() != null && !paused) {
                 setState(update.state());
             }

@@ -99,6 +99,12 @@ public record HistoryEntry(
                 List.of());
     }
 
+    public static HistoryEntry ofIgnored(String timestamp, List<String> items, List<String> deleted,
+                                         SendSnapshot snapshot) {
+        return new HistoryEntry(Direction.SENT, timestamp, items, deleted, snapshot, items.size() + deleted.size(), 0, 0,
+                null, 0, SendStatus.IGNORED, List.of(), "", List.of());
+    }
+
     public static HistoryEntry ofVerify(String timestamp, List<String> paths, SendSnapshot snapshot, SendStatus status,
                                         List<VerifyItem> verified, double seconds, List<String> log) {
         return new HistoryEntry(Direction.VERIFY_SENT, timestamp, paths, List.of(), snapshot, paths.size(),

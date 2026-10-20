@@ -18,4 +18,7 @@ public interface ReceiveObserver {
 
     default void onCalibration(ReceivedCalibration calibration) {
     }
+
+    default void onSequence(int received, int failed, boolean open) {
+    }
 }

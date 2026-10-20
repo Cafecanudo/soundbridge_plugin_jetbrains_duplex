@@ -14,4 +14,7 @@ public interface SendObserver {
 
     default void onVerified(VerifyOutcome outcome) {
     }
+
+    default void onTotal(SendTotals.Total total) {
+    }
 }

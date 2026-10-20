@@ -10,7 +10,8 @@ public enum SendStatus {
     CANCELLED,
     REQUESTING,
     REQUESTED,
-    NO_REPLY;
+    NO_REPLY,
+    IGNORED;
 
     public static SendStatus of(SendOutcome outcome) {
         if (outcome.cancelled()) {
@@ -27,6 +28,7 @@ public enum SendStatus {
             case REQUESTING -> message("history.status.requesting");
             case REQUESTED -> message("history.status.requested");
             case NO_REPLY -> message("history.status.noReply");
+            case IGNORED -> message("history.status.ignored");
         };
     }
 }

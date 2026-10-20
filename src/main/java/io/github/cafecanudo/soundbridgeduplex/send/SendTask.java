@@ -15,6 +15,7 @@ import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSetting
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +27,7 @@ final class SendTask extends Task.Backgroundable {
     private static final long POLL_MILLIS = 250;
     private static final long CANCEL_WAIT_MILLIS = 5000;
     private static final double NANOS_PER_SECOND = 1e9;
+    private static final double PERCENT = 100.0;
     private static final Path WORK_DIRECTORY = Path.of(System.getProperty("user.home"));
 
     private final SendRequest request;
@@ -37,6 +39,7 @@ final class SendTask extends Task.Backgroundable {
     private volatile boolean cancelled;
     private long startedAt;
     private volatile boolean receiverPaused;
+    private volatile SendTotals totals = new SendTotals(new long[0]);
 
     SendTask(Project project, SendRequest request, SendService service) {
         super(project, message("send.task.title"), true);
@@ -49,6 +52,9 @@ final class SendTask extends Task.Backgroundable {
         service.attach(indicator);
         receiverPaused = ReceiveService.getInstance(getProject()).pauseForTransmit();
         startedAt = System.nanoTime();
+        totals = request.jobs().size() == request.commands().size() ? SendTotals.of(request.jobs())
+                : new SendTotals(new long[request.commands().size()]);
+        publishTotal(0, null, indicator);
         for (int i = 0; i < request.commands().size(); i++) {
             if (i > 0 && !pause(request.commandDelayMs(), indicator)) {
                 cancelled = true;
@@ -61,6 +67,7 @@ final class SendTask extends Task.Backgroundable {
             if (code == CliExitCode.OK) {
                 SoundBridgeProjectSettings.getInstance(getProject()).recordSent(fingerprint);
             }
+            publishTotal(i + 1, null, indicator);
             if (cancelled || code != CliExitCode.OK) {
                 if (!cancelled && failure.get() == null) {
                     failure.set(message("send.notify.exit", code.code()));
@@ -68,6 +75,15 @@ final class SendTask extends Task.Backgroundable {
                 return;
             }
         }
+    }
+
+    private SendTotals.Total publishTotal(int index, Double current, ProgressIndicator indicator) {
+        int failed = (int) results.stream().filter(result -> !result.ok()).count();
+        SendTotals.Total total = totals.at(index, current, failed);
+        indicator.setIndeterminate(false);
+        indicator.setFraction(total.fraction());
+        service.publishTotal(total);
+        return total;
     }
 
     private static boolean pause(int millis, ProgressIndicator indicator) {
@@ -158,11 +174,10 @@ final class SendTask extends Task.Backgroundable {
         }
 
         private void showProgress(SendProgress progress) {
-            indicator.setText2(progress.counter().isEmpty() ? progress.file() : progress.counter() + " · " + progress.file());
-            indicator.setIndeterminate(progress.fraction() == null);
-            if (progress.fraction() != null) {
-                indicator.setFraction(progress.fraction());
-            }
+            SendTotals.Total total = publishTotal(currentCommand, progress.fraction(), indicator);
+            String file = progress.fraction() == null ? progress.file()
+                    : String.format(Locale.ROOT, "%s %.0f%%", progress.file(), progress.fraction() * PERCENT);
+            indicator.setText2(message("send.task.detail", Math.min(total.done() + 1, total.total()), total.total(), file));
             service.publishProgress(progress);
         }
     }

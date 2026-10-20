@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreService;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -62,6 +63,7 @@ public final class VerifyAction extends AnAction implements DumbAware {
         UniProfile parameters = SendCommandBuilder.txParameters(mode.get().applyTo(config), settings.uniProfile(),
                 settings.calibrationProfile());
         SendOptions options = new SendOptions("", settings.zipLevel(), McsSelection.of(parameters.mcs()), false);
-        service.startVerify(VerifyRequest.of(settings, mode.get(), options, items));
+        service.startVerify(VerifyRequest.of(settings, IgnoreService.getInstance(project).list(), mode.get(),
+                options, items));
     }
 }

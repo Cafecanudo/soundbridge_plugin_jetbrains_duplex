@@ -99,7 +99,8 @@ public final class ReceiveEventReader {
         String line = message(ok ? "receive.log.ok" : "receive.log.failed", name, SendEventReader.formatTime(seconds));
         fileLog.add(line);
         ReceivedFile received = new ReceivedFile(name, event.string("path").orElse(""),
-                (long) event.number("size").orElse(0), seconds, ok, bidirectional, fileLog);
+                (long) event.number("size").orElse(0), seconds, ok, bidirectional, fileLog,
+                event.bool("more").orElse(false));
         fileLog.clear();
         currentName = "";
         return new Update(List.of(line), ReceiveState.LISTENING, null, received);

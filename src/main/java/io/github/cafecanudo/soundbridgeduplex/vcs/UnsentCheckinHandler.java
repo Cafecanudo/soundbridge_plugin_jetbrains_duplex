@@ -7,6 +7,9 @@ import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.checkin.CheckinHandler;
 import io.github.cafecanudo.soundbridgeduplex.send.SendAction;
 import io.github.cafecanudo.soundbridgeduplex.send.SendSelection;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreFilter;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreList;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreService;
 import io.github.cafecanudo.soundbridgeduplex.send.SentRegistry;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -32,8 +35,9 @@ final class UnsentCheckinHandler extends CheckinHandler {
         }
         List<Change> changes = List.copyOf(panel.getSelectedChanges());
         Map<String, String> sent = settings.sent();
+        IgnoreList ignore = IgnoreService.getInstance(project).list();
         List<Change> unsent = ProgressManager.getInstance().runProcessWithProgressSynchronously(
-                () -> unsent(changes, sent), message("commit.unsent.checking"), false, project);
+                () -> unsent(changes, sent, ignore), message("commit.unsent.checking"), false, project);
         if (unsent.isEmpty()) {
             return ReturnResult.COMMIT;
         }
@@ -52,10 +56,11 @@ final class UnsentCheckinHandler extends CheckinHandler {
                 : ReturnResult.CANCEL;
     }
 
-    private static List<Change> unsent(List<Change> changes, Map<String, String> sent) {
+    private static List<Change> unsent(List<Change> changes, Map<String, String> sent, IgnoreList ignore) {
         return changes.stream()
-                .filter(change -> !SentRegistry.unsent(
-                        SendSelection.fromChanges(ChangePaths.of(List.of(change)), List.of()), sent).isEmpty())
+                .filter(change -> !SentRegistry.unsent(IgnoreFilter.apply(
+                        SendSelection.fromChanges(ChangePaths.of(List.of(change)), List.of()), ignore,
+                        path -> false).kept(), sent).isEmpty())
                 .toList();
     }
 }

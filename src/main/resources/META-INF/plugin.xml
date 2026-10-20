@@ -23,6 +23,7 @@
                 instance="io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable"
                 displayName="SoundBridge"/>
         <notificationGroup id="SoundBridge" displayType="BALLOON"/>
+        <projectViewNodeDecorator implementation="io.github.cafecanudo.soundbridgeduplex.ignore.IgnoredNodeDecorator"/>
         <toolWindow
                 id="SoundBridge"
                 anchor="right"
@@ -56,6 +57,13 @@
                     icon="AllIcons.Actions.Help">
                 <keyboard-shortcut keymap="$default" first-keystroke="alt shift K" second-keystroke="V"/>
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="V"/>
+            </action>
+            <action
+                    id="SoundBridge.Ignore"
+                    class="io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreAction"
+                    icon="AllIcons.Actions.Cancel">
+                <keyboard-shortcut keymap="$default" first-keystroke="alt shift K" second-keystroke="I"/>
+                <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="I"/>
             </action>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </group>

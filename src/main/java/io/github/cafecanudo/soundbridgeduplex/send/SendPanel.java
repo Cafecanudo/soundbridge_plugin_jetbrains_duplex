@@ -18,6 +18,9 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationObserver;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreFilter;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreList;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreService;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable;
@@ -89,6 +92,8 @@ final class SendPanel {
     private final JBLabel logLabel = new JBLabel(message("send.log"));
     private final JProgressBar progressBar = new JProgressBar(0, PROGRESS_SCALE);
     private final JBLabel progressLabel = new JBLabel(message("send.progress.idle"));
+    private final JProgressBar totalBar = new JProgressBar(0, PROGRESS_SCALE);
+    private final JBLabel totalLabel = new JBLabel(message("send.total.idle"));
     private final JBTextArea logArea = new JBTextArea(LOG_ROWS, 0);
     private final JBScrollPane commandScroll = new JBScrollPane(commandArea);
     private final JBScrollPane logScroll = new JBScrollPane(logArea);
@@ -111,6 +116,7 @@ final class SendPanel {
         commandArea.setLineWrap(true);
         logArea.setEditable(false);
         progressBar.setForeground(ProgressColors.PASSED);
+        totalBar.setForeground(ProgressColors.PASSED);
         modeGroup.add(oneWayRadio);
         modeGroup.add(twoWayRadio);
         configureButton.addActionListener(e -> openSettings());
@@ -180,8 +186,11 @@ final class SendPanel {
         SendSelection selection = SendFiles.prepare(chosen, settings().expandFolders());
         perItemDestination = SendPlan.perItemDestination(destinationBase(), selection, Files::isDirectory);
         itemsModel.clear();
-        selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true, itemDestination(path, true))));
-        selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false, itemDestination(path, false))));
+        IgnoreList ignore = ignoreService().list();
+        selection.deletions().forEach(path -> itemsModel.addElement(new SendItem(path, true, itemDestination(path, true),
+                ignore.isIgnored(path))));
+        selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false, itemDestination(path, false),
+                ignore.isIgnored(path))));
         destinationField.setEnabled(!perItemDestination);
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
                 : DestinationResolver.defaultDestination(destinationBase(), selection.sends(), Files::isDirectory));
@@ -257,12 +266,16 @@ final class SendPanel {
         SoundBridgeProjectSettings settings = settings();
         ProjectConfig config = mode.get().applyTo(settings.config());
         String typed = perItemDestination ? "" : destinationField.getText();
-        List<SendJob> jobs = SendPlan.jobs(destinationBase(), selection, Files::isDirectory, typed);
+        IgnoreFilter.Result filtered = IgnoreFilter.apply(selection, ignoreService().list(), Files::isDirectory);
+        SendSelection kept = filtered.kept();
+        List<SendJob> jobs = kept.isEmpty() ? List.of()
+                : SendPlan.jobs(destinationBase(), kept, Files::isDirectory, typed);
         List<List<String>> commands = SendCommandBuilder.commands(config, settings.uniProfile(),
                 settings.calibrationProfile(), options(), jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), typed, options());
-        return Optional.of(new SendRequest(config.launcher(), commands, jobs, QuickSend.labels(selection.sends()),
-                QuickSend.labels(selection.deletions()), snapshot, settings.commandDelayMs()));
+        return Optional.of(new SendRequest(config.launcher(), commands, jobs, QuickSend.labels(kept.sends()),
+                QuickSend.labels(kept.deletions()), snapshot, settings.commandDelayMs(),
+                QuickSend.labels(filtered.ignoredSends()), QuickSend.labels(filtered.ignoredDeletions())));
     }
 
     private void start() {
@@ -272,6 +285,7 @@ final class SendPanel {
             progressBar.setForeground(ProgressColors.PASSED);
             progressBar.setValue(0);
             progressLabel.setText(message("send.progress.idle"));
+            resetTotal();
             sendService().start(request);
         });
     }
@@ -283,12 +297,20 @@ final class SendPanel {
             return;
         }
         mode.ifPresent(settings()::setSendMode);
-        VerifyRequest request = VerifyRequest.of(settings(), mode.get(), options(), currentSelection().sends());
+        VerifyRequest request = VerifyRequest.of(settings(), ignoreService().list(), mode.get(), options(),
+                currentSelection().sends());
         logArea.setText("");
         progressBar.setForeground(ProgressColors.PASSED);
         progressBar.setValue(0);
         progressLabel.setText(message("send.progress.idle"));
+        resetTotal();
         sendService().startVerify(request);
+    }
+
+    private void resetTotal() {
+        totalBar.setForeground(ProgressColors.PASSED);
+        totalBar.setValue(0);
+        totalLabel.setText(message("send.total.idle"));
     }
 
     private void updateVisibility() {
@@ -409,6 +431,9 @@ final class SendPanel {
     }
 
     private static String preview(SendRequest request) {
+        if (request.commands().isEmpty()) {
+            return message("send.items.allIgnored", request.ignoredCount());
+        }
         return request.commands().stream()
                 .map(arguments -> CommandPreview.format(CliCommand.of(request.launcher(), arguments).withJson().fullCommand()))
                 .collect(Collectors.joining(LINE_BREAK));
@@ -471,6 +496,8 @@ final class SendPanel {
                 .addComponentToRightColumn(row(sendButton, verifyButton, cancelButton, autoSendCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
+                .addLabeledComponent(message("send.total"), totalBar)
+                .addComponentToRightColumn(totalLabel)
                 .addLabeledComponent(logLabel, logScroll)
                 .getPanel();
         form.setBorder(JBUI.Borders.empty(8));
@@ -543,6 +570,10 @@ final class SendPanel {
         return CalibrationService.getInstance(project);
     }
 
+    private IgnoreService ignoreService() {
+        return IgnoreService.getInstance(project);
+    }
+
     private SendDraft draft() {
         return SendDraft.getInstance(project);
     }
@@ -558,6 +589,7 @@ final class SendPanel {
         public void onRunningChanged(boolean running) {
             if (running) {
                 logArea.setText("");
+                resetTotal();
             } else {
                 progressBar.setIndeterminate(false);
             }
@@ -567,6 +599,13 @@ final class SendPanel {
         @Override
         public void onProgress(SendProgress progress) {
             showProgress(progress);
+        }
+
+        @Override
+        public void onTotal(SendTotals.Total total) {
+            totalBar.setValue((int) Math.round(total.fraction() * PROGRESS_SCALE));
+            totalLabel.setText(total.failed() == 0 ? message("send.total.label", total.done(), total.total())
+                    : message("send.total.failed", total.done(), total.total(), total.failed()));
         }
 
         @Override
@@ -585,8 +624,10 @@ final class SendPanel {
             progressBar.setIndeterminate(false);
             if (outcome.succeeded()) {
                 progressBar.setValue(PROGRESS_SCALE);
+                totalBar.setValue(PROGRESS_SCALE);
             } else {
                 progressBar.setForeground(ProgressColors.FAILED);
+                totalBar.setForeground(ProgressColors.FAILED);
             }
         }
     }

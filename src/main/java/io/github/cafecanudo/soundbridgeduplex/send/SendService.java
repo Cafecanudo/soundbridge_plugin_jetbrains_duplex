@@ -66,6 +66,13 @@ public final class SendService {
     }
 
     public boolean start(SendRequest request) {
+        if (request.commands().isEmpty()) {
+            recordIgnored(request);
+            if (request.hasIgnored()) {
+                notifyUser(message("send.notify.allIgnored", request.ignoredCount()), NotificationType.WARNING);
+            }
+            return false;
+        }
         if (!acquire()) {
             return false;
         }
@@ -77,6 +84,9 @@ public final class SendService {
         if (!request.outside().isEmpty()) {
             notifyVerify(message("verify.notify.outside", request.outside().size(), request.workDirectory()),
                     NotificationType.WARNING);
+        }
+        if (!request.ignored().isEmpty()) {
+            notifyVerify(message("verify.notify.ignored", request.ignored().size()), NotificationType.INFORMATION);
         }
         if (request.isEmpty()) {
             notifyVerify(message("verify.notify.empty", request.workDirectory()), NotificationType.WARNING);
@@ -128,15 +138,29 @@ public final class SendService {
         onUi(() -> observers.forEach(observer -> observer.onProgress(progress)));
     }
 
+    void publishTotal(SendTotals.Total total) {
+        onUi(() -> observers.forEach(observer -> observer.onTotal(total)));
+    }
+
     void finish(SendRequest request, SendOutcome outcome, List<SentFile> files) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
         SendHistory.getInstance(project).addAll(SentEntries.of(timestamp, request, files, outcome, log(),
                 Files::isDirectory));
+        recordIgnored(request);
         indicator.set(null);
         running.set(false);
         notifyRunning(false);
         onUi(() -> observers.forEach(observer -> observer.onFinished(outcome)));
-        notifyUser(outcome.summary(), outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);
+        String summary = request.hasIgnored()
+                ? outcome.summary() + message("send.notify.ignoredSuffix", request.ignoredCount()) : outcome.summary();
+        notifyUser(summary, outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);
+    }
+
+    private void recordIgnored(SendRequest request) {
+        if (request.hasIgnored()) {
+            SendHistory.getInstance(project).add(HistoryEntry.ofIgnored(LocalDateTime.now().format(TIMESTAMP),
+                    request.ignoredLabels(), request.ignoredDeletedLabels(), request.snapshot()));
+        }
     }
 
     void finishVerify(VerifyRequest request, VerifyOutcome outcome) {

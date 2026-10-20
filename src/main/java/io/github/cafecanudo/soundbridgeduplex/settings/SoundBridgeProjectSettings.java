@@ -58,6 +58,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public int commandDelayMs = DEFAULT_COMMAND_DELAY_MS;
         public boolean serveRequests = true;
         public String sendMode = "";
+        public List<String> ignored = new ArrayList<>();
         public Map<String, String> sent = new HashMap<>();
     }
 
@@ -218,6 +219,14 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setHistory(List<String> entries) {
         state.history = new ArrayList<>(entries);
+    }
+
+    public List<String> ignored() {
+        return state.ignored == null ? List.of() : List.copyOf(state.ignored);
+    }
+
+    public void setIgnored(List<String> entries) {
+        state.ignored = new ArrayList<>(entries);
     }
 
     public Optional<SendMode> sendMode() {

@@ -30,6 +30,11 @@ aquele envio e mostra o comando que será executado. **Enviar** roda em backgrou
 **Cancelar**. Uma pasta selecionada aparece na lista com todos os seus arquivos (recursivo), e **cada arquivo é
 enviado num comando próprio** (encadeados com `--more`), mantendo a estrutura do projeto; o Histórico tem uma
 linha por arquivo.
+O progresso tem duas barras: **Progresso** (arquivo atual, com velocidade e tempo restante) e **Total** (todos os
+itens, ponderado pelo tamanho, com *3/10 item(ns)* e as falhas). Na barra de status da IDE, o indicador da tarefa
+mostra o total e o texto ao lado traz o item atual (*3/10 · Main.java 45%*). No fim do envio sai uma notificação
+só, com os enviados e as falhas.
+
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
 Com Ctrl/Shift dá para selecionar várias linhas (envios, recebidos e verificações) e **Reenviar** tudo de uma vez:
 os itens são juntados sem repetir, os caminhos das verificações são resolvidos na Pasta de recepção e, com mais de
@@ -68,6 +73,17 @@ a mesma janela mostra todas as alterações do projeto (com os não versionados)
 (envia o que estiver marcado), **Comitar assim mesmo** e **Cancelar**, além de **Não mostrar novamente**. Liga e desliga em *Settings > Tools > SoundBridge* (ligado por padrão;
 só avisa com a saída configurada). No unidirecional, OK quer dizer enviado, sem confirmação do RX.
 
+## Ignorar
+
+**SoundBridge → Ignorar no envio** (botão direito no Project, ou Alt+Shift+K, I) marca arquivos ou pastas que o
+SoundBridge nunca envia nem verifica, mesmo selecionados direto ou dentro de uma pasta; pasta ignorada inclui tudo
+dentro. No mesmo menu, **Não ignorar mais** desfaz. No Project o item fica cinza com *SoundBridge: ignorado*, e no
+formulário aparece com *· ignorado*. O filtro vale na hora do envio: os ignorados viram uma linha **Ignorado** no
+Histórico, a notificação do fim conta quantos foram, e exclusões (Commit) de itens ignorados também são puladas.
+O aviso de alterações não enviadas no commit não considera os ignorados. A lista fica nas configurações do projeto
+na IDE (nenhum arquivo é criado no projeto) e aparece na aba **Ignorados** do Histórico, com **Não ignorar mais** e
+**Limpar ignorados**.
+
 ## Atalhos
 
 Atalhos em dois toques: **Alt+Shift+K** e depois a letra (no macOS, ⌥⇧K). Trocam em *Settings → Keymap*.
@@ -78,13 +94,15 @@ Atalhos em dois toques: **Alt+Shift+K** e depois a letra (no macOS, ⌥⇧K). Tr
 | Alt+Shift+K, V | Verificar o selecionado (ou o arquivo aberto) |
 | Alt+Shift+K, R | Receber / Parar, com as opções salvas do Recebimento (modo, pasta, atender pedidos) |
 | Alt+Shift+K, H | Abrir o Histórico |
+| Alt+Shift+K, I | Ignorar no envio / Não ignorar mais o selecionado |
 
 ## Recebimento
 
 Na seção **Recebimento** da Tool Window, **Receber** deixa o SoundBridge escutando na pasta de recepção do
 projeto (com confirmação no modo bidirecional) até **Parar**. Durante um envio ou uma calibração o recebimento
-pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de download), na árvore do Project e numa
-notificação.
+pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de download) e na árvore do Project.
+Numa sequência (pasta ou lista enviada de uma vez), só as falhas notificam na hora; no fim sai um resumo
+(*5 recebido(s) · 1 falha(s)*), e a linha **Sequência** do Recebimento conta os recebidos e as falhas.
 
 **Calibrar**, ao lado de Receber, escuta uma calibração iniciada no outro PC e para sozinho no fim. No modo
 **uni** mede só a ida e mostra mono, banda, pico e MCS, com **Copiar parâmetros** para digitar no TX do outro

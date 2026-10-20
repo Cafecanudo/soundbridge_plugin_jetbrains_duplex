@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Ignorar no envio** no menu SoundBridge (e Alt+Shift+K, I): arquivos e pastas marcados nunca são enviados nem
+  verificados, mesmo selecionados direto ou por pasta; **Não ignorar mais** desfaz. Filtro na hora do envio, com linha
+  **Ignorado** no Histórico e contagem na notificação; exclusões de ignorados também são puladas e o aviso de não
+  enviados do commit os desconsidera. Itens ignorados aparecem em cinza no Project e marcados no formulário.
+  Nova aba **Ignorados** no Histórico. A lista fica nas configurações do projeto (sem arquivo no projeto).
+- Barra **Total** no envio (todos os itens, ponderada pelo tamanho, com contagem e falhas), além da barra do arquivo
+  atual. O indicador da barra de status da IDE passa a mostrar o total, com o item atual no texto (*3/10 · Main.java 45%*).
+- Linha **Sequência** no Recebimento com os recebidos e as falhas da sequência atual (ou da última).
+
+### Alterado
+- Recebimento sem notificação por arquivo: numa sequência (`--more`), só as falhas notificam na hora e o fim traz um
+  resumo com recebidos e falhas. Arquivo avulso continua com a notificação de antes.
+
 ## [1.0.14-SNAPSHOT] — 2026-10-20
 
 ### Adicionado

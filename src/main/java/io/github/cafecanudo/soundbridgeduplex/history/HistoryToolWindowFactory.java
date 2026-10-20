@@ -5,7 +5,10 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import io.github.cafecanudo.soundbridgeduplex.ToolWindows;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoredPanel;
 import io.github.cafecanudo.soundbridgeduplex.send.SendDraft;
+
+import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
 public final class HistoryToolWindowFactory implements ToolWindowFactory, DumbAware {
 
@@ -20,6 +23,8 @@ public final class HistoryToolWindowFactory implements ToolWindowFactory, DumbAw
             SendDraft.getInstance(project).resend(batch);
             ToolWindows.show(project, ToolWindows.SEND);
         });
-        ToolWindows.install(toolWindow, panel.component(), panel::dispose);
+        IgnoredPanel ignored = new IgnoredPanel(project);
+        ToolWindows.install(toolWindow, panel.component(), panel::dispose, message("history.tab.history"));
+        ToolWindows.install(toolWindow, ignored.component(), ignored::dispose, message("history.tab.ignored"));
     }
 }

@@ -27,7 +27,11 @@ public final class ToolWindows {
     }
 
     public static void install(ToolWindow toolWindow, JComponent component, Disposable disposable) {
-        Content content = ContentFactory.getInstance().createContent(component, "", false);
+        install(toolWindow, component, disposable, "");
+    }
+
+    public static void install(ToolWindow toolWindow, JComponent component, Disposable disposable, String title) {
+        Content content = ContentFactory.getInstance().createContent(component, title, false);
         Disposer.register(content, disposable);
         toolWindow.getContentManager().addContent(content);
     }
