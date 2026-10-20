@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.0.16-SNAPSHOT] — 2026-10-20
+
+### Removido
+- Marcação dos itens ignorados no Project (texto em cinza e rótulo *SoundBridge: ignorado*); a lista segue na aba
+  Ignorados do Histórico e no formulário de envio.
+
 ## [1.0.15-SNAPSHOT] — 2026-10-20
 
 ### Adicionado
