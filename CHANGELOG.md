@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.15-SNAPSHOT] — 2026-10-20
+
 ### Adicionado
 - **Ignorar no envio** no menu SoundBridge (e Alt+Shift+K, I): arquivos e pastas marcados nunca são enviados nem
   verificados, mesmo selecionados direto ou por pasta; **Não ignorar mais** desfaz. Filtro na hora do envio, com linha
