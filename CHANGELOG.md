@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.13-SNAPSHOT] — 2026-10-20
+
 ### Adicionado
 - Histórico com seleção múltipla: **Reenviar** junta os itens de várias linhas (envios, recebidos e verificações),
   sem repetir; com mais de uma linha valem as opções atuais do formulário. **Enviar faltantes e diferentes** (botão
