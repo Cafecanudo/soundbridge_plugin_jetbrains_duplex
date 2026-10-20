@@ -2,6 +2,7 @@ package io.github.cafecanudo.soundbridgeduplex.history;
 
 import io.github.cafecanudo.soundbridgeduplex.send.SendEventReader;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifySummary;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -56,6 +57,10 @@ public final class HistoryFormat {
 
     public static String mcs(Integer value) {
         return value == null ? "" : value.toString();
+    }
+
+    public static String status(HistoryEntry entry) {
+        return entry.verified().isEmpty() ? entry.status().label() : VerifySummary.text(entry.verified());
     }
 
     public static String duration(double seconds) {

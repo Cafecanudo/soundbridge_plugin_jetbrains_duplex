@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Verificar** (`--verify`, sb-duplex 1.4.0b4): botão ao lado de Enviar e item **SoundBridge → Verificar** no
+  botão direito do Project. Pastas são percorridas e os caminhos vão relativos à Pasta de recepção, em lotes de até
+  24 mil caracteres. No bi, a linha do Histórico (ícone ?) vai de *Solicitando* para o resultado e abre um dialog com
+  cada arquivo; no uni fica *Solicitado* e uma notificação manda conferir no destino. O Recebimento registra a
+  verificação recebida no Histórico com o resultado; duplo clique ou **Ver resultado** abre o dialog.
+
+### Alterado
+- O menu do Project vira o submenu **SoundBridge** com **Enviar** e **Verificar**.
+
+### Corrigido
+- Um Recebimento que recebia uma verificação criava uma linha vazia de arquivo recebido no Histórico.
+
 ## [1.0.11-SNAPSHOT] — 2026-10-16
 
 ### Alterado

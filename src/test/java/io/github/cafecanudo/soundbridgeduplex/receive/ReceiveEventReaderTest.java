@@ -123,6 +123,27 @@ class ReceiveEventReaderTest {
         assertNull(update.calibration().arrival());
     }
 
+    @Test
+    void verificationIsNotAReceivedFile() {
+        ReceiveEventReader.Update update = new ReceiveEventReader().read(event("{\"schema\": 2, \"event\": \"result\", "
+                + "\"side\": \"rx\", \"ok\": true, \"verify\": true, \"name\": \"\", \"path\": null, "
+                + "\"items\": [{\"path\": \"src/a.txt\", \"status\": \"differs\"}]}"));
+
+        assertNull(update.received());
+        assertEquals(ReceiveState.LISTENING, update.state());
+        assertTrue(update.verification().ok());
+        assertEquals("src/a.txt", update.verification().items().get(0).path());
+        assertEquals(List.of("verificação recebida · diferente"), update.log());
+    }
+
+    @Test
+    void verificationWithoutItemsIsInvalid() {
+        ReceiveEventReader.Update update = new ReceiveEventReader().read(event("{\"schema\": 2, \"event\": \"result\", "
+                + "\"side\": \"rx\", \"ok\": false, \"verify\": true}"));
+
+        assertFalse(update.verification().ok());
+    }
+
     private static CliEvent event(String json) {
         return CliEventParser.parse(json).orElseThrow();
     }

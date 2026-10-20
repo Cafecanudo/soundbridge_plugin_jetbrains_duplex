@@ -8,6 +8,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBUI;
 import io.github.cafecanudo.soundbridgeduplex.receive.ResendRequestService;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyResultDialog;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -33,6 +34,7 @@ public final class HistoryPanel {
     private static final int COLUMN_MIN_WIDTH = 24;
     private static final int COLUMN_MAX_FACTOR = 3;
     private static final int[] COLUMN_WIDTHS = {40, 32, 0, 50, 74, 54, 78, 82};
+    private static final int DOUBLE_CLICK = 2;
 
     private final Project project;
     private final HistoryTableModel model = new HistoryTableModel();
@@ -82,15 +84,25 @@ public final class HistoryPanel {
     private void installPopup(Consumer<HistoryEntry> resend) {
         JBMenuItem resendItem = new JBMenuItem(message("history.resend"));
         JBMenuItem requestItem = new JBMenuItem(message("history.request"));
+        JBMenuItem resultItem = new JBMenuItem(message("history.verifyResult"));
         resendItem.addActionListener(e -> selected().ifPresent(resend));
         requestItem.addActionListener(e -> selected().ifPresent(entry -> requests().request(entry)));
+        resultItem.addActionListener(e -> selected().ifPresent(this::showVerifyResult));
         JBPopupMenu popup = new JBPopupMenu();
         popup.add(resendItem);
         popup.add(requestItem);
+        popup.add(resultItem);
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent event) {
                 showPopup(event);
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                if (event.getClickCount() == DOUBLE_CLICK && table.rowAtPoint(event.getPoint()) >= 0) {
+                    selected().filter(HistoryPanel::hasVerifyResult).ifPresent(HistoryPanel.this::showVerifyResult);
+                }
             }
 
             @Override
@@ -110,9 +122,20 @@ public final class HistoryPanel {
                 Optional<HistoryEntry> entry = selected();
                 resendItem.setEnabled(entry.filter(item -> item.direction() == Direction.SENT).isPresent());
                 requestItem.setEnabled(entry.filter(requests()::canRequest).isPresent());
+                resultItem.setEnabled(entry.filter(HistoryPanel::hasVerifyResult).isPresent());
                 popup.show(table, event.getX(), event.getY());
             }
         });
+    }
+
+    private void showVerifyResult(HistoryEntry entry) {
+        if (hasVerifyResult(entry)) {
+            new VerifyResultDialog(project, HistoryFormat.date(entry.timestamp()), entry.verified()).show();
+        }
+    }
+
+    private static boolean hasVerifyResult(HistoryEntry entry) {
+        return !entry.verified().isEmpty();
     }
 
     private ResendRequestService requests() {

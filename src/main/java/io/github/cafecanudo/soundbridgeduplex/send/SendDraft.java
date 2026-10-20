@@ -15,6 +15,7 @@ public final class SendDraft {
 
     private final List<Consumer<SendSelection>> listeners = new CopyOnWriteArrayList<>();
     private final AtomicBoolean autoSendRequested = new AtomicBoolean();
+    private final AtomicBoolean verifyRequested = new AtomicBoolean();
     private final List<Consumer<HistoryEntry>> resendListeners = new CopyOnWriteArrayList<>();
     private volatile HistoryEntry pendingResend;
     private volatile SendSelection selection = SendSelection.EMPTY;
@@ -45,6 +46,15 @@ public final class SendDraft {
 
     public void selectFromMenu(SendSelection selected) {
         select(selected, true);
+    }
+
+    public void selectForVerify(SendSelection selected) {
+        verifyRequested.set(true);
+        select(selected, false);
+    }
+
+    public boolean consumeVerifyRequest() {
+        return verifyRequested.getAndSet(false);
     }
 
     public boolean consumeAutoSendRequest() {

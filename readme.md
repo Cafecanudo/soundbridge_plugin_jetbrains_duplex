@@ -24,13 +24,29 @@ os eventos `--json`.
 
 ## Envio
 
-Botão direito em arquivos ou pastas no Project → **SoundBridge Enviar**. A Tool Window **SoundBridge** abre com os
+Botão direito em arquivos ou pastas no Project → **SoundBridge → Enviar**. A Tool Window **SoundBridge** abre com os
 itens, o modo e os parâmetros do projeto; o formulário ajusta subpasta no destino, compressão e MCS só para
 aquele envio e mostra o comando que será executado. **Enviar** roda em background, com progresso, log e
 **Cancelar**. Uma pasta selecionada aparece na lista com todos os seus arquivos (recursivo), e **cada arquivo é
 enviado num comando próprio** (encadeados com `--more`), mantendo a estrutura do projeto; o Histórico tem uma
 linha por arquivo.
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
+
+## Verificação
+
+**Verificar** (ao lado de Enviar no formulário, ou **SoundBridge → Verificar** no botão direito do Project)
+confere no outro PC se cada arquivo existe e é igual ao daqui (hash), sem gravar nada (`--verify`). Pastas são
+percorridas e cada arquivo vai na lista com o caminho relativo à **Pasta de recepção** do Settings (a mesma base
+do `--dest` do envio); itens fora dela ficam de fora, com aviso. Usa o modo, os parâmetros e o MCS do formulário.
+
+- **bi:** a linha do Histórico (ícone **?**) começa como *Solicitando* e, quando o resultado volta, mostra
+  *existe*, *não existe*, *diferente* ou a contagem de cada um; abre também um dialog com cada arquivo.
+- **uni:** a linha fica *Solicitado* e uma notificação lembra de conferir o resultado no destino.
+
+No outro PC, o Recebimento registra a verificação no Histórico (ícone **?**) com o resultado. Duplo clique numa
+linha de verificação (ou **Ver resultado** no botão direito) abre o dialog. Listas longas vão em lotes (um
+`--verify` por lote) para não passar do limite da linha de comando do Windows; o resultado é juntado numa linha
+só. Exige `sb-duplex` 1.4.0b4.
 
 Na Tool Window **Commit** (e em Local Changes), o **SoundBridge Enviar** do menu das alterações abre uma janela
 com a árvore de alterações do projeto (como a do Commit, com checkbox), já marcando o que foi selecionado:

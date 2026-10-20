@@ -7,7 +7,10 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 public enum SendStatus {
     OK,
     FAILED,
-    CANCELLED;
+    CANCELLED,
+    REQUESTING,
+    REQUESTED,
+    NO_REPLY;
 
     public static SendStatus of(SendOutcome outcome) {
         if (outcome.cancelled()) {
@@ -21,6 +24,9 @@ public enum SendStatus {
             case OK -> message("history.status.ok");
             case FAILED -> message("history.status.failed");
             case CANCELLED -> message("history.status.cancelled");
+            case REQUESTING -> message("history.status.requesting");
+            case REQUESTED -> message("history.status.requested");
+            case NO_REPLY -> message("history.status.noReply");
         };
     }
 }

@@ -98,6 +98,16 @@ class SendCommandBuilderTest {
                 SendCommandBuilder.requestArguments(UNI, UniProfile.EMPTY, Optional.empty(), Path.of("Main.java"), "src"));
     }
 
+    @Test
+    void verifyJoinsRelativePathsAndSkipsSendOnlyFlags() {
+        SendOptions options = new SendOptions("docs", null, McsSelection.fixed(1), true);
+
+        assertEquals(List.of("--verify", "src/a.txt;src/dao/b.txt", "--out", "dq8f", "--mono", "--band-high", "7000",
+                        "--peak", "0.003", "--mcs", "1", "--no-zip"),
+                SendCommandBuilder.verifyArguments(UNI, UNI_PROFILE, Optional.empty(), options,
+                        List.of("src/a.txt", "src/dao/b.txt")));
+    }
+
     private static SendOptions withMcs(int value) {
         return new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(value), false);
     }

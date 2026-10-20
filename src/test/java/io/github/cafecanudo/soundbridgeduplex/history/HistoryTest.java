@@ -5,6 +5,8 @@ import io.github.cafecanudo.soundbridgeduplex.send.SendFileResult;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOutcome;
 import io.github.cafecanudo.soundbridgeduplex.send.SendSnapshot;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyItem;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyStatus;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -36,6 +38,36 @@ class HistoryTest {
     void statusReflectsCancelAndSuccess() {
         assertEquals(SendStatus.CANCELLED, SendStatus.of(new SendOutcome(FILES, 1.0, true, null)));
         assertEquals(SendStatus.OK, SendStatus.of(new SendOutcome(List.of(FILES.get(0)), 1.0, false, null)));
+    }
+
+    @Test
+    void verificationRoundTripsThroughJsonAndSummarizesStatus() {
+        List<VerifyItem> items = List.of(new VerifyItem("src/a.txt", VerifyStatus.EXISTS),
+                new VerifyItem("src/b.txt", VerifyStatus.MISSING));
+        HistoryEntry answered = HistoryEntry.ofVerify("t", List.of("src/a.txt", "src/b.txt"), SNAPSHOT, SendStatus.OK,
+                items, 3.0, List.of("log"));
+        HistoryEntry requesting = HistoryEntry.ofVerify("t", List.of("src/a.txt"), SNAPSHOT, SendStatus.REQUESTING,
+                List.of(), 0, List.of());
+
+        assertEquals(answered, HistoryEntry.fromJson(answered.toJson()).orElseThrow());
+        assertEquals(requesting, HistoryEntry.fromJson(requesting.toJson()).orElseThrow());
+        assertEquals(Direction.VERIFY_SENT, answered.direction());
+        assertEquals(1, answered.okFiles());
+        assertEquals("1 não existe(m) · 1 existe(m)", HistoryFormat.status(answered));
+        assertEquals("Solicitando", HistoryFormat.status(requesting));
+    }
+
+    @Test
+    void requestingRowIsReplacedInPlace() {
+        HistoryEntry requesting = HistoryEntry.ofVerify("t", List.of("a"), SNAPSHOT, SendStatus.REQUESTING, List.of(), 0,
+                List.of());
+        HistoryEntry answered = HistoryEntry.ofVerify("t", List.of("a"), SNAPSHOT, SendStatus.OK,
+                List.of(new VerifyItem("a", VerifyStatus.EXISTS)), 2.0, List.of());
+        HistoryEntry other = HistoryEntry.ofVerify("u", List.of("b"), SNAPSHOT, SendStatus.REQUESTED, List.of(), 1.0,
+                List.of());
+        List<String> stored = HistoryLog.add(HistoryLog.add(List.of(), requesting), other);
+
+        assertEquals(List.of(other, answered), HistoryLog.read(HistoryLog.replace(stored, requesting, answered)));
     }
 
     @Test

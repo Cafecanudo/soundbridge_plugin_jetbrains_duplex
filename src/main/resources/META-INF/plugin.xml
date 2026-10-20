@@ -6,7 +6,8 @@
     <description><![CDATA[
         Send files and folders to another computer over an audio cable, using the SoundBridge
         OFDM transceiver.
-        Right-click a file or folder in the Project view and choose <b>SoundBridge Send</b>. In the Commit
+        Right-click a file or folder in the Project view and choose <b>SoundBridge &gt; Send</b>, or
+        <b>SoundBridge &gt; Verify</b> to check whether the receiver has the same files. In the Commit
         tool window, deleted files are removed on the receiver too.
     ]]></description>
 
@@ -41,11 +42,16 @@
     </extensions>
 
     <actions>
-        <action
-                id="SoundBridge.Send"
-                class="io.github.cafecanudo.soundbridgeduplex.send.SendAction"
-                icon="AllIcons.Actions.Upload">
+        <group id="SoundBridge.ProjectMenu" popup="true" compact="true" icon="AllIcons.Actions.Upload">
+            <action
+                    id="SoundBridge.Send"
+                    class="io.github.cafecanudo.soundbridgeduplex.send.SendAction"
+                    icon="AllIcons.Actions.Upload"/>
+            <action
+                    id="SoundBridge.Verify"
+                    class="io.github.cafecanudo.soundbridgeduplex.send.VerifyAction"
+                    icon="AllIcons.Actions.Help"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
-        </action>
+        </group>
     </actions>
 </idea-plugin>

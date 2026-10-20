@@ -45,7 +45,7 @@ public final class SendAction extends AnAction implements DumbAware {
         SoundBridgeToolWindowFactory.show(project);
     }
 
-    private static List<Path> localFiles(AnActionEvent event) {
+    static List<Path> localFiles(AnActionEvent event) {
         VirtualFile[] files = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY);
         if (files == null) {
             return List.of();

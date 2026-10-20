@@ -17,6 +17,7 @@ o CLI com `--json` e lê os eventos (`schema` 1). Nada do áudio é reimplementa
 | 7 | Histórico por projeto (Reenviar, Ver log, Limpar); Recebimento (`--rx --keep`, pausa durante envio); três Tool Windows | ✅ |
 | 7.1 | Menu no Commit/Local Changes: envia alterados e apaga no RX os apagados (`--delete`, sb-duplex 1.4.0b0); falta teste no cabo | ✅ |
 | 7.2 | Aviso no commit de alterações não enviadas (registro por SHA-256 do enviado/recebido; Enviar e comitar) | ✅ |
+| 7.3 | Verificar (`--verify`): botão, submenu SoundBridge (Enviar/Verificar), lotes, dialog do resultado, Histórico com ?; falta teste no cabo | ✅ |
 | 8 | Distribuição do plugin | ⏳ |
 | 9 | Skill do Claude para o SoundBridge | ⏳ |
 

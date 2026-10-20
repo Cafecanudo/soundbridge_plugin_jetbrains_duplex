@@ -55,6 +55,6 @@ class ResendRequestTest {
         SendSnapshot snapshot = new SendSnapshot(SendMode.TWO_WAY, "", null, null, false);
         return new HistoryEntry(Direction.RECEIVED, "t", List.of(item),
                 List.of(), snapshot, 1, 0, 0, null, 1.0, SendStatus.FAILED,
-                List.of(), remoteName);
+                List.of(), remoteName, List.of());
     }
 }

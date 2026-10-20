@@ -20,6 +20,8 @@ public final class SendCommandBuilder {
     private static final String REPLACE_FLAG = "--force-repl";
     private static final String DELETE_FLAG = "--delete";
     private static final String REQUEST_FLAG = "--request";
+    private static final String TX_FLAG = "--tx";
+    private static final String VERIFY_FLAG = "--verify";
     private static final Pattern GLOB_SPECIAL = Pattern.compile("[\\[*?]");
 
     private SendCommandBuilder() {
@@ -27,8 +29,8 @@ public final class SendCommandBuilder {
 
     public static List<String> arguments(ProjectConfig config, UniProfile uniProfile,
                                          Optional<CalibrationProfile> biProfile, SendOptions options, List<Path> items) {
-        List<String> arguments = linkArguments(config, uniProfile, biProfile, options.mcs(), items,
-                SendCommandBuilder::literal);
+        List<String> arguments = linkArguments(TX_FLAG, joined(items, SendCommandBuilder::literal), config, uniProfile,
+                biProfile, options.mcs());
         addOption(arguments, "--dest", options.destination());
         addCompression(arguments, options);
         if (options.replaceExisting()) {
@@ -39,7 +41,8 @@ public final class SendCommandBuilder {
 
     public static List<String> deleteArguments(ProjectConfig config, UniProfile uniProfile,
                                                Optional<CalibrationProfile> biProfile, McsSelection mcs, SendJob job) {
-        List<String> arguments = linkArguments(config, uniProfile, biProfile, mcs, job.items(), Path::toString);
+        List<String> arguments = linkArguments(TX_FLAG, joined(job.items(), Path::toString), config, uniProfile,
+                biProfile, mcs);
         addOption(arguments, "--dest", job.destination());
         arguments.add(DELETE_FLAG);
         return arguments;
@@ -47,10 +50,19 @@ public final class SendCommandBuilder {
 
     public static List<String> requestArguments(ProjectConfig config, UniProfile uniProfile,
                                                 Optional<CalibrationProfile> biProfile, Path item, String destination) {
-        List<String> arguments = linkArguments(config, uniProfile, biProfile, McsSelection.AUTO, List.of(item),
-                Path::toString);
+        List<String> arguments = linkArguments(TX_FLAG, item.toString(), config, uniProfile, biProfile,
+                McsSelection.AUTO);
         addOption(arguments, "--dest", destination);
         arguments.add(REQUEST_FLAG);
+        return arguments;
+    }
+
+    public static List<String> verifyArguments(ProjectConfig config, UniProfile uniProfile,
+                                               Optional<CalibrationProfile> biProfile, SendOptions options,
+                                               List<String> paths) {
+        List<String> arguments = linkArguments(VERIFY_FLAG, String.join(ITEM_SEPARATOR, paths), config, uniProfile,
+                biProfile, options.mcs());
+        addCompression(arguments, options);
         return arguments;
     }
 
@@ -86,12 +98,16 @@ public final class SendCommandBuilder {
                 .orElse(UniProfile.EMPTY);
     }
 
-    private static List<String> linkArguments(ProjectConfig config, UniProfile uniProfile,
-                                              Optional<CalibrationProfile> biProfile, McsSelection mcs,
-                                              List<Path> items, Function<Path, String> render) {
+    private static String joined(List<Path> items, Function<Path, String> render) {
+        return items.stream().map(render).collect(Collectors.joining(ITEM_SEPARATOR));
+    }
+
+    private static List<String> linkArguments(String actionFlag, String items, ProjectConfig config,
+                                              UniProfile uniProfile, Optional<CalibrationProfile> biProfile,
+                                              McsSelection mcs) {
         List<String> arguments = new ArrayList<>();
-        arguments.add("--tx");
-        arguments.add(items.stream().map(render).collect(Collectors.joining(ITEM_SEPARATOR)));
+        arguments.add(actionFlag);
+        arguments.add(items);
         addOption(arguments, "--out", config.output());
         addOption(arguments, "--profile", config.profile());
         if (config.bidirectional()) {

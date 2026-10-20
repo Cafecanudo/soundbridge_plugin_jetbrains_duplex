@@ -23,6 +23,7 @@ import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyOutcome;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -78,6 +79,7 @@ final class SendPanel {
     private final ComboBox<McsSelection> mcsCombo = new ComboBox<>();
     private final JBTextArea commandArea = new JBTextArea(COMMAND_ROWS, 0);
     private final JButton sendButton = new JButton(message("send.start"));
+    private final JButton verifyButton = new JButton(message("send.verify"));
     private final JButton cancelButton = new JButton(message("send.cancel"));
     private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
     private final JBCheckBox replaceCheck = new JBCheckBox(message("send.replace"));
@@ -123,6 +125,8 @@ final class SendPanel {
         destinationField.getDocument().addDocumentListener(onChange(this::refresh));
         destinationField.getEmptyText().setText(message("send.destination.root"));
         sendButton.addActionListener(e -> start());
+        verifyButton.setToolTipText(message("send.verify.tooltip"));
+        verifyButton.addActionListener(e -> verify());
         cancelButton.addActionListener(e -> sendService().cancel());
         autoSendCheck.setSelected(settings().autoSend());
         autoSendCheck.setToolTipText(message("send.autoSend.tooltip"));
@@ -183,6 +187,10 @@ final class SendPanel {
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
                 : DestinationResolver.defaultDestination(destinationBase(), selection.sends(), Files::isDirectory));
         applySettings();
+        if (draft().consumeVerifyRequest()) {
+            verify();
+            return;
+        }
         if (draft().consumeAutoSendRequest() && settings().autoSend()) {
             autoStart();
         }
@@ -269,6 +277,21 @@ final class SendPanel {
         });
     }
 
+    private void verify() {
+        Optional<SendMode> mode = selectedMode();
+        if (mode.isEmpty() || currentSelection().sends().isEmpty()) {
+            sendService().notifyUser(message("verify.notify.notStarted"), NotificationType.WARNING);
+            return;
+        }
+        mode.ifPresent(settings()::setSendMode);
+        VerifyRequest request = VerifyRequest.of(settings(), mode.get(), options(), currentSelection().sends());
+        logArea.setText("");
+        progressBar.setForeground(ProgressColors.PASSED);
+        progressBar.setValue(0);
+        progressLabel.setText(message("send.progress.idle"));
+        sendService().startVerify(request);
+    }
+
     private void updateVisibility() {
         commandLabel.setVisible(showCommandCheck.isSelected());
         commandScroll.setVisible(showCommandCheck.isSelected());
@@ -311,6 +334,8 @@ final class SendPanel {
         boolean sending = sendService().isRunning();
         boolean calibrating = calibrationService().isRunning();
         sendButton.setEnabled(!sending && !calibrating && selectedMode().isPresent() && !currentSelection().isEmpty());
+        verifyButton.setEnabled(!sending && !calibrating && selectedMode().isPresent()
+                && !currentSelection().sends().isEmpty());
         cancelButton.setEnabled(sending);
     }
 
@@ -441,7 +466,7 @@ final class SendPanel {
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
                 .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
-                .addComponentToRightColumn(row(sendButton, cancelButton, autoSendCheck))
+                .addComponentToRightColumn(row(sendButton, verifyButton, cancelButton, autoSendCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
                 .addLabeledComponent(logLabel, logScroll)
@@ -540,6 +565,17 @@ final class SendPanel {
         @Override
         public void onProgress(SendProgress progress) {
             showProgress(progress);
+        }
+
+        @Override
+        public void onVerified(VerifyOutcome outcome) {
+            progressBar.setIndeterminate(false);
+            if (outcome.succeeded()) {
+                progressBar.setValue(PROGRESS_SCALE);
+                progressLabel.setText(outcome.summary());
+            } else {
+                progressBar.setForeground(ProgressColors.FAILED);
+            }
         }
 
         @Override

@@ -9,8 +9,13 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import io.github.cafecanudo.soundbridgeduplex.IdeAlerts;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
+import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
+import io.github.cafecanudo.soundbridgeduplex.history.SendStatus;
 import io.github.cafecanudo.soundbridgeduplex.history.SentEntries;
 import io.github.cafecanudo.soundbridgeduplex.history.SendHistory;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyItem;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyOutcome;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyResultDialog;
 
 import java.nio.file.Files;
 import java.time.LocalDateTime;
@@ -33,6 +38,7 @@ public final class SendService {
     private final List<String> log = new CopyOnWriteArrayList<>();
     private final AtomicBoolean running = new AtomicBoolean();
     private final AtomicReference<ProgressIndicator> indicator = new AtomicReference<>();
+    private final AtomicReference<HistoryEntry> pendingVerify = new AtomicReference<>();
 
     public SendService(Project project) {
         this.project = project;
@@ -59,6 +65,35 @@ public final class SendService {
     }
 
     public boolean start(SendRequest request) {
+        if (!acquire()) {
+            return false;
+        }
+        ProgressManager.getInstance().run(new SendTask(project, request, this));
+        return true;
+    }
+
+    public boolean startVerify(VerifyRequest request) {
+        if (!request.outside().isEmpty()) {
+            notifyVerify(message("verify.notify.outside", request.outside().size(), request.workDirectory()),
+                    NotificationType.WARNING);
+        }
+        if (request.isEmpty()) {
+            notifyVerify(message("verify.notify.empty", request.workDirectory()), NotificationType.WARNING);
+            return false;
+        }
+        if (!acquire()) {
+            return false;
+        }
+        if (request.bidirectional()) {
+            HistoryEntry requesting = verifyEntry(request, SendStatus.REQUESTING, List.of(), 0);
+            pendingVerify.set(requesting);
+            SendHistory.getInstance(project).add(requesting);
+        }
+        ProgressManager.getInstance().run(new VerifyTask(project, request, this));
+        return true;
+    }
+
+    private boolean acquire() {
         if (CalibrationService.getInstance(project).isRunning()) {
             notifyUser(message("send.notify.busy"), NotificationType.WARNING);
             return false;
@@ -69,7 +104,6 @@ public final class SendService {
         }
         log.clear();
         notifyRunning(true);
-        ProgressManager.getInstance().run(new SendTask(project, request, this));
         return true;
     }
 
@@ -102,6 +136,35 @@ public final class SendService {
         notifyRunning(false);
         onUi(() -> observers.forEach(observer -> observer.onFinished(outcome)));
         notifyUser(outcome.summary(), outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);
+    }
+
+    void finishVerify(VerifyRequest request, VerifyOutcome outcome) {
+        HistoryEntry entry = verifyEntry(request, outcome.status(), outcome.items(), outcome.seconds());
+        HistoryEntry requesting = pendingVerify.getAndSet(null);
+        if (requesting == null) {
+            SendHistory.getInstance(project).add(entry);
+        } else {
+            SendHistory.getInstance(project).replace(requesting, entry);
+        }
+        indicator.set(null);
+        running.set(false);
+        notifyRunning(false);
+        onUi(() -> observers.forEach(observer -> observer.onVerified(outcome)));
+        if (outcome.answered()) {
+            onUi(() -> new VerifyResultDialog(project, entry.timestamp(), outcome.items()).show());
+        }
+        notifyVerify(outcome.summary(), outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);
+    }
+
+    private HistoryEntry verifyEntry(VerifyRequest request, SendStatus status, List<VerifyItem> items,
+                                     double seconds) {
+        return HistoryEntry.ofVerify(LocalDateTime.now().format(TIMESTAMP), request.paths(), request.snapshot(), status,
+                items, seconds, log());
+    }
+
+    private void notifyVerify(String content, NotificationType type) {
+        IdeAlerts.notify(project, message("verify.notify.title"), content, type, message("send.notify.open"),
+                this::openToolWindow);
     }
 
     private void notifyRunning(boolean value) {

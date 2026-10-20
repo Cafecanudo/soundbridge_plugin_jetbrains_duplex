@@ -8,10 +8,14 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import io.github.cafecanudo.soundbridgeduplex.receive.ReceivedFile;
+import io.github.cafecanudo.soundbridgeduplex.receive.ReceivedVerification;
 import io.github.cafecanudo.soundbridgeduplex.send.SendFileResult;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOutcome;
 import io.github.cafecanudo.soundbridgeduplex.send.SendSnapshot;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyItem;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyStatus;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifySummary;
 
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +35,8 @@ public record HistoryEntry(
         double seconds,
         SendStatus status,
         List<String> log,
-        String remoteName) {
+        String remoteName,
+        List<VerifyItem> verified) {
 
     public static final int MAX_LOG_LINES = 200;
 
@@ -52,12 +57,14 @@ public record HistoryEntry(
     private static final String STATUS = "status";
     private static final String LOG = "log";
     private static final String REMOTE_NAME = "remote_name";
+    private static final String VERIFIED = "verified";
 
     public HistoryEntry {
         items = List.copyOf(items);
         deleted = List.copyOf(deleted);
         log = List.copyOf(log.size() > MAX_LOG_LINES ? log.subList(log.size() - MAX_LOG_LINES, log.size()) : log);
         remoteName = Objects.requireNonNullElse(remoteName, "");
+        verified = List.copyOf(Objects.requireNonNullElse(verified, List.of()));
     }
 
     public static HistoryEntry of(String timestamp, List<String> items, SendSnapshot snapshot, SendOutcome outcome,
@@ -71,7 +78,7 @@ public record HistoryEntry(
         Integer finalMcs = results.isEmpty() ? null : results.get(results.size() - 1).finalMcs();
         long size = results.stream().mapToLong(SendFileResult::size).sum();
         return new HistoryEntry(Direction.SENT, timestamp, items, deleted, snapshot, results.size(), (int) outcome.okCount(),
-                size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log, "");
+                size, finalMcs, outcome.seconds(), SendStatus.of(outcome), log, "", List.of());
     }
 
     public static HistoryEntry ofFile(String timestamp, String item, boolean delete, SendSnapshot snapshot,
@@ -79,7 +86,8 @@ public record HistoryEntry(
         boolean ok = result != null && result.ok();
         return new HistoryEntry(Direction.SENT, timestamp, delete ? List.of() : List.of(item),
                 delete ? List.of(item) : List.of(), snapshot, 1, ok ? 1 : 0, result == null ? 0 : result.size(),
-                result == null ? null : result.finalMcs(), result == null ? 0 : result.seconds(), status, log, "");
+                result == null ? null : result.finalMcs(), result == null ? 0 : result.seconds(), status, log, "",
+                List.of());
     }
 
     public static HistoryEntry ofReceived(String timestamp, ReceivedFile file) {
@@ -87,7 +95,24 @@ public record HistoryEntry(
                 null, null, false);
         String item = file.path().isEmpty() ? file.name() : file.path();
         return new HistoryEntry(Direction.RECEIVED, timestamp, List.of(item), List.of(), snapshot, 1, file.ok() ? 1 : 0,
-                file.size(), null, file.seconds(), file.ok() ? SendStatus.OK : SendStatus.FAILED, file.log(), file.name());
+                file.size(), null, file.seconds(), file.ok() ? SendStatus.OK : SendStatus.FAILED, file.log(), file.name(),
+                List.of());
+    }
+
+    public static HistoryEntry ofVerify(String timestamp, List<String> paths, SendSnapshot snapshot, SendStatus status,
+                                        List<VerifyItem> verified, double seconds, List<String> log) {
+        return new HistoryEntry(Direction.VERIFY_SENT, timestamp, paths, List.of(), snapshot, paths.size(),
+                (int) VerifySummary.count(verified, VerifyStatus.EXISTS), 0, null, seconds, status, log, "", verified);
+    }
+
+    public static HistoryEntry ofVerifyReceived(String timestamp, ReceivedVerification verification) {
+        SendSnapshot snapshot = new SendSnapshot(verification.bidirectional() ? SendMode.TWO_WAY : SendMode.ONE_WAY, "",
+                null, null, false);
+        List<String> paths = verification.items().stream().map(VerifyItem::path).toList();
+        SendStatus status = verification.ok() ? SendStatus.OK : SendStatus.FAILED;
+        return new HistoryEntry(Direction.VERIFY_RECEIVED, timestamp, paths, List.of(), snapshot, paths.size(),
+                (int) VerifySummary.count(verification.items(), VerifyStatus.EXISTS), 0, null, verification.seconds(),
+                status, verification.log(), "", verification.items());
     }
 
     public String toJson() {
@@ -109,6 +134,9 @@ public record HistoryEntry(
         object.addProperty(STATUS, status.name());
         object.add(LOG, strings(log));
         object.addProperty(REMOTE_NAME, remoteName);
+        if (!verified.isEmpty()) {
+            object.add(VERIFIED, VerifyItem.toJson(verified));
+        }
         return object.toString();
     }
 
@@ -123,7 +151,8 @@ public record HistoryEntry(
             return Optional.of(new HistoryEntry(direction, o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
                     deleted, snapshot, o.get(FILES).getAsInt(), o.get(OK_FILES).getAsInt(), o.get(SIZE).getAsLong(),
                     integer(o, FINAL_MCS), o.get(SECONDS).getAsDouble(), SendStatus.valueOf(o.get(STATUS).getAsString()),
-                    strings(o.getAsJsonArray(LOG)), o.has(REMOTE_NAME) ? o.get(REMOTE_NAME).getAsString() : ""));
+                    strings(o.getAsJsonArray(LOG)), o.has(REMOTE_NAME) ? o.get(REMOTE_NAME).getAsString() : "",
+                    VerifyItem.fromJson(o.get(VERIFIED))));
         } catch (JsonParseException | IllegalStateException | IllegalArgumentException | NullPointerException e) {
             return Optional.empty();
         }

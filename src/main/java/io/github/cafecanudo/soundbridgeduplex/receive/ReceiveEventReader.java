@@ -5,6 +5,8 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.LinkChoice;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliEvent;
 import io.github.cafecanudo.soundbridgeduplex.send.SendEventReader;
 import io.github.cafecanudo.soundbridgeduplex.send.SendProgress;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifyItem;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifySummary;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +17,17 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 public final class ReceiveEventReader {
 
     public record Update(List<String> log, ReceiveState state, SendProgress progress, ReceivedFile received,
-                         String calibrationStage, ReceivedCalibration calibration) {
+                         String calibrationStage, ReceivedCalibration calibration, ReceivedVerification verification) {
 
         static final Update NONE = new Update(List.of(), null, null, null);
 
         Update(List<String> log, ReceiveState state, SendProgress progress, ReceivedFile received) {
-            this(log, state, progress, received, null, null);
+            this(log, state, progress, received, null, null, null);
+        }
+
+        Update(List<String> log, ReceiveState state, SendProgress progress, ReceivedFile received,
+               String calibrationStage, ReceivedCalibration calibration) {
+            this(log, state, progress, received, calibrationStage, calibration, null);
         }
     }
 
@@ -83,6 +90,9 @@ public final class ReceiveEventReader {
             String served = event.string("served").orElse("");
             return log(message("receive.log.served." + served, event.string("name").orElse("")), ReceiveState.LISTENING);
         }
+        if (event.bool("verify").orElse(false)) {
+            return verification(event);
+        }
         boolean ok = event.bool("ok").orElse(false);
         String name = event.string("name").orElse(currentName);
         double seconds = event.number("seconds").orElse(0);
@@ -93,6 +103,18 @@ public final class ReceiveEventReader {
         fileLog.clear();
         currentName = "";
         return new Update(List.of(line), ReceiveState.LISTENING, null, received);
+    }
+
+    private Update verification(CliEvent event) {
+        List<VerifyItem> items = VerifyItem.fromJson(event.data().get("items"));
+        boolean ok = event.bool("ok").orElse(false) && !items.isEmpty();
+        String line = ok ? message("receive.log.verified", VerifySummary.text(items)) : message("receive.log.verifyInvalid");
+        fileLog.add(line);
+        ReceivedVerification verification = new ReceivedVerification(items, event.number("seconds").orElse(0), ok,
+                bidirectional, fileLog);
+        fileLog.clear();
+        currentName = "";
+        return new Update(List.of(line), ReceiveState.LISTENING, null, null, null, null, verification);
     }
 
     private Update calibrationStage(CliEvent event) {

@@ -58,10 +58,10 @@ public final class HistoryTableModel extends AbstractTableModel {
             case DIRECTION -> entry.direction().icon();
             case ITEMS -> HistoryFormat.items(entry.items(), entry.deleted());
             case 3 -> HistoryFormat.mode(entry.snapshot().mode());
-            case 4 -> HistoryFormat.size(entry.size());
+            case 4 -> entry.direction().isVerify() ? "" : HistoryFormat.size(entry.size());
             case 5 -> HistoryFormat.mcs(entry.finalMcs());
             case 6 -> HistoryFormat.duration(entry.seconds());
-            default -> entry.status().label();
+            default -> HistoryFormat.status(entry);
         };
     }
 }

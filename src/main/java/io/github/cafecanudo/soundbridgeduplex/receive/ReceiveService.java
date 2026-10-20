@@ -25,6 +25,7 @@ import io.github.cafecanudo.soundbridgeduplex.send.SendService;
 import io.github.cafecanudo.soundbridgeduplex.send.SentRegistry;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
+import io.github.cafecanudo.soundbridgeduplex.verify.VerifySummary;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -203,6 +204,15 @@ public final class ReceiveService implements Disposable {
         notifyUser(text, file.ok() ? NotificationType.INFORMATION : NotificationType.WARNING);
     }
 
+    private void verified(ReceivedVerification verification) {
+        HistoryEntry entry = HistoryEntry.ofVerifyReceived(LocalDateTime.now().format(TIMESTAMP), verification);
+        onUi(() -> SendHistory.getInstance(project).add(entry));
+        String text = verification.ok() ? message("receive.notify.verified", VerifySummary.text(verification.items()))
+                : message("receive.log.verifyInvalid");
+        notifyUser(text, verification.ok() && VerifySummary.allExist(verification.items())
+                ? NotificationType.INFORMATION : NotificationType.WARNING);
+    }
+
     private void calibrated(ReceivedCalibration calibration) {
         ReceivedCalibration stamped = calibration.at(LocalDateTime.now().format(TIMESTAMP));
         lastCalibration = stamped;
@@ -277,6 +287,9 @@ public final class ReceiveService implements Disposable {
             }
             if (update.calibrationStage() != null) {
                 onUi(() -> observers.forEach(observer -> observer.onCalibrationStage(update.calibrationStage())));
+            }
+            if (update.verification() != null) {
+                verified(update.verification());
             }
             if (update.calibration() != null) {
                 calibrated(update.calibration());
