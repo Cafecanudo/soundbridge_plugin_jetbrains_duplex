@@ -16,8 +16,8 @@ public final class HistoryToolWindowFactory implements ToolWindowFactory, DumbAw
 
     @Override
     public void createToolWindowContent(Project project, ToolWindow toolWindow) {
-        HistoryPanel panel = new HistoryPanel(project, entry -> {
-            SendDraft.getInstance(project).resend(entry);
+        HistoryPanel panel = new HistoryPanel(project, batch -> {
+            SendDraft.getInstance(project).resend(batch);
             ToolWindows.show(project, ToolWindows.SEND);
         });
         ToolWindows.install(toolWindow, panel.component(), panel::dispose);

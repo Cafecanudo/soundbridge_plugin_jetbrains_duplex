@@ -31,6 +31,10 @@ aquele envio e mostra o comando que será executado. **Enviar** roda em backgrou
 enviado num comando próprio** (encadeados com `--more`), mantendo a estrutura do projeto; o Histórico tem uma
 linha por arquivo.
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
+Com Ctrl/Shift dá para selecionar várias linhas (envios, recebidos e verificações) e **Reenviar** tudo de uma vez:
+os itens são juntados sem repetir, os caminhos das verificações são resolvidos na Pasta de recepção e, com mais de
+uma linha, valem as opções atuais do formulário (com uma só, as daquele envio). **Enviar faltantes e diferentes**
+(botão direito) manda só os arquivos que as verificações selecionadas marcaram como *não existe* ou *diferente*.
 
 ## Verificação
 

@@ -2,7 +2,6 @@ package io.github.cafecanudo.soundbridgeduplex.send;
 
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
-import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -16,8 +15,8 @@ public final class SendDraft {
     private final List<Consumer<SendSelection>> listeners = new CopyOnWriteArrayList<>();
     private final AtomicBoolean autoSendRequested = new AtomicBoolean();
     private final AtomicBoolean verifyRequested = new AtomicBoolean();
-    private final List<Consumer<HistoryEntry>> resendListeners = new CopyOnWriteArrayList<>();
-    private volatile HistoryEntry pendingResend;
+    private final List<Consumer<ResendBatch>> resendListeners = new CopyOnWriteArrayList<>();
+    private volatile ResendBatch pendingResend;
     private volatile SendSelection selection = SendSelection.EMPTY;
 
     public static SendDraft getInstance(Project project) {
@@ -67,22 +66,22 @@ public final class SendDraft {
         listeners.forEach(listener -> listener.accept(selection));
     }
 
-    public void resend(HistoryEntry entry) {
-        pendingResend = entry;
-        resendListeners.forEach(listener -> listener.accept(entry));
+    public void resend(ResendBatch batch) {
+        pendingResend = batch;
+        resendListeners.forEach(listener -> listener.accept(batch));
     }
 
-    public HistoryEntry consumeResend() {
-        HistoryEntry entry = pendingResend;
+    public ResendBatch consumeResend() {
+        ResendBatch batch = pendingResend;
         pendingResend = null;
-        return entry;
+        return batch;
     }
 
-    public void addResendListener(Consumer<HistoryEntry> listener) {
+    public void addResendListener(Consumer<ResendBatch> listener) {
         resendListeners.add(listener);
     }
 
-    public void removeResendListener(Consumer<HistoryEntry> listener) {
+    public void removeResendListener(Consumer<ResendBatch> listener) {
         resendListeners.remove(listener);
     }
 

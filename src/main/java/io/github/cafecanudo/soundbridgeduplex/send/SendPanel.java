@@ -19,7 +19,6 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
-import io.github.cafecanudo.soundbridgeduplex.history.HistoryEntry;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
@@ -94,9 +93,9 @@ final class SendPanel {
     private final JBScrollPane commandScroll = new JBScrollPane(commandArea);
     private final JBScrollPane logScroll = new JBScrollPane(logArea);
     private final Consumer<SendSelection> draftListener = this::showItems;
-    private final Consumer<HistoryEntry> resendListener = entry -> {
+    private final Consumer<ResendBatch> resendListener = batch -> {
         draft().consumeResend();
-        resend(entry);
+        resend(batch);
     };
     private final SendObserver sendObserver = new SendWatcher();
     private final CalibrationObserver calibrationObserver = new CalibrationWatcher();
@@ -160,7 +159,7 @@ final class SendPanel {
         root.addAncestorListener(onShown(this::applySettings));
         sendService().log().forEach(this::appendLog);
         showItems(draft().selection());
-        HistoryEntry pending = draft().consumeResend();
+        ResendBatch pending = draft().consumeResend();
         if (pending != null) {
             resend(pending);
         }
@@ -301,14 +300,17 @@ final class SendPanel {
         root.repaint();
     }
 
-    void resend(HistoryEntry entry) {
-        List<Path> existing = entry.items().stream().map(Path::of).filter(Files::exists).toList();
-        int missing = entry.items().size() - existing.size();
+    void resend(ResendBatch batch) {
+        List<Path> sends = batch.selection().sends();
+        List<Path> existing = sends.stream().filter(Files::exists).toList();
+        int missing = sends.size() - existing.size();
         if (missing > 0) {
             sendService().notifyUser(message("history.resend.missing", missing), NotificationType.WARNING);
         }
-        draft().setSelection(new SendSelection(existing, entry.deleted().stream().map(Path::of).toList()));
-        applySnapshot(entry.snapshot());
+        draft().setSelection(new SendSelection(existing, batch.selection().deletions()));
+        if (batch.snapshot() != null) {
+            applySnapshot(batch.snapshot());
+        }
         if (settings().autoSend()) {
             autoStart();
         }

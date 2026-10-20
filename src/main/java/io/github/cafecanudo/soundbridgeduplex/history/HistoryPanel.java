@@ -8,6 +8,8 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBUI;
 import io.github.cafecanudo.soundbridgeduplex.receive.ResendRequestService;
+import io.github.cafecanudo.soundbridgeduplex.send.ResendBatch;
+import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 import io.github.cafecanudo.soundbridgeduplex.verify.VerifyResultDialog;
 
 import javax.swing.Box;
@@ -21,6 +23,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -45,12 +49,12 @@ public final class HistoryPanel {
     private final Runnable historyListener = this::reload;
     private final JPanel root;
 
-    public HistoryPanel(Project project, Consumer<HistoryEntry> resend) {
+    public HistoryPanel(Project project, Consumer<ResendBatch> resend) {
         this.project = project;
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         sizeColumns();
         table.getSelectionModel().addListSelectionListener(e -> updateButtons());
-        resendButton.addActionListener(e -> selected().ifPresent(resend));
+        resendButton.addActionListener(e -> resendSelected(resend, false));
         installPopup(resend);
         logButton.addActionListener(e -> selected().ifPresent(entry -> new HistoryLogDialog(project, entry).show()));
         clearButton.addActionListener(e -> confirmClear());
@@ -81,15 +85,18 @@ public final class HistoryPanel {
         }
     }
 
-    private void installPopup(Consumer<HistoryEntry> resend) {
+    private void installPopup(Consumer<ResendBatch> resend) {
         JBMenuItem resendItem = new JBMenuItem(message("history.resend"));
+        JBMenuItem problemsItem = new JBMenuItem(message("history.resendProblems"));
         JBMenuItem requestItem = new JBMenuItem(message("history.request"));
         JBMenuItem resultItem = new JBMenuItem(message("history.verifyResult"));
-        resendItem.addActionListener(e -> selected().ifPresent(resend));
+        resendItem.addActionListener(e -> resendSelected(resend, false));
+        problemsItem.addActionListener(e -> resendSelected(resend, true));
         requestItem.addActionListener(e -> selected().ifPresent(entry -> requests().request(entry)));
         resultItem.addActionListener(e -> selected().ifPresent(this::showVerifyResult));
         JBPopupMenu popup = new JBPopupMenu();
         popup.add(resendItem);
+        popup.add(problemsItem);
         popup.add(requestItem);
         popup.add(resultItem);
         table.addMouseListener(new MouseAdapter() {
@@ -118,14 +125,25 @@ public final class HistoryPanel {
                 if (row < 0) {
                     return;
                 }
-                table.setRowSelectionInterval(row, row);
+                if (!table.isRowSelected(row)) {
+                    table.setRowSelectionInterval(row, row);
+                }
                 Optional<HistoryEntry> entry = selected();
-                resendItem.setEnabled(entry.filter(item -> item.direction() == Direction.SENT).isPresent());
+                resendItem.setEnabled(!selectedEntries().isEmpty());
+                problemsItem.setEnabled(selectedEntries().stream().anyMatch(ResendBatch::hasProblems));
                 requestItem.setEnabled(entry.filter(requests()::canRequest).isPresent());
                 resultItem.setEnabled(entry.filter(HistoryPanel::hasVerifyResult).isPresent());
                 popup.show(table, event.getX(), event.getY());
             }
         });
+    }
+
+    private void resendSelected(Consumer<ResendBatch> resend, boolean onlyProblems) {
+        ResendBatch batch = ResendBatch.of(selectedEntries(),
+                SoundBridgeProjectSettings.getInstance(project).destinationBase(), onlyProblems);
+        if (!batch.isEmpty()) {
+            resend.accept(batch);
+        }
     }
 
     private void showVerifyResult(HistoryEntry entry) {
@@ -148,15 +166,21 @@ public final class HistoryPanel {
     }
 
     private void updateButtons() {
-        boolean hasSelection = selected().isPresent();
-        resendButton.setEnabled(selected().filter(entry -> entry.direction() == Direction.SENT).isPresent());
-        logButton.setEnabled(hasSelection);
+        resendButton.setEnabled(!selectedEntries().isEmpty());
+        logButton.setEnabled(selected().isPresent());
         clearButton.setEnabled(model.getRowCount() > 0);
     }
 
     private Optional<HistoryEntry> selected() {
-        int row = table.getSelectedRow();
-        return row < 0 ? Optional.empty() : Optional.of(model.entryAt(table.convertRowIndexToModel(row)));
+        List<HistoryEntry> entries = selectedEntries();
+        return entries.size() == 1 ? Optional.of(entries.get(0)) : Optional.empty();
+    }
+
+    private List<HistoryEntry> selectedEntries() {
+        return Arrays.stream(table.getSelectedRows())
+                .map(table::convertRowIndexToModel)
+                .mapToObj(model::entryAt)
+                .toList();
     }
 
     private void confirmClear() {
