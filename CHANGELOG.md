@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.19-SNAPSHOT] — 2026-10-21
+
 ### Adicionado
 - **Usar memória** abaixo de Itens: detecta arquivos, print ou texto na área de transferência (também copiados fora da
   IDE) e os coloca nos itens; print e texto vão como `sb-memoria.png` e `sb-memoria.txt`.
