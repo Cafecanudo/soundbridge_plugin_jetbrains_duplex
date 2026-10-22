@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.21-SNAPSHOT] — 2026-10-22
+
 ### Adicionado
 - **Arquivo único compactado quando pasta**, ao lado de **Substituir se existir**: cada pasta dos itens vai num único
   pacote (`--only-package`, um envio por pasta) e o PC que recebe extrai com as mesmas subpastas. Arquivos avulsos vão
