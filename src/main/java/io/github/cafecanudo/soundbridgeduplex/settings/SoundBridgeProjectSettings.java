@@ -44,6 +44,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public String calibrationProfile = "";
         public boolean autoSend = false;
         public boolean replaceExisting = false;
+        public boolean packageFolders = false;
         public boolean showCommand = false;
         public boolean showLog = false;
         public boolean showReceiveLog = false;
@@ -57,7 +58,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean expandFolders = true;
         public int commandDelayMs = DEFAULT_COMMAND_DELAY_MS;
         public boolean serveRequests = true;
-        public boolean receiveCopyMemory = false;
+        public boolean sendCopyMemory = false;
         public String sendMode = "";
         public List<String> ignored = new ArrayList<>();
         public Map<String, String> sent = new HashMap<>();
@@ -154,6 +155,14 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         state.replaceExisting = value;
     }
 
+    public boolean packageFolders() {
+        return state.packageFolders;
+    }
+
+    public void setPackageFolders(boolean value) {
+        state.packageFolders = value;
+    }
+
     public boolean showCommand() {
         return state.showCommand;
     }
@@ -238,12 +247,12 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         state.sendMode = mode.name();
     }
 
-    public boolean receiveCopyMemory() {
-        return state.receiveCopyMemory;
+    public boolean sendCopyMemory() {
+        return state.sendCopyMemory;
     }
 
-    public void setReceiveCopyMemory(boolean value) {
-        state.receiveCopyMemory = value;
+    public void setSendCopyMemory(boolean value) {
+        state.sendCopyMemory = value;
     }
 
     public boolean serveRequests() {

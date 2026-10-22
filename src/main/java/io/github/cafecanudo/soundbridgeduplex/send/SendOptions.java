@@ -2,7 +2,8 @@ package io.github.cafecanudo.soundbridgeduplex.send;
 
 import java.util.Objects;
 
-public record SendOptions(String destination, Integer zipLevel, McsSelection mcs, boolean replaceExisting) {
+public record SendOptions(String destination, Integer zipLevel, McsSelection mcs, boolean replaceExisting,
+                          boolean packageFolders, boolean copyMemory) {
 
     public static final int DEFAULT_ZIP_LEVEL = 9;
     public static final int MIN_ZIP_LEVEL = 0;
@@ -11,6 +12,10 @@ public record SendOptions(String destination, Integer zipLevel, McsSelection mcs
     public SendOptions {
         destination = Objects.requireNonNullElse(destination, "").strip();
         mcs = Objects.requireNonNullElse(mcs, McsSelection.AUTO);
+    }
+
+    public SendOptions(String destination, Integer zipLevel, McsSelection mcs, boolean replaceExisting) {
+        this(destination, zipLevel, mcs, replaceExisting, false, false);
     }
 
     public boolean compressed() {

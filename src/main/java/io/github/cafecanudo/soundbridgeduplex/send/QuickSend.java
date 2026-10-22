@@ -44,7 +44,7 @@ final class QuickSend {
         UniProfile parameters = SendCommandBuilder.txParameters(effective, settings.uniProfile(),
                 settings.calibrationProfile());
         SendOptions options = new SendOptions("", settings.zipLevel(), McsSelection.of(parameters.mcs()),
-                settings.replaceExisting());
+                settings.replaceExisting(), settings.packageFolders(), settings.sendCopyMemory());
         List<List<String>> commands = SendCommandBuilder.commands(effective, settings.uniProfile(),
                 settings.calibrationProfile(), options, jobs);
         SendSnapshot snapshot = SendSnapshot.of(mode.get(), destination, options);

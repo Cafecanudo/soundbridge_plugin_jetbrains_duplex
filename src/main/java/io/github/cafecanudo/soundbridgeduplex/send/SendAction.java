@@ -49,7 +49,9 @@ public final class SendAction extends AnAction implements DumbAware {
 
     public static void sendText(Project project, String text) {
         try {
-            send(project, SendSelection.of(List.of(MemoryFiles.writeText(MemoryFiles.defaultRoot(), text))));
+            Path file = MemoryFiles.writeText(MemoryFiles.defaultRoot(), text);
+            SoundBridgeProjectSettings.getInstance(project).setSendCopyMemory(true);
+            send(project, SendSelection.of(List.of(file)));
         } catch (IOException e) {
             SendService.getInstance(project).notifyUser(e.getMessage(), NotificationType.WARNING);
         }

@@ -54,10 +54,10 @@ class ReceiveCommandBuilderTest {
     }
 
     @Test
-    void copyMemoryAsksTheCliToCopyWhatArrives() {
-        List<String> arguments = ReceiveCommandBuilder.arguments(CONFIG, new ReceiveOptions(false, "C:/p", false, true),
+    void receiveNeverAsksForMemoryBecauseTheSenderDecides() {
+        List<String> arguments = ReceiveCommandBuilder.arguments(CONFIG, new ReceiveOptions(true, "C:/p", true),
                 Optional.empty());
 
-        org.junit.jupiter.api.Assertions.assertTrue(arguments.contains("--copy-memory"));
+        org.junit.jupiter.api.Assertions.assertFalse(arguments.contains("--copy-memory"));
     }
 }

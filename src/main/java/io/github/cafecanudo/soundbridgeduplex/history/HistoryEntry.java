@@ -49,6 +49,8 @@ public record HistoryEntry(
     private static final String ZIP_LEVEL = "zip_level";
     private static final String MCS = "mcs";
     private static final String REPLACE = "replace";
+    private static final String PACKAGE = "package";
+    private static final String MEMORY = "memory";
     private static final String FILES = "files";
     private static final String OK_FILES = "ok_files";
     private static final String SIZE = "size";
@@ -132,6 +134,8 @@ public record HistoryEntry(
         object.add(ZIP_LEVEL, number(snapshot.zipLevel()));
         object.add(MCS, number(snapshot.mcs()));
         object.addProperty(REPLACE, snapshot.replaceExisting());
+        object.addProperty(PACKAGE, snapshot.packageFolders());
+        object.addProperty(MEMORY, snapshot.copyMemory());
         object.addProperty(FILES, files);
         object.addProperty(OK_FILES, okFiles);
         object.addProperty(SIZE, size);
@@ -151,7 +155,7 @@ public record HistoryEntry(
             JsonObject o = JsonParser.parseString(json).getAsJsonObject();
             SendSnapshot snapshot = new SendSnapshot(SendMode.valueOf(o.get(MODE).getAsString()),
                     o.get(DESTINATION).getAsString(), integer(o, ZIP_LEVEL), integer(o, MCS),
-                    o.get(REPLACE).getAsBoolean());
+                    o.get(REPLACE).getAsBoolean(), flag(o, PACKAGE), flag(o, MEMORY));
             Direction direction = o.has(DIRECTION) ? Direction.valueOf(o.get(DIRECTION).getAsString()) : Direction.SENT;
             List<String> deleted = o.has(DELETED) ? strings(o.getAsJsonArray(DELETED)) : List.of();
             return Optional.of(new HistoryEntry(direction, o.get(TIMESTAMP).getAsString(), strings(o.getAsJsonArray(ITEMS)),
@@ -183,5 +187,10 @@ public record HistoryEntry(
     private static Integer integer(JsonObject object, String key) {
         JsonElement element = object.get(key);
         return element == null || element.isJsonNull() ? null : element.getAsInt();
+    }
+
+    private static boolean flag(JsonObject object, String key) {
+        JsonElement element = object.get(key);
+        return element != null && !element.isJsonNull() && element.getAsBoolean();
     }
 }

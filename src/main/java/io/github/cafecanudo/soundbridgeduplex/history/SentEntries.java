@@ -65,7 +65,7 @@ public final class SentEntries {
 
     private static SendSnapshot withDestination(SendSnapshot snapshot, String destination) {
         return new SendSnapshot(snapshot.mode(), destination, snapshot.zipLevel(), snapshot.mcs(),
-                snapshot.replaceExisting());
+                snapshot.replaceExisting(), snapshot.packageFolders(), snapshot.copyMemory());
     }
 
     private static SendStatus statusOf(SentFile sent, SendOutcome outcome) {

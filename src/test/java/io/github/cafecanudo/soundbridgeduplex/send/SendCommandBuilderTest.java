@@ -5,7 +5,10 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.LinkChoice;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -63,6 +66,33 @@ class SendCommandBuilderTest {
         assertEquals(List.of("--tx", JOINED, "--out", "dq8f", "--mono", "--band-high", "7000", "--peak", "0.003",
                         "--mcs", "3", "--zip-level", "6"),
                 SendCommandBuilder.arguments(UNI, UNI_PROFILE, Optional.empty(), fixed, ITEMS));
+    }
+
+    @Test
+    void packageFlagOnlyWhenOptionIsOnAndJobHasFolder(@TempDir Path folder) throws IOException {
+        Path file = Files.writeString(folder.resolve("a.txt"), "a");
+        SendOptions packaged = new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(3), false, true, false);
+
+        assertEquals(List.of("--tx", folder.toString(), "--out", "dq8f", "--mcs", "3", "--only-package"),
+                SendCommandBuilder.arguments(UNI, UniProfile.EMPTY, Optional.empty(), packaged, List.of(folder)));
+        assertEquals(List.of("--tx", file.toString(), "--out", "dq8f", "--mcs", "3"),
+                SendCommandBuilder.arguments(UNI, UniProfile.EMPTY, Optional.empty(), packaged, List.of(file)));
+        assertEquals(List.of("--tx", folder.toString(), "--out", "dq8f", "--mcs", "3"),
+                SendCommandBuilder.arguments(UNI, UniProfile.EMPTY, Optional.empty(), withMcs(3), List.of(folder)));
+    }
+
+    @Test
+    void copyMemoryGoesOnSendsButNotOnDeletes() {
+        SendOptions memory = new SendOptions("", SendOptions.DEFAULT_ZIP_LEVEL, McsSelection.fixed(3), false, false, true);
+        List<SendJob> jobs = List.of(new SendJob(List.of(Path.of("C:/p/old.txt")), "", true),
+                new SendJob(List.of(Path.of("C:/p/sb-memoria.txt")), ""));
+
+        List<List<String>> commands = SendCommandBuilder.commands(UNI, UniProfile.EMPTY, Optional.empty(), memory, jobs);
+
+        assertEquals(List.of("--tx", Path.of("C:/p/old.txt").toString(), "--out", "dq8f", "--mcs", "3", "--delete",
+                "--more"), commands.get(0));
+        assertEquals(List.of("--tx", Path.of("C:/p/sb-memoria.txt").toString(), "--out", "dq8f", "--mcs", "3",
+                "--copy-memory"), commands.get(1));
     }
 
     @Test

@@ -68,7 +68,6 @@ public final class ReceivePanel {
     private final JButton stopButton = new JButton(message("receive.stop"));
     private final JButton calibrateButton = new JButton(message("receive.calibrate"));
     private final JBCheckBox serveCheck = new JBCheckBox(message("receive.serve"));
-    private final JBCheckBox memoryCheck = new JBCheckBox(message("receive.copyMemory"));
     private final JBLabel calibrationTitle = new JBLabel(message("receive.calibration.title"));
     private final JBLabel calibrationLabel = new JBLabel();
     private final JButton copyButton = new JButton(message("receive.calibration.copy"));
@@ -108,14 +107,6 @@ public final class ReceivePanel {
         });
         startButton.addActionListener(e -> service().start(options()));
         serveCheck.setToolTipText(message("receive.serve.tooltip"));
-        memoryCheck.setToolTipText(message("receive.copyMemory.tooltip"));
-        memoryCheck.addActionListener(e -> {
-            settings().setReceiveCopyMemory(memoryCheck.isSelected());
-            refresh();
-            if (service().state() != ReceiveState.STOPPED) {
-                service().changeOptions(options());
-            }
-        });
         serveCheck.addActionListener(e -> {
             settings().setServeRequests(serveCheck.isSelected());
             refresh();
@@ -161,7 +152,6 @@ public final class ReceivePanel {
         boolean twoWay = outputConfigured && settings().receiveBidirectional();
         (twoWay ? twoWayRadio : oneWayRadio).setSelected(true);
         serveCheck.setSelected(settings().serveRequests());
-        memoryCheck.setSelected(settings().receiveCopyMemory());
         directoryField.setText(config.receiveDirectory());
         refresh();
     }
@@ -199,7 +189,7 @@ public final class ReceivePanel {
 
     private ReceiveOptions options() {
         return new ReceiveOptions(twoWayRadio.isSelected(), directoryField.getText(),
-                twoWayRadio.isSelected() && serveCheck.isSelected(), memoryCheck.isSelected());
+                twoWayRadio.isSelected() && serveCheck.isSelected());
     }
 
     private void chooseDirectory() {
@@ -228,7 +218,6 @@ public final class ReceivePanel {
         twoWayRadio.setEnabled(!active && !settings().config().output().isEmpty());
         directoryField.setEnabled(!active);
         serveCheck.setEnabled(!active && twoWayRadio.isSelected());
-        memoryCheck.setEnabled(state != ReceiveState.CALIBRATING && !service().isCalibrateOnly());
         if (state == ReceiveState.LISTENING || state == ReceiveState.STOPPED) {
             progressBar.setIndeterminate(false);
         }
@@ -299,7 +288,6 @@ public final class ReceivePanel {
                 .addLabeledComponent(message("send.parameters"), parametersLabel)
                 .addLabeledComponent(message("receive.folder"), directoryField)
                 .addComponentToRightColumn(serveCheck)
-                .addComponentToRightColumn(memoryCheck)
                 .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
                 .addComponentToRightColumn(row(startButton, calibrateButton, stopButton))

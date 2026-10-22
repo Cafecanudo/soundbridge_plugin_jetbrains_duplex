@@ -38,6 +38,6 @@ public final class ToggleReceiveAction extends AnAction implements DumbAware {
     static ReceiveOptions savedOptions(SoundBridgeProjectSettings settings) {
         boolean bidirectional = settings.receiveBidirectional();
         return new ReceiveOptions(bidirectional, settings.config().receiveDirectory(),
-                bidirectional && settings.serveRequests(), settings.receiveCopyMemory());
+                bidirectional && settings.serveRequests());
     }
 }

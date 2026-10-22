@@ -92,6 +92,8 @@ final class SendPanel {
     private final JButton cancelButton = new JButton(message("send.cancel"));
     private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
     private final JBCheckBox replaceCheck = new JBCheckBox(message("send.replace"));
+    private final JBCheckBox packageCheck = new JBCheckBox(message("send.package"));
+    private final JBCheckBox copyMemoryCheck = new JBCheckBox(message("send.copyMemory"));
     private final JBCheckBox showWindowCheck = new JBCheckBox(message("send.showWindow"));
     private final JBCheckBox showCommandCheck = new JBCheckBox(message("send.showCommand"));
     private final JBCheckBox showLogCheck = new JBCheckBox(message("send.showLog"));
@@ -163,6 +165,18 @@ final class SendPanel {
             settings().setReplaceExisting(replaceCheck.isSelected());
             refresh();
         });
+        packageCheck.setSelected(settings().packageFolders());
+        packageCheck.setToolTipText(message("send.package.tooltip"));
+        packageCheck.addActionListener(e -> {
+            settings().setPackageFolders(packageCheck.isSelected());
+            refresh();
+        });
+        copyMemoryCheck.setSelected(settings().sendCopyMemory());
+        copyMemoryCheck.setToolTipText(message("send.copyMemory.tooltip"));
+        copyMemoryCheck.addActionListener(e -> {
+            settings().setSendCopyMemory(copyMemoryCheck.isSelected());
+            refresh();
+        });
         draft().addListener(draftListener);
         draft().addResendListener(resendListener);
         sendService().addObserver(sendObserver);
@@ -196,6 +210,7 @@ final class SendPanel {
     }
 
     private void showItems(SendSelection chosen) {
+        copyMemoryCheck.setSelected(settings().sendCopyMemory());
         SendSelection selection = SendFiles.prepare(chosen, settings().expandFolders());
         perItemDestination = SendPlan.perItemDestination(destinationBase(), selection, Files::isDirectory);
         itemsModel.clear();
@@ -243,6 +258,7 @@ final class SendPanel {
     private void useMemory() {
         try {
             List<Path> items = ClipboardMemory.materialize(systemClipboard(), MemoryFiles.defaultRoot());
+            settings().setSendCopyMemory(true);
             draft().setSelection(SendSelection.of(items));
         } catch (java.io.IOException e) {
             sendService().notifyUser(e.getMessage(), NotificationType.WARNING);
@@ -397,6 +413,10 @@ final class SendPanel {
         mcsCombo.setSelectedItem(McsSelection.of(snapshot.mcs()));
         replaceCheck.setSelected(snapshot.replaceExisting());
         settings().setReplaceExisting(snapshot.replaceExisting());
+        packageCheck.setSelected(snapshot.packageFolders());
+        settings().setPackageFolders(snapshot.packageFolders());
+        copyMemoryCheck.setSelected(snapshot.copyMemory());
+        settings().setSendCopyMemory(snapshot.copyMemory());
         refresh();
     }
 
@@ -454,7 +474,7 @@ final class SendPanel {
         Object zip = zipCombo.getSelectedItem();
         Integer level = zip instanceof Integer value ? value : null;
         return new SendOptions(destinationField.getText(), level, (McsSelection) mcsCombo.getSelectedItem(),
-                replaceCheck.isSelected());
+                replaceCheck.isSelected(), packageCheck.isSelected(), copyMemoryCheck.isSelected());
     }
 
     private SendSelection currentSelection() {
@@ -529,7 +549,7 @@ final class SendPanel {
         itemsPanel.add(new JBScrollPane(itemsList), BorderLayout.CENTER);
         JPanel form = FormBuilder.createFormBuilder()
                 .addComponent(showWindowCheck)
-                .addComponentToRightColumn(replaceCheck)
+                .addComponentToRightColumn(row(replaceCheck, packageCheck, copyMemoryCheck))
                 .addLabeledComponent(message("send.items"), itemsPanel)
                 .addComponentToRightColumn(row(memoryButton))
                 .addLabeledComponent(message("send.mode"), row(oneWayRadio, twoWayRadio, configureButton))

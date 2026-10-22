@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Arquivo único compactado quando pasta**, ao lado de **Substituir se existir**: cada pasta dos itens vai num único
+  pacote (`--only-package`, um envio por pasta) e o PC que recebe extrai com as mesmas subpastas. Arquivos avulsos vão
+  sozinhos; uma pasta com itens ignorados continua arquivo por arquivo (o filtro já a expande). A opção fica salva e
+  volta com o Histórico. Exige o sb-duplex com `--only-package` nos dois PCs.
+- **Copiar para a memória do outro PC**, na mesma linha: o envio leva `--copy-memory` e o PC que recebe põe o enviado
+  na área de transferência dele. **Usar memória** e o texto selecionado no editor ligam a opção; ela fica salva e volta
+  com o Histórico.
+
+### Removido
+- **Copiar para a memória** no Recebimento: quem decide agora é quem envia (o sb-duplex recusa `--rx --copy-memory`).
+  Com ela saiu o reinício do Recebimento ao mudar a opção.
+
 ## [1.0.20-SNAPSHOT] — 2026-10-21
 
 ### Corrigido

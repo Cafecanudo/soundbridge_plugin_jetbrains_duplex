@@ -15,9 +15,6 @@ public final class ReceiveCommandBuilder {
     public static List<String> arguments(ProjectConfig config, ReceiveOptions options,
                                          Optional<CalibrationProfile> biProfile) {
         List<String> arguments = new ArrayList<>(List.of("--rx", options.directory(), "--in", config.input(), "--keep"));
-        if (options.copyMemory()) {
-            arguments.add("--copy-memory");
-        }
         if (options.bidirectional() && !config.output().isEmpty()) {
             arguments.add("--out");
             arguments.add(config.output());

@@ -5,6 +5,7 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.LinkChoice;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,8 @@ public final class SendCommandBuilder {
     private static final String ITEM_SEPARATOR = ";";
     private static final String MORE_FLAG = "--more";
     private static final String REPLACE_FLAG = "--force-repl";
+    private static final String PACKAGE_FLAG = "--only-package";
+    private static final String MEMORY_FLAG = "--copy-memory";
     private static final String DELETE_FLAG = "--delete";
     private static final String REQUEST_FLAG = "--request";
     private static final String TX_FLAG = "--tx";
@@ -35,6 +38,12 @@ public final class SendCommandBuilder {
         addCompression(arguments, options);
         if (options.replaceExisting()) {
             arguments.add(REPLACE_FLAG);
+        }
+        if (options.packageFolders() && items.stream().anyMatch(Files::isDirectory)) {
+            arguments.add(PACKAGE_FLAG);
+        }
+        if (options.copyMemory()) {
+            arguments.add(MEMORY_FLAG);
         }
         return arguments;
     }
@@ -73,7 +82,7 @@ public final class SendCommandBuilder {
         for (int i = 0; i < jobs.size(); i++) {
             SendJob job = jobs.get(i);
             SendOptions jobOptions = new SendOptions(job.destination(), options.zipLevel(), options.mcs(),
-                    options.replaceExisting());
+                    options.replaceExisting(), options.packageFolders(), options.copyMemory());
             List<String> arguments = job.delete()
                     ? deleteArguments(config, uniProfile, biProfile, options.mcs(), job)
                     : arguments(config, uniProfile, biProfile, jobOptions, job.items());

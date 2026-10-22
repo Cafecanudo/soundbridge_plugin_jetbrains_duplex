@@ -148,25 +148,6 @@ public final class ReceiveService implements Disposable {
         });
     }
 
-    public void changeOptions(ReceiveOptions requested) {
-        synchronized (this) {
-            if (paused) {
-                options = requested;
-                return;
-            }
-            if (!wanted) {
-                return;
-            }
-            wanted = false;
-        }
-        appendLog(message("receive.log.restarting"));
-        boolean calibration = calibrateOnly;
-        ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            terminate();
-            onUi(() -> start(requested, calibration));
-        });
-    }
-
     private void startAfterExit(CliProcess stopping, ReceiveOptions requested, boolean calibration) {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             if (!stopping.waitFor(STOP_WAIT_MILLIS)) {
