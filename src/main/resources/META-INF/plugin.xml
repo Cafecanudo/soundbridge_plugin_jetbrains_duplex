@@ -23,6 +23,8 @@
                 instance="io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable"
                 displayName="SoundBridge"/>
         <notificationGroup id="SoundBridge" displayType="BALLOON"/>
+        <statusBarWidgetFactory id="SoundBridge.ReceiveStatus" order="first"
+                                implementation="io.github.cafecanudo.soundbridgeduplex.receive.ReceiveStatusWidgetFactory"/>
         <toolWindow
                 id="SoundBridge"
                 anchor="right"

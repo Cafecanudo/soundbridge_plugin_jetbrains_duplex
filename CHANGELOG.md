@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Adicionado
+- Indicador do Recebimento na barra de status da IDE: ponto verde (escutando), azul (recebendo), amarelo (pausado
+  durante um envio), roxo (calibrando) e cinza (parado); tooltip com modo e pasta; clique abre o Recebimento.
+
 ## [1.0.17-SNAPSHOT] — 2026-10-21
 
 ### Alterado

@@ -81,6 +81,10 @@ public final class ReceiveService implements Disposable {
         observers.remove(observer);
     }
 
+    public ReceiveOptions options() {
+        return options;
+    }
+
     public boolean isCalibrateOnly() {
         return calibrateOnly;
     }

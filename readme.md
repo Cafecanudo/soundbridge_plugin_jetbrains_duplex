@@ -103,6 +103,10 @@ pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de d
 Numa sequência (pasta ou lista enviada de uma vez), só as falhas notificam na hora; no fim sai um resumo
 (*5 recebido(s) · 1 falha(s)*), e a linha **Sequência** do Recebimento conta os recebidos e as falhas.
 
+Na barra de status da IDE (canto inferior direito), um ponto mostra o estado do Recebimento: verde escutando, azul
+recebendo, amarelo pausado durante um envio, roxo calibrando e cinza parado. O tooltip traz o modo e a pasta, e o
+clique abre o painel de Recebimento. Dá para esconder em *View → Appearance → Status Bar Widgets*.
+
 Receber não exige calibração, nem no uni nem no bi: no bi basta a saída configurada, e sem calibração o ACK usa o
 pico padrão (com a calibração bidirecional destas placas, o pico vem do perfil). Mudar a **Pasta de recepção** no
 Settings com o Recebimento ligado para o Recebimento e avisa; ligue de novo para escutar na pasta nova.
