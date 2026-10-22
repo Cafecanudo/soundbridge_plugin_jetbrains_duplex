@@ -21,6 +21,8 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreFilter;
 import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreList;
 import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreService;
+import io.github.cafecanudo.soundbridgeduplex.memory.ClipboardMemory;
+import io.github.cafecanudo.soundbridgeduplex.memory.MemoryFiles;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeConfigurable;
@@ -58,6 +60,8 @@ import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 final class SendPanel {
 
     private static final int ITEM_ROWS = 4;
+    private static final int EMPTY_ITEM_ROWS = 1;
+    private static final int MEMORY_POLL_MILLIS = 1000;
     private static final int COMMAND_ROWS = 3;
     private static final int LOG_ROWS = 6;
     private static final int ITEM_GAP = 6;
@@ -81,6 +85,9 @@ final class SendPanel {
     private final ComboBox<McsSelection> mcsCombo = new ComboBox<>();
     private final JBTextArea commandArea = new JBTextArea(COMMAND_ROWS, 0);
     private final JButton sendButton = new JButton(message("send.start"));
+    private final JButton memoryButton = new JButton();
+    private final javax.swing.Timer memoryTimer = new javax.swing.Timer(MEMORY_POLL_MILLIS, e -> pollMemory());
+    private ClipboardMemory.Probe memoryProbe;
     private final JButton verifyButton = new JButton(message("send.verify"));
     private final JButton cancelButton = new JButton(message("send.cancel"));
     private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
@@ -163,6 +170,11 @@ final class SendPanel {
         root = buildLayout();
         updateVisibility();
         root.addAncestorListener(onShown(this::applySettings));
+        root.addAncestorListener(onVisibility(memoryTimer::start, memoryTimer::stop));
+        memoryButton.setVisible(false);
+        memoryButton.setToolTipText(message("memory.button.tooltip"));
+        memoryButton.addActionListener(e -> useMemory());
+        itemsList.getEmptyText().setText(message("send.items.emptyHint"));
         sendService().log().forEach(this::appendLog);
         showItems(draft().selection());
         ResendBatch pending = draft().consumeResend();
@@ -176,6 +188,7 @@ final class SendPanel {
     }
 
     void dispose() {
+        memoryTimer.stop();
         draft().removeListener(draftListener);
         draft().removeResendListener(resendListener);
         sendService().removeObserver(sendObserver);
@@ -191,6 +204,8 @@ final class SendPanel {
                 ignore.isIgnored(path))));
         selection.sends().forEach(path -> itemsModel.addElement(new SendItem(path, false, itemDestination(path, false),
                 ignore.isIgnored(path))));
+        itemsList.setVisibleRowCount(itemsModel.isEmpty() ? EMPTY_ITEM_ROWS : ITEM_ROWS);
+        root.revalidate();
         destinationField.setEnabled(!perItemDestination);
         destinationField.setText(perItemDestination ? message("send.destination.perItem")
                 : DestinationResolver.defaultDestination(destinationBase(), selection.sends(), Files::isDirectory));
@@ -209,6 +224,37 @@ final class SendPanel {
             return null;
         }
         return DestinationResolver.defaultDestination(destinationBase(), List.of(path), delete ? item -> false : Files::isDirectory);
+    }
+
+    private void pollMemory() {
+        ClipboardMemory.Probe probe = ClipboardMemory.probe(systemClipboard()).orElse(null);
+        if (java.util.Objects.equals(probe, memoryProbe)) {
+            return;
+        }
+        memoryProbe = probe;
+        memoryButton.setVisible(probe != null);
+        if (probe != null) {
+            memoryButton.setText(probe.label());
+            memoryButton.setMaximumSize(memoryButton.getPreferredSize());
+        }
+        root.revalidate();
+    }
+
+    private void useMemory() {
+        try {
+            List<Path> items = ClipboardMemory.materialize(systemClipboard(), MemoryFiles.defaultRoot());
+            draft().setSelection(SendSelection.of(items));
+        } catch (java.io.IOException e) {
+            sendService().notifyUser(e.getMessage(), NotificationType.WARNING);
+        }
+    }
+
+    private static java.awt.datatransfer.Transferable systemClipboard() {
+        try {
+            return java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+        } catch (IllegalStateException e) {
+            return null;
+        }
     }
 
     private void autoStart() {
@@ -485,6 +531,7 @@ final class SendPanel {
                 .addComponent(showWindowCheck)
                 .addComponentToRightColumn(replaceCheck)
                 .addLabeledComponent(message("send.items"), itemsPanel)
+                .addComponentToRightColumn(row(memoryButton))
                 .addLabeledComponent(message("send.mode"), row(oneWayRadio, twoWayRadio, configureButton))
                 .addComponentToRightColumn(modeHint)
                 .addLabeledComponent(message("send.parameters"), parametersLabel)
@@ -537,6 +584,24 @@ final class SendPanel {
             @Override
             public void changedUpdate(DocumentEvent e) {
                 action.run();
+            }
+        };
+    }
+
+    private static AncestorListener onVisibility(Runnable shown, Runnable hidden) {
+        return new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                shown.run();
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {
+                hidden.run();
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
             }
         };
     }

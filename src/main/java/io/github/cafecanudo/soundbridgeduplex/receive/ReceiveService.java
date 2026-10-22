@@ -209,7 +209,7 @@ public final class ReceiveService implements Disposable {
                 SendHistory.getInstance(project).add(entry);
             }
         });
-        if (file.ok() && !file.path().isEmpty()) {
+        if (file.ok() && !file.path().isEmpty() && !file.inMemory()) {
             Path path = Path.of(file.path());
             SentRegistry.state(path).ifPresent(state ->
                     SoundBridgeProjectSettings.getInstance(project).recordSent(Map.of(SentRegistry.key(path), state)));

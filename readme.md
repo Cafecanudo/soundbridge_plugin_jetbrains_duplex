@@ -41,6 +41,15 @@ os itens são juntados sem repetir, os caminhos das verificações são resolvid
 uma linha, valem as opções atuais do formulário (com uma só, as daquele envio). **Enviar faltantes e diferentes**
 (botão direito) manda só os arquivos que as verificações selecionadas marcaram como *não existe* ou *diferente*.
 
+## Memória entre PCs
+
+Com a Tool Window de envio aberta, o plugin observa a área de transferência e mostra **Usar memória** abaixo de Itens
+quando há algo copiado, mesmo fora da IDE: arquivos (Ctrl+C no Explorer), um print ou um texto. O botão coloca nos
+itens os arquivos copiados, o print como `sb-memoria.png` ou o texto como `sb-memoria.txt` (temporários em
+`%TEMP%\sb-duplex-memoria-tx`, apagados após 24 h). Um texto selecionado no editor vai do mesmo jeito: botão direito
+→ **SoundBridge → Enviar**, ou Alt+Shift+K, E. No outro PC, com **Copiar para a memória** marcado no Recebimento
+(`--copy-memory`, exige `sb-duplex` 1.4.0b5), texto e print colam como texto e imagem, e arquivos colam como arquivos.
+
 ## Verificação
 
 **Verificar** (ao lado de Enviar no formulário, ou **SoundBridge → Verificar** no botão direito do Project)

@@ -52,4 +52,12 @@ class ReceiveCommandBuilderTest {
         assertEquals(List.of("--rx", "C:/p", "--in", "v2yh", "--keep"),
                 ReceiveCommandBuilder.arguments(withProfile, new ReceiveOptions(false, "C:/p"), Optional.empty()));
     }
+
+    @Test
+    void copyMemoryAsksTheCliToCopyWhatArrives() {
+        List<String> arguments = ReceiveCommandBuilder.arguments(CONFIG, new ReceiveOptions(false, "C:/p", false, true),
+                Optional.empty());
+
+        org.junit.jupiter.api.Assertions.assertTrue(arguments.contains("--copy-memory"));
+    }
 }

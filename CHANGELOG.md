@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Usar memória** abaixo de Itens: detecta arquivos, print ou texto na área de transferência (também copiados fora da
+  IDE) e os coloca nos itens; print e texto vão como `sb-memoria.png` e `sb-memoria.txt`.
+- Texto selecionado no editor é enviado como `sb-memoria.txt` (SoundBridge → Enviar no botão direito do editor, ou
+  Alt+Shift+K, E). O menu SoundBridge passa a aparecer também no editor.
+- **Copiar para a memória** no Recebimento (`--copy-memory`, sb-duplex 1.4.0b5): o recebido vai para a área de
+  transferência; log e notificação dizem se foi texto, imagem ou arquivo.
+
+### Alterado
+- Lista de Itens com uma linha só quando vazia, com a dica de onde escolher os itens.
+
 ## [1.0.18-SNAPSHOT] — 2026-10-21
 
 ### Adicionado

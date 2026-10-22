@@ -144,6 +144,16 @@ class ReceiveEventReaderTest {
         assertFalse(update.verification().ok());
     }
 
+    @Test
+    void memoryResultIsAReceivedFileInMemory() {
+        ReceiveEventReader.Update update = new ReceiveEventReader().read(event("{\"schema\": 2, \"event\": \"result\", "
+                + "\"side\": \"rx\", \"ok\": true, \"name\": \"sb-memoria.txt\", \"memory\": \"text\", \"path\": null}"));
+
+        assertTrue(update.received().inMemory());
+        assertEquals("text", update.received().memory());
+        assertEquals(List.of("texto copiado para a memória (sb-memoria.txt)"), update.log());
+    }
+
     private static CliEvent event(String json) {
         return CliEventParser.parse(json).orElseThrow();
     }

@@ -57,6 +57,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean expandFolders = true;
         public int commandDelayMs = DEFAULT_COMMAND_DELAY_MS;
         public boolean serveRequests = true;
+        public boolean receiveCopyMemory = false;
         public String sendMode = "";
         public List<String> ignored = new ArrayList<>();
         public Map<String, String> sent = new HashMap<>();
@@ -235,6 +236,14 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setSendMode(SendMode mode) {
         state.sendMode = mode.name();
+    }
+
+    public boolean receiveCopyMemory() {
+        return state.receiveCopyMemory;
+    }
+
+    public void setReceiveCopyMemory(boolean value) {
+        state.receiveCopyMemory = value;
     }
 
     public boolean serveRequests() {

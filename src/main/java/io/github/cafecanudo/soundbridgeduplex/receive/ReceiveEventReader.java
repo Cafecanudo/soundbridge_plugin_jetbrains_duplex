@@ -96,11 +96,13 @@ public final class ReceiveEventReader {
         boolean ok = event.bool("ok").orElse(false);
         String name = event.string("name").orElse(currentName);
         double seconds = event.number("seconds").orElse(0);
-        String line = message(ok ? "receive.log.ok" : "receive.log.failed", name, SendEventReader.formatTime(seconds));
+        String memory = event.string("memory").orElse("");
+        String line = !memory.isEmpty() ? message("receive.log.memory." + memory, name)
+                : message(ok ? "receive.log.ok" : "receive.log.failed", name, SendEventReader.formatTime(seconds));
         fileLog.add(line);
         ReceivedFile received = new ReceivedFile(name, event.string("path").orElse(""),
                 (long) event.number("size").orElse(0), seconds, ok, bidirectional, fileLog,
-                event.bool("more").orElse(false));
+                event.bool("more").orElse(false), memory);
         fileLog.clear();
         currentName = "";
         return new Update(List.of(line), ReceiveState.LISTENING, null, received);

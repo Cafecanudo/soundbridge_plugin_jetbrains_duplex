@@ -67,6 +67,7 @@
                 <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt shift K" second-keystroke="I"/>
             </action>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </group>
         <action
                 id="SoundBridge.ToggleReceive"

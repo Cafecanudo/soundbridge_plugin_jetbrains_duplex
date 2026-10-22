@@ -50,8 +50,9 @@ public final class ReceiveSequence {
         open = false;
         int total = received + failed;
         if (total == 1 && failed == 0) {
-            return List.of(new Notice(message("receive.notify.received", last.name(),
-                    SendEventReader.formatTime(last.seconds())), false));
+            String text = last.inMemory() ? message("receive.notify.memory." + last.memory(), last.name())
+                    : message("receive.notify.received", last.name(), SendEventReader.formatTime(last.seconds()));
+            return List.of(new Notice(text, false));
         }
         if (total > 1) {
             return List.of(new Notice(message("receive.notify.sequence", received, failed,
