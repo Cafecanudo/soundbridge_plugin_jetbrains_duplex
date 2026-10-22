@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.20-SNAPSHOT] — 2026-10-21
+
 ### Corrigido
 - **Receber** logo depois de **Parar** era ignorado sem aviso enquanto o processo anterior ainda terminava (e as
   opções novas, como **Copiar para a memória**, se perdiam); agora espera o anterior sair e liga com as novas.
