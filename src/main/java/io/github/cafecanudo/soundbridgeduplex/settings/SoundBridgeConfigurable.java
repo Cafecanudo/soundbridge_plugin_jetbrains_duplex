@@ -3,6 +3,7 @@ package io.github.cafecanudo.soundbridgeduplex.settings;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import io.github.cafecanudo.soundbridgeduplex.receive.ReceiveService;
 
 import javax.swing.JComponent;
 import java.util.Optional;
@@ -47,7 +48,12 @@ public final class SoundBridgeConfigurable implements Configurable {
         if (error.isPresent()) {
             throw new ConfigurationException(error.get());
         }
+        String previousDirectory = settings().config().receiveDirectory();
         settings().update(panel.config());
+        String directory = settings().config().receiveDirectory();
+        if (!previousDirectory.equals(directory)) {
+            ReceiveService.getInstance(project).directoryChanged(directory);
+        }
         settings().updateUniProfile(panel.uniProfile());
         settings().updateCalibrationOptions(panel.calibrationOptions());
         settings().setWarnUnsentOnCommit(panel.warnUnsent());

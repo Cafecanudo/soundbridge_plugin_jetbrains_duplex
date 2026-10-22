@@ -379,6 +379,11 @@ public final class ReceivePanel {
         }
 
         @Override
+        public void onDirectoryChanged(String directory) {
+            directoryField.setText(directory);
+        }
+
+        @Override
         public void onSequence(int received, int failed, boolean open) {
             sequenceLabel.setText(message(open ? "receive.sequence.open" : "receive.sequence.closed", received, failed));
         }

@@ -103,6 +103,10 @@ pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de d
 Numa sequência (pasta ou lista enviada de uma vez), só as falhas notificam na hora; no fim sai um resumo
 (*5 recebido(s) · 1 falha(s)*), e a linha **Sequência** do Recebimento conta os recebidos e as falhas.
 
+Receber não exige calibração, nem no uni nem no bi: no bi basta a saída configurada, e sem calibração o ACK usa o
+pico padrão (com a calibração bidirecional destas placas, o pico vem do perfil). Mudar a **Pasta de recepção** no
+Settings com o Recebimento ligado para o Recebimento e avisa; ligue de novo para escutar na pasta nova.
+
 **Calibrar**, ao lado de Receber, escuta uma calibração iniciada no outro PC e para sozinho no fim. No modo
 **uni** mede só a ida e mostra mono, banda, pico e MCS, com **Copiar parâmetros** para digitar no TX do outro
 PC; no **bi** responde à calibração completa e mostra chegada, saída e o perfil onde foi gravada (com

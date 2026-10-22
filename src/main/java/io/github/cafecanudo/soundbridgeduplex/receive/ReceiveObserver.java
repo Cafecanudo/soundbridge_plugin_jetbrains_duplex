@@ -21,4 +21,7 @@ public interface ReceiveObserver {
 
     default void onSequence(int received, int failed, boolean open) {
     }
+
+    default void onDirectoryChanged(String directory) {
+    }
 }

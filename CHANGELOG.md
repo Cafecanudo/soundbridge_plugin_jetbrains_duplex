@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Alterado
+- Mudar a **Pasta de recepção** no Settings com o Recebimento ligado para o Recebimento (antes ele seguia na pasta
+  antiga, inclusive ao retomar depois de um envio) e avisa; o campo Pasta do Recebimento passa a mostrar a nova.
+- Texto dos parâmetros do Recebimento bi sem calibração deixa claro que a calibração é opcional.
+
 ## [1.0.16-SNAPSHOT] — 2026-10-20
 
 ### Removido

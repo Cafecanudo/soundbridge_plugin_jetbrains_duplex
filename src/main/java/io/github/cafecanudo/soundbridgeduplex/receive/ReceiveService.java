@@ -118,6 +118,17 @@ public final class ReceiveService implements Disposable {
         launch(config);
     }
 
+    public void directoryChanged(String directory) {
+        boolean running = state != ReceiveState.STOPPED;
+        if (running) {
+            stop();
+        }
+        onUi(() -> observers.forEach(observer -> observer.onDirectoryChanged(directory)));
+        if (running) {
+            notifyUser(message("receive.notify.directoryChanged", directory), NotificationType.INFORMATION);
+        }
+    }
+
     public synchronized void stop() {
         wanted = false;
         paused = false;
