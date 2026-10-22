@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Corrigido
+- **Receber** logo depois de **Parar** era ignorado sem aviso enquanto o processo anterior ainda terminava (e as
+  opções novas, como **Copiar para a memória**, se perdiam); agora espera o anterior sair e liga com as novas.
+- **Copiar para a memória** pode ser marcado com o Recebimento ligado: ele reinicia na hora com a opção nova (durante
+  um envio, a opção vale na retomada).
+
 ## [1.0.19-SNAPSHOT] — 2026-10-21
 
 ### Adicionado

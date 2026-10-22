@@ -112,6 +112,9 @@ public final class ReceivePanel {
         memoryCheck.addActionListener(e -> {
             settings().setReceiveCopyMemory(memoryCheck.isSelected());
             refresh();
+            if (service().state() != ReceiveState.STOPPED) {
+                service().changeOptions(options());
+            }
         });
         serveCheck.addActionListener(e -> {
             settings().setServeRequests(serveCheck.isSelected());
@@ -225,7 +228,7 @@ public final class ReceivePanel {
         twoWayRadio.setEnabled(!active && !settings().config().output().isEmpty());
         directoryField.setEnabled(!active);
         serveCheck.setEnabled(!active && twoWayRadio.isSelected());
-        memoryCheck.setEnabled(!active);
+        memoryCheck.setEnabled(state != ReceiveState.CALIBRATING && !service().isCalibrateOnly());
         if (state == ReceiveState.LISTENING || state == ReceiveState.STOPPED) {
             progressBar.setIndeterminate(false);
         }

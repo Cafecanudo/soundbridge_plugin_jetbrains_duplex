@@ -102,7 +102,11 @@ public final class ReceiveService implements Disposable {
     }
 
     private synchronized void start(ReceiveOptions requested, boolean calibration) {
-        if (process != null && process.isRunning()) {
+        CliProcess current = process;
+        if (current != null && current.isRunning()) {
+            if (!wanted) {
+                startAfterExit(current, requested, calibration);
+            }
             return;
         }
         if (SendService.getInstance(project).isRunning() || CalibrationService.getInstance(project).isRunning()) {
@@ -138,7 +142,38 @@ public final class ReceiveService implements Disposable {
         paused = false;
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             terminate();
-            setState(ReceiveState.STOPPED);
+            if (!wanted) {
+                setState(ReceiveState.STOPPED);
+            }
+        });
+    }
+
+    public void changeOptions(ReceiveOptions requested) {
+        synchronized (this) {
+            if (paused) {
+                options = requested;
+                return;
+            }
+            if (!wanted) {
+                return;
+            }
+            wanted = false;
+        }
+        appendLog(message("receive.log.restarting"));
+        boolean calibration = calibrateOnly;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            terminate();
+            onUi(() -> start(requested, calibration));
+        });
+    }
+
+    private void startAfterExit(CliProcess stopping, ReceiveOptions requested, boolean calibration) {
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            if (!stopping.waitFor(STOP_WAIT_MILLIS)) {
+                stopping.kill();
+                stopping.waitFor(STOP_WAIT_MILLIS);
+            }
+            onUi(() -> start(requested, calibration));
         });
     }
 
