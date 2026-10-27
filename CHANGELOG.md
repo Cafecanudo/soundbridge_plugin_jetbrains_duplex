@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.22-SNAPSHOT] — 2026-10-27
+
 ### Adicionado
 - **Valores da calibração bidirecional editáveis** no Settings, iguais aos do Unidirecional (Mono, Banda, Pico,
   MCS), mesmo depois de gravada. Salvar uma edição marca o perfil como **ajustado manualmente**, vincula-o à saída e

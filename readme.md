@@ -21,6 +21,8 @@ os eventos `--json`.
   MCS, que você digita nos campos do projeto.
 - **Calibração bidirecional** (com Bidirecional marcado): mede os dois sentidos com o outro PC recebendo;
   opcionalmente valida com transferências de teste e grava o resultado como perfil do projeto (nunca nos padrões do SoundBridge). Roda em background (barra de status), com cancelamento.
+  Mono, banda, pico e MCS do perfil ficam editáveis como no unidirecional; salvar uma edição marca o perfil como
+  ajustado manualmente e o vincula à saída e à entrada atuais.
 
 ## Envio
 
