@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Valores da calibração bidirecional editáveis** no Settings, iguais aos do Unidirecional (Mono, Banda, Pico,
+  MCS), mesmo depois de gravada. Salvar uma edição marca o perfil como **ajustado manualmente**, vincula-o à saída e
+  à entrada atuais e descarta os testes de validação e os avisos (o SNR medido fica). Sem calibração prévia, preencher
+  os valores cria o perfil. Pico fora de (0, 1] ou Banda, Pico ou MCS em branco impedem salvar.
+
 ## [1.0.21-SNAPSHOT] — 2026-10-22
 
 ### Adicionado

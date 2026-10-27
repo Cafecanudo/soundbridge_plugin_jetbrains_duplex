@@ -118,6 +118,15 @@ public final class CalibrationService {
         return profile;
     }
 
+    public CalibrationProfile adjust(UniProfile values, String output, String input) {
+        SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
+        CalibrationProfile profile = CalibrationProfile.adjusted(
+                settings.calibrationProfile(), values, output, input, LocalDateTime.now().format(TIMESTAMP));
+        settings.updateCalibrationProfile(profile);
+        onUi(() -> observers.forEach(observer -> observer.onProfileChanged(profile)));
+        return profile;
+    }
+
     private void notifyRunning(boolean value) {
         onUi(() -> observers.forEach(observer -> observer.onRunningChanged(value)));
     }

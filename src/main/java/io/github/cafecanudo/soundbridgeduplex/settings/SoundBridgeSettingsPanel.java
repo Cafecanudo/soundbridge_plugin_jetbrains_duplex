@@ -110,6 +110,14 @@ final class SoundBridgeSettingsPanel {
         return calibration.uniError();
     }
 
+    UniProfile biValues() {
+        return calibration.biValues();
+    }
+
+    Optional<String> biError() {
+        return calibration.biError();
+    }
+
     ProjectConfig config() {
         return new ProjectConfig(launcherField.getText(), outputCombo.spec(), inputCombo.spec(), directoryField.getText(),
                 calibration.bidirectional(), selectedProfile());

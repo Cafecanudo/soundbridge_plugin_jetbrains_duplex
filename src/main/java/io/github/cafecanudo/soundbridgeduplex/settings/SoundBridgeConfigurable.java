@@ -3,6 +3,9 @@ package io.github.cafecanudo.soundbridgeduplex.settings;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
+import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationService;
+import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.receive.ReceiveService;
 
 import javax.swing.JComponent;
@@ -39,21 +42,26 @@ public final class SoundBridgeConfigurable implements Configurable {
                 || panel.osNotifications() != settings().osNotifications()
                 || panel.expandFolders() != settings().expandFolders()
                 || panel.commandDelayMs() != settings().commandDelayMs()
-                || panel.uniError().isPresent();
+                || panel.uniError().isPresent()
+                || panel.biError().isPresent()
+                || biAdjustment().isPresent();
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        Optional<String> error = panel.uniError();
+        Optional<String> error = panel.uniError().or(panel::biError);
         if (error.isPresent()) {
             throw new ConfigurationException(error.get());
         }
+        Optional<UniProfile> adjustment = biAdjustment();
         String previousDirectory = settings().config().receiveDirectory();
         settings().update(panel.config());
         String directory = settings().config().receiveDirectory();
         if (!previousDirectory.equals(directory)) {
             ReceiveService.getInstance(project).directoryChanged(directory);
         }
+        adjustment.ifPresent(values -> CalibrationService.getInstance(project)
+                .adjust(values, settings().config().output(), settings().config().input()));
         settings().updateUniProfile(panel.uniProfile());
         settings().updateCalibrationOptions(panel.calibrationOptions());
         settings().setWarnUnsentOnCommit(panel.warnUnsent());
@@ -75,6 +83,12 @@ public final class SoundBridgeConfigurable implements Configurable {
     public void disposeUIResources() {
         panel.dispose();
         panel = null;
+    }
+
+    private Optional<UniProfile> biAdjustment() {
+        UniProfile values = panel.biValues();
+        boolean changed = !values.equals(CalibrationProfile.values(settings().calibrationProfile()));
+        return panel.config().bidirectional() && changed && values.isComplete() ? Optional.of(values) : Optional.empty();
     }
 
     private SoundBridgeProjectSettings settings() {

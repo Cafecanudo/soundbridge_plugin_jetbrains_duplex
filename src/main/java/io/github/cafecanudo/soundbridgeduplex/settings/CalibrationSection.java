@@ -28,6 +28,7 @@ import javax.swing.JPanel;
 import java.awt.Component;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +53,10 @@ final class CalibrationSection implements CalibrationObserver {
     private final JBTextField uniPeakField = new JBTextField(PEAK_COLUMNS);
     private final ComboBox<Object> uniMcsCombo = new ComboBox<>();
     private final JButton uniCalibrateButton = new JButton(message("calibration.uni.start"));
+    private final JBCheckBox biMonoCheck = new JBCheckBox(message("calibration.uni.mono"));
+    private final ComboBox<Object> biBandCombo = new ComboBox<>();
+    private final JBTextField biPeakField = new JBTextField(PEAK_COLUMNS);
+    private final ComboBox<Object> biMcsCombo = new ComboBox<>();
     private final Map<TestSize, JBCheckBox> sizeChecks = new EnumMap<>(TestSize.class);
     private final JBCheckBox validateCheck = new JBCheckBox(message("calibration.validate"));
     private final JBCheckBox saveCheck = new JBCheckBox(message("calibration.save"));
@@ -72,9 +77,13 @@ final class CalibrationSection implements CalibrationObserver {
         for (TestSize size : TestSize.values()) {
             sizeChecks.put(size, new JBCheckBox(size.label()));
         }
-        uniBandCombo.setModel(optionalModel(UniProfile.BANDS_HZ.stream().map(CalibrationSection::bandLabel).toArray()));
-        uniMcsCombo.setModel(optionalModel(UniProfile.MCS_VALUES.toArray()));
-        keepPreferredSize(uniBandCombo, uniPeakField, uniMcsCombo);
+        for (ComboBox<Object> combo : List.of(uniBandCombo, biBandCombo)) {
+            combo.setModel(optionalModel(UniProfile.BANDS_HZ.stream().map(CalibrationSection::bandLabel).toArray()));
+        }
+        for (ComboBox<Object> combo : List.of(uniMcsCombo, biMcsCombo)) {
+            combo.setModel(optionalModel(UniProfile.MCS_VALUES.toArray()));
+        }
+        keepPreferredSize(uniBandCombo, uniPeakField, uniMcsCombo, biBandCombo, biPeakField, biMcsCombo);
         logArea.setEditable(false);
         bidirectionalCheck.addActionListener(e -> updateMode());
         validateCheck.addActionListener(e -> updateSizesEnabled());
@@ -121,16 +130,28 @@ final class CalibrationSection implements CalibrationObserver {
     }
 
     UniProfile uniProfile() {
-        return new UniProfile(uniMonoCheck.isSelected(), selectedBand(), validPeak().orElse(null), selectedMcs());
+        return values(uniMonoCheck, uniBandCombo, uniPeakField, uniMcsCombo);
     }
 
     Optional<String> uniError() {
-        try {
-            UniProfile.parsePeak(uniPeakField.getText());
+        return peakError(uniPeakField);
+    }
+
+    UniProfile biValues() {
+        return values(biMonoCheck, biBandCombo, biPeakField, biMcsCombo);
+    }
+
+    Optional<String> biError() {
+        if (!bidirectional()) {
             return Optional.empty();
-        } catch (NumberFormatException e) {
-            return Optional.of(message("calibration.uni.invalidPeak", uniPeakField.getText().strip()));
         }
+        Optional<String> peakError = peakError(biPeakField);
+        if (peakError.isPresent()) {
+            return peakError;
+        }
+        UniProfile values = biValues();
+        boolean filled = !values.equals(UniProfile.EMPTY) || profile.isPresent();
+        return filled && !values.isComplete() ? Optional.of(message("calibration.bi.incomplete")) : Optional.empty();
     }
 
     void load(CalibrationOptions options, Optional<CalibrationProfile> savedProfile, UniProfile uni) {
@@ -140,10 +161,8 @@ final class CalibrationSection implements CalibrationObserver {
         updateSizesEnabled();
         profile = savedProfile;
         refreshProfileLabel();
-        uniMonoCheck.setSelected(uni.mono());
-        uniBandCombo.setSelectedItem(uni.bandHighHz() == null ? "" : bandLabel(uni.bandHighHz()));
-        uniPeakField.setText(uni.peak() == null ? "" : uni.peak().toString());
-        uniMcsCombo.setSelectedItem(uni.mcs() == null ? "" : uni.mcs());
+        show(uni, uniMonoCheck, uniBandCombo, uniPeakField, uniMcsCombo);
+        showBiValues();
     }
 
     void refreshProfileLabel() {
@@ -171,6 +190,7 @@ final class CalibrationSection implements CalibrationObserver {
     public void onProfileChanged(CalibrationProfile changed) {
         profile = Optional.of(changed);
         refreshProfileLabel();
+        showBiValues();
     }
 
     private void start(CalibrationMode mode) {
@@ -188,21 +208,46 @@ final class CalibrationSection implements CalibrationObserver {
         sizeChecks.values().forEach(check -> check.setEnabled(validateCheck.isSelected()));
     }
 
-    private Optional<Double> validPeak() {
+    private void showBiValues() {
+        show(CalibrationProfile.values(profile), biMonoCheck, biBandCombo, biPeakField, biMcsCombo);
+    }
+
+    private static void show(UniProfile values, JBCheckBox mono, ComboBox<Object> band, JBTextField peak,
+                             ComboBox<Object> mcs) {
+        mono.setSelected(values.mono());
+        band.setSelectedItem(values.bandHighHz() == null ? "" : bandLabel(values.bandHighHz()));
+        peak.setText(values.peak() == null ? "" : values.peak().toString());
+        mcs.setSelectedItem(values.mcs() == null ? "" : values.mcs());
+    }
+
+    private static UniProfile values(JBCheckBox mono, ComboBox<Object> band, JBTextField peak, ComboBox<Object> mcs) {
+        return new UniProfile(mono.isSelected(), selectedBand(band), validPeak(peak).orElse(null), selectedMcs(mcs));
+    }
+
+    private static Optional<String> peakError(JBTextField field) {
         try {
-            return UniProfile.parsePeak(uniPeakField.getText());
+            UniProfile.parsePeak(field.getText());
+            return Optional.empty();
+        } catch (NumberFormatException e) {
+            return Optional.of(message("calibration.uni.invalidPeak", field.getText().strip()));
+        }
+    }
+
+    private static Optional<Double> validPeak(JBTextField field) {
+        try {
+            return UniProfile.parsePeak(field.getText());
         } catch (NumberFormatException e) {
             return Optional.empty();
         }
     }
 
-    private Double selectedBand() {
-        int index = uniBandCombo.getSelectedIndex();
+    private static Double selectedBand(ComboBox<Object> combo) {
+        int index = combo.getSelectedIndex();
         return index <= 0 ? null : UniProfile.BANDS_HZ.get(index - 1);
     }
 
-    private Integer selectedMcs() {
-        Object item = uniMcsCombo.getSelectedItem();
+    private static Integer selectedMcs(ComboBox<Object> combo) {
+        Object item = combo.getSelectedItem();
         return item instanceof Integer value ? value : null;
     }
 
@@ -220,7 +265,8 @@ final class CalibrationSection implements CalibrationObserver {
     }
 
     private static String describe(CalibrationProfile profile, ProjectConfig config) {
-        String text = message("calibration.profile.current", profile.choice().summary(), profile.calibratedAt());
+        String key = profile.manual() ? "calibration.profile.manual" : "calibration.profile.current";
+        String text = message(key, profile.choice().summary(), profile.calibratedAt());
         if (!profile.matches(config.output(), config.input())) {
             text += " " + message("calibration.profile.otherDevices", profile.output(), profile.input());
         }
@@ -231,6 +277,9 @@ final class CalibrationSection implements CalibrationObserver {
         JPanel sizes = row(0, sizeChecks.values().toArray(new Component[0]));
         return FormBuilder.createFormBuilder()
                 .addComponent(new TitledSeparator(message("calibration.section.twoWay")))
+                .addLabeledComponent(message("calibration.uni.values"),
+                        valuesRow(biMonoCheck, biBandCombo, biPeakField, biMcsCombo))
+                .addComponentToRightColumn(hint(message("calibration.bi.hint")))
                 .addLabeledComponent(message("calibration.profile"), profileLabel)
                 .addComponentToRightColumn(validateCheck)
                 .addComponentToRightColumn(sizes)
@@ -241,19 +290,23 @@ final class CalibrationSection implements CalibrationObserver {
     }
 
     private JPanel buildLayout() {
-        JPanel uniValues = row(ITEM_GAP, uniMonoCheck, Box.createHorizontalStrut(GROUP_GAP - ITEM_GAP),
-                new JBLabel(message("calibration.uni.band")), uniBandCombo, Box.createHorizontalStrut(GROUP_GAP - ITEM_GAP),
-                new JBLabel(message("calibration.uni.peak")), uniPeakField, Box.createHorizontalStrut(GROUP_GAP - ITEM_GAP),
-                new JBLabel(message("calibration.uni.mcs")), uniMcsCombo);
         return FormBuilder.createFormBuilder()
                 .addComponent(bidirectionalCheck)
                 .addComponent(new TitledSeparator(message("calibration.section.oneWay")))
-                .addLabeledComponent(message("calibration.uni.values"), uniValues)
+                .addLabeledComponent(message("calibration.uni.values"),
+                        valuesRow(uniMonoCheck, uniBandCombo, uniPeakField, uniMcsCombo))
                 .addComponentToRightColumn(hint(message("calibration.uni.hint")))
                 .addComponentToRightColumn(row(ITEM_GAP, uniCalibrateButton, uniCancelButton))
                 .addComponent(twoWayPanel)
                 .addComponent(new JBScrollPane(logArea))
                 .getPanel();
+    }
+
+    private static JPanel valuesRow(JBCheckBox mono, ComboBox<Object> band, JBTextField peak, ComboBox<Object> mcs) {
+        return row(ITEM_GAP, mono, Box.createHorizontalStrut(GROUP_GAP - ITEM_GAP),
+                new JBLabel(message("calibration.uni.band")), band, Box.createHorizontalStrut(GROUP_GAP - ITEM_GAP),
+                new JBLabel(message("calibration.uni.peak")), peak, Box.createHorizontalStrut(GROUP_GAP - ITEM_GAP),
+                new JBLabel(message("calibration.uni.mcs")), mcs);
     }
 
     private static JPanel row(int gap, Component... components) {
