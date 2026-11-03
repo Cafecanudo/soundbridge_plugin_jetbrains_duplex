@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.23-SNAPSHOT] — 2026-11-03
+
 ### Alterado
 - **Envio bloqueado fora da Pasta de recepção**: item (enviado ou apagado) fora da Pasta de recepção do Settings não
   é mais enviado sem `--dest` para a raiz do RX. A janela mostra o aviso no lugar do comando e desabilita **Enviar**;
