@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public final class SendPlan {
 
@@ -29,6 +30,20 @@ public final class SendPlan {
         List<SendJob> jobs = new ArrayList<>(toJobs(groups(projectBase, selection.deletions(), item -> false), true));
         jobs.addAll(toJobs(groups(projectBase, selection.sends(), isDirectory), false));
         return jobs;
+    }
+
+    public static List<Path> outsideBase(Path base, SendSelection selection, Path exemptRoot) {
+        if (base == null) {
+            return List.of();
+        }
+        Path root = base.toAbsolutePath().normalize();
+        Path exempt = exemptRoot == null ? null : exemptRoot.toAbsolutePath().normalize();
+        return Stream.concat(selection.sends().stream(), selection.deletions().stream())
+                .filter(item -> {
+                    Path normalized = item.toAbsolutePath().normalize();
+                    return !normalized.startsWith(root) && (exempt == null || !normalized.startsWith(exempt));
+                })
+                .toList();
     }
 
     public static boolean perItemDestination(Path projectBase, SendSelection selection, Predicate<Path> isDirectory) {

@@ -314,8 +314,10 @@ final class SendPanel {
     private void refresh() {
         parametersLabel.setText(selectedMode().map(mode -> describe(parameters(mode)))
                 .orElse(message("send.parameters.none")));
-        commandArea.setText(request().map(SendPanel::preview)
-                .orElse(message(currentSelection().isEmpty() ? "send.items.empty" : "send.mode.none")));
+        List<Path> outside = outsideItems();
+        commandArea.setText(!outside.isEmpty() ? QuickSend.outsideMessage(destinationBase(), outside)
+                : request().map(SendPanel::preview)
+                        .orElse(message(currentSelection().isEmpty() ? "send.items.empty" : "send.mode.none")));
         updateButtons();
     }
 
@@ -340,7 +342,19 @@ final class SendPanel {
                 QuickSend.labels(filtered.ignoredSends()), QuickSend.labels(filtered.ignoredDeletions())));
     }
 
+    private List<Path> outsideItems() {
+        if (!perItemDestination && !destinationField.getText().isBlank()) {
+            return List.of();
+        }
+        return SendPlan.outsideBase(destinationBase(), currentSelection(), MemoryFiles.defaultRoot());
+    }
+
     private void start() {
+        List<Path> outside = outsideItems();
+        if (!outside.isEmpty()) {
+            sendService().notifyUser(QuickSend.outsideMessage(destinationBase(), outside), NotificationType.WARNING);
+            return;
+        }
         request().ifPresent(request -> {
             selectedMode().ifPresent(settings()::setSendMode);
             logArea.setText("");
@@ -423,7 +437,8 @@ final class SendPanel {
     private void updateButtons() {
         boolean sending = sendService().isRunning();
         boolean calibrating = calibrationService().isRunning();
-        sendButton.setEnabled(!sending && !calibrating && selectedMode().isPresent() && !currentSelection().isEmpty());
+        sendButton.setEnabled(!sending && !calibrating && selectedMode().isPresent() && !currentSelection().isEmpty()
+                && outsideItems().isEmpty());
         verifyButton.setEnabled(!sending && !calibrating && selectedMode().isPresent()
                 && !currentSelection().sends().isEmpty());
         cancelButton.setEnabled(sending);

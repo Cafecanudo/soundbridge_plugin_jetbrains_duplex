@@ -31,7 +31,8 @@ itens, o modo e os parâmetros do projeto; o formulário ajusta subpasta no dest
 aquele envio e mostra o comando que será executado. **Enviar** roda em background, com progresso, log e
 **Cancelar**. Uma pasta selecionada aparece na lista com todos os seus arquivos (recursivo), e **cada arquivo é
 enviado num comando próprio** (encadeados com `--more`), mantendo a estrutura do projeto; o Histórico tem uma
-linha por arquivo.
+linha por arquivo. Item fora da Pasta de recepção do Settings bloqueia o envio (com aviso), a menos que o Destino
+seja digitado na janela. Sem a janela, o menu só envia direto com **Enviar automaticamente ao selecionar** marcado.
 O progresso tem duas barras: **Progresso** (arquivo atual, com velocidade e tempo restante) e **Total** (todos os
 itens, ponderado pelo tamanho, com *3/10 item(ns)* e as falhas). Na barra de status da IDE, o indicador da tarefa
 mostra o total e o texto ao lado traz o item atual (*3/10 · Main.java 45%*). No fim do envio sai uma notificação

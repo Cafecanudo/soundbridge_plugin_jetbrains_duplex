@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Alterado
+- **Envio bloqueado fora da Pasta de recepção**: item (enviado ou apagado) fora da Pasta de recepção do Settings não
+  é mais enviado sem `--dest` para a raiz do RX. A janela mostra o aviso no lugar do comando e desabilita **Enviar**;
+  o envio direto pelo menu, o envio automático e o reenvio do Histórico param com uma notificação que lista os itens.
+  Destino digitado na janela libera o envio; texto e print do **Usar memória** (pasta temporária) não são bloqueados.
+
+### Corrigido
+- O SoundBridge Enviar do menu, com **Mostrar esta janela ao enviar pelo menu** desmarcado, enviava direto mesmo
+  com **Enviar automaticamente ao selecionar** desmarcado. Agora o envio direto exige o envio automático; sem ele a
+  janela abre e espera o **Enviar**.
+
 ## [1.0.22-SNAPSHOT] — 2026-10-27
 
 ### Adicionado

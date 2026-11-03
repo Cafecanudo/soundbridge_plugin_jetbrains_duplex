@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreFilter;
 import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreService;
+import io.github.cafecanudo.soundbridgeduplex.memory.MemoryFiles;
 import io.github.cafecanudo.soundbridgeduplex.settings.ProjectConfig;
 import io.github.cafecanudo.soundbridgeduplex.settings.SoundBridgeProjectSettings;
 
@@ -13,10 +14,13 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
 final class QuickSend {
+
+    private static final int OUTSIDE_SHOWN = 3;
 
     private QuickSend() {
     }
@@ -31,12 +35,17 @@ final class QuickSend {
         Set<SendMode> calibrated = SendMode.calibrated(config, settings.uniProfile(), settings.calibrationProfile());
         Optional<SendMode> mode = SendMode.preferred(config, calibrated, settings.sendMode());
         SendService service = SendService.getInstance(project);
+        Path base = settings.destinationBase();
+        List<Path> outside = SendPlan.outsideBase(base, selection, MemoryFiles.defaultRoot());
+        if (!outside.isEmpty()) {
+            service.notifyUser(outsideMessage(base, outside), NotificationType.WARNING);
+            return;
+        }
         if (mode.isEmpty()) {
             service.notifyUser(message("send.autoSend.notStarted", message("send.mode.none")), NotificationType.WARNING);
             return;
         }
         ProjectConfig effective = mode.get().applyTo(config);
-        Path base = settings.destinationBase();
         boolean perItem = !selection.isEmpty() && SendPlan.perItemDestination(base, selection, Files::isDirectory);
         String destination = perItem || selection.isEmpty() ? ""
                 : DestinationResolver.defaultDestination(base, selection.sends(), Files::isDirectory);
@@ -55,6 +64,14 @@ final class QuickSend {
 
     static List<String> labels(List<Path> paths) {
         return paths.stream().map(Path::toString).toList();
+    }
+
+    static String outsideMessage(Path base, List<Path> outside) {
+        String names = outside.stream().limit(OUTSIDE_SHOWN).map(Path::toString).collect(Collectors.joining(", "));
+        if (outside.size() > OUTSIDE_SHOWN) {
+            names += ", …";
+        }
+        return message("send.outside.blocked", outside.size(), base, names);
     }
 
 }

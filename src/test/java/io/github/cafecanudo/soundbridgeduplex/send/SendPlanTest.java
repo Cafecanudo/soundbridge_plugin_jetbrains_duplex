@@ -53,4 +53,24 @@ class SendPlanTest {
         assertTrue(SendPlan.perItemDestination(BASE, selection, DIRECTORIES::contains));
         assertFalse(SendPlan.perItemDestination(BASE, SendSelection.of(List.of(FILE_A)), DIRECTORIES::contains));
     }
+
+    @Test
+    void itemsOutsideBaseAreReportedExceptExemptRoot() {
+        Path outside = Path.of("C:/outro/projeto/x.java").toAbsolutePath().normalize();
+        Path gone = Path.of("C:/outro/velho.java").toAbsolutePath().normalize();
+        Path memory = Path.of("C:/tmp/sb-memoria/1/sb-memoria.txt").toAbsolutePath().normalize();
+        Path exempt = Path.of("C:/tmp/sb-memoria").toAbsolutePath().normalize();
+        SendSelection selection = new SendSelection(List.of(FILE_A, outside, memory), List.of(gone));
+
+        assertEquals(List.of(outside, gone), SendPlan.outsideBase(BASE, selection, exempt));
+        assertEquals(List.of(), SendPlan.outsideBase(BASE, SendSelection.of(List.of(FILE_A, FOLDER)), exempt));
+        assertEquals(List.of(), SendPlan.outsideBase(null, selection, exempt));
+    }
+
+    @Test
+    void siblingFolderWithSamePrefixIsOutside() {
+        Path sibling = Path.of("C:/IdeaProjects/untitled2/a.java").toAbsolutePath().normalize();
+
+        assertEquals(List.of(sibling), SendPlan.outsideBase(BASE, SendSelection.of(List.of(sibling)), null));
+    }
 }

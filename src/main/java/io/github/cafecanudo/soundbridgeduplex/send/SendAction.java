@@ -67,7 +67,8 @@ public final class SendAction extends AnAction implements DumbAware {
     }
 
     public static void send(Project project, SendSelection selection) {
-        if (!SoundBridgeProjectSettings.getInstance(project).showWindowOnSend()) {
+        SoundBridgeProjectSettings settings = SoundBridgeProjectSettings.getInstance(project);
+        if (!settings.showWindowOnSend() && settings.autoSend()) {
             SendDraft.getInstance(project).setSelection(selection);
             QuickSend.run(project, selection);
             return;
