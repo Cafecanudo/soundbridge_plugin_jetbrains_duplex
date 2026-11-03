@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.24-SNAPSHOT] — 2026-11-03
+
 ### Adicionado
 - **Adicionar…** na aba Ignorados: caminhos e padrões digitados (um por linha ou separados por vírgula), no estilo
   gitignore. Sem `/` casa o nome em qualquer pasta (`*.iml`); com `/` é relativo à raiz do projeto (`.git/*`,
