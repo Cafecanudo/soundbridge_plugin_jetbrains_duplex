@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.25-SNAPSHOT] — 2026-11-03
+
 ### Adicionado
 - **Ignorados por padrão**: a pasta `.git`, os arquivos do IntelliJ (`.idea`, `*.iml`, `*.ipr`, `*.iws`) e do Visual
   Studio (`.vs`, `*.suo`, `*.user`, `*.userosscache`, `*.sln.docstates`), em qualquer nível. Entram uma vez em cada
