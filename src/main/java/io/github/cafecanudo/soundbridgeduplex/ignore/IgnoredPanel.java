@@ -1,6 +1,7 @@
 package io.github.cafecanudo.soundbridgeduplex.ignore;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.InputValidatorEx;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.SimpleListCellRenderer;
 import com.intellij.ui.components.JBLabel;
@@ -16,6 +17,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.nio.file.Files;
+import java.util.List;
+import java.util.Optional;
 
 import static io.github.cafecanudo.soundbridgeduplex.SoundBridgeBundle.message;
 
@@ -27,6 +30,7 @@ public final class IgnoredPanel {
     private final Project project;
     private final DefaultListModel<String> model = new DefaultListModel<>();
     private final JBList<String> list = new JBList<>(model);
+    private final JButton addButton = new JButton(message("ignore.add.button"));
     private final JButton removeButton = new JButton(message("ignore.panel.remove"));
     private final JButton clearButton = new JButton(message("ignore.panel.clear"));
     private final Runnable listener = this::reload;
@@ -37,6 +41,7 @@ public final class IgnoredPanel {
         list.getEmptyText().setText(message("ignore.panel.empty"));
         list.setCellRenderer(SimpleListCellRenderer.create((label, entry, index) -> label.setText(label(entry))));
         list.addListSelectionListener(e -> updateButtons());
+        addButton.addActionListener(e -> add());
         removeButton.addActionListener(e -> service().unignore(list.getSelectedValuesList()));
         clearButton.addActionListener(e -> confirmClear());
         service().addListener(listener);
@@ -53,8 +58,51 @@ public final class IgnoredPanel {
     }
 
     private String label(String entry) {
+        if (IgnorePattern.isPattern(entry)) {
+            return entry;
+        }
         boolean folder = Files.isDirectory(service().list().resolve(entry));
         return folder ? entry + FOLDER_SUFFIX : entry;
+    }
+
+    private void add() {
+        String input = Messages.showMultilineInputDialog(project, message("ignore.add.prompt"),
+                message("ignore.add.title"), "", null, new EntriesValidator());
+        if (input != null) {
+            service().addEntries(IgnorePattern.split(input));
+        }
+    }
+
+    private static Optional<String> inputProblem(String input) {
+        List<String> entries = IgnorePattern.split(input);
+        if (entries.isEmpty()) {
+            return Optional.of(message("ignore.add.empty"));
+        }
+        for (String entry : entries) {
+            Optional<String> key = IgnorePattern.problemKey(entry);
+            if (key.isPresent()) {
+                return Optional.of(message(key.get(), entry));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static final class EntriesValidator implements InputValidatorEx {
+
+        @Override
+        public String getErrorText(String input) {
+            return inputProblem(input).orElse(null);
+        }
+
+        @Override
+        public boolean checkInput(String input) {
+            return inputProblem(input).isEmpty();
+        }
+
+        @Override
+        public boolean canClose(String input) {
+            return checkInput(input);
+        }
     }
 
     private void reload() {
@@ -79,6 +127,8 @@ public final class IgnoredPanel {
     private JPanel buildLayout() {
         JPanel buttons = new JPanel();
         buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
+        buttons.add(addButton);
+        buttons.add(Box.createHorizontalStrut(GAP));
         buttons.add(removeButton);
         buttons.add(Box.createHorizontalStrut(GAP));
         buttons.add(clearButton);

@@ -92,8 +92,20 @@ SoundBridge nunca envia nem verifica, mesmo selecionados direto ou dentro de uma
 dentro. No mesmo menu, **Não ignorar mais** desfaz. No formulário o item aparece com *· ignorado*. O filtro vale na hora do envio: os ignorados viram uma linha **Ignorado** no
 Histórico, a notificação do fim conta quantos foram, e exclusões (Commit) de itens ignorados também são puladas.
 O aviso de alterações não enviadas no commit não considera os ignorados. A lista fica nas configurações do projeto
-na IDE (nenhum arquivo é criado no projeto) e aparece na aba **Ignorados** do Histórico, com **Não ignorar mais** e
-**Limpar ignorados**.
+na IDE (nenhum arquivo é criado no projeto) e aparece na aba **Ignorados** do Histórico, com **Adicionar…**,
+**Não ignorar mais** e **Limpar ignorados**.
+
+**Adicionar…** aceita caminhos e padrões digitados, um por linha ou separados por vírgula:
+
+| Entrada | Efeito |
+|---|---|
+| `build`, `src/Secret.java` | caminho relativo à raiz do projeto (como o menu) |
+| `*.iml`, `*.log` | sem `/`: casa o nome em qualquer pasta |
+| `.git/*`, `src/**/gen`, `/out*` | com `/`: relativo à raiz; `/` no início ancora um nome na raiz |
+
+`*` não passa de pasta, `**` passa e `?` é um caractere. Pasta que casa leva tudo dentro (`.git/*` ignora
+`.git/objects/...`). Padrões só valem dentro do projeto; uma pasta enviada inteira só é aberta arquivo por arquivo
+quando algum padrão casa dentro dela. Não há negação (`!padrão`).
 
 ## Atalhos
 

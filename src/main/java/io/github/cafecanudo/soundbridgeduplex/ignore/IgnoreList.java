@@ -1,23 +1,33 @@
 package io.github.cafecanudo.soundbridgeduplex.ignore;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
-public record IgnoreList(Path base, List<String> entries) {
+public record IgnoreList(Path base, List<String> entries, List<IgnorePattern> patterns) {
 
     private static final String SEPARATOR = "/";
 
     public IgnoreList {
         base = base.toAbsolutePath().normalize();
         entries = List.copyOf(entries);
+        patterns = List.copyOf(patterns);
+    }
+
+    public IgnoreList(Path base, List<String> entries) {
+        this(base, entries, entries.stream().map(IgnorePattern::of).flatMap(Optional::stream).toList());
     }
 
     public boolean isIgnored(Path path) {
         Path target = normalize(path);
-        return entries.stream().map(this::resolve).anyMatch(target::startsWith);
+        return pathEntries().map(this::resolve).anyMatch(target::startsWith) || matchesPattern(target);
     }
 
     public boolean isEntry(Path path) {
@@ -26,12 +36,20 @@ public record IgnoreList(Path base, List<String> entries) {
 
     public boolean hasIgnoredUnder(Path folder) {
         Path root = normalize(folder);
-        return entries.stream().map(this::resolve).anyMatch(entry -> entry.startsWith(root) && !entry.equals(root));
+        boolean entryUnder = pathEntries().map(this::resolve)
+                .anyMatch(entry -> entry.startsWith(root) && !entry.equals(root));
+        return entryUnder || patternUnder(root);
     }
 
     public List<String> with(List<Path> paths) {
         Set<String> result = new LinkedHashSet<>(entries);
         paths.stream().filter(path -> !isIgnored(path)).map(this::key).forEach(result::add);
+        return List.copyOf(result);
+    }
+
+    public List<String> withEntries(List<String> added) {
+        Set<String> result = new LinkedHashSet<>(entries);
+        result.addAll(added);
         return List.copyOf(result);
     }
 
@@ -55,6 +73,30 @@ public record IgnoreList(Path base, List<String> entries) {
         }
         stored.forEach(part -> parts.add(part.toString()));
         return String.join(SEPARATOR, parts);
+    }
+
+    private Stream<String> pathEntries() {
+        return entries.stream().filter(entry -> !IgnorePattern.isPattern(entry));
+    }
+
+    private boolean matchesPattern(Path target) {
+        if (patterns.isEmpty() || !target.startsWith(base) || target.equals(base)) {
+            return false;
+        }
+        List<String> parts = new ArrayList<>();
+        base.relativize(target).forEach(part -> parts.add(part.toString()));
+        return patterns.stream().anyMatch(pattern -> pattern.matches(parts));
+    }
+
+    private boolean patternUnder(Path root) {
+        if (patterns.isEmpty() || !root.startsWith(base) || !Files.isDirectory(root)) {
+            return false;
+        }
+        try (Stream<Path> walk = Files.walk(root)) {
+            return walk.anyMatch(path -> !path.equals(root) && matchesPattern(normalize(path)));
+        } catch (IOException | UncheckedIOException e) {
+            return true;
+        }
     }
 
     private static Path normalize(Path path) {

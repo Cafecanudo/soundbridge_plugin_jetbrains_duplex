@@ -42,6 +42,10 @@ public final class IgnoreService {
         store(list().with(paths));
     }
 
+    public void addEntries(List<String> entries) {
+        store(list().withEntries(entries));
+    }
+
     public void unignore(List<String> entries) {
         store(list().without(entries));
     }

@@ -72,4 +72,70 @@ class IgnoreListTest {
         assertEquals(List.of(root.resolve("build/old.jar")), result.ignoredDeletions());
         assertEquals(3, result.ignoredCount());
     }
+
+    @Test
+    void nameGlobMatchesAtAnyDepth() {
+        IgnoreList list = new IgnoreList(root, List.of("*.iml"));
+
+        assertTrue(list.isIgnored(root.resolve("app.iml")));
+        assertTrue(list.isIgnored(root.resolve("modules/core/core.iml")));
+        assertFalse(list.isIgnored(root.resolve("src/iml.txt")));
+    }
+
+    @Test
+    void anchoredGlobIgnoresMatchedFolderContents() {
+        IgnoreList list = new IgnoreList(root, List.of(".git/*", "src/**/gen"));
+
+        assertTrue(list.isIgnored(root.resolve(".git/HEAD")));
+        assertTrue(list.isIgnored(root.resolve(".git/objects/ab/cdef")));
+        assertFalse(list.isIgnored(root.resolve(".git")));
+        assertFalse(list.isIgnored(root.resolve("sub/.git/HEAD")));
+        assertTrue(list.isIgnored(root.resolve("src/gen/A.java")));
+        assertTrue(list.isIgnored(root.resolve("src/main/java/gen/B.java")));
+        assertFalse(list.isIgnored(root.resolve("lib/gen/C.java")));
+    }
+
+    @Test
+    void globsOnlyApplyInsideTheProject() {
+        IgnoreList list = new IgnoreList(root.resolve("projeto"), List.of("*.iml"));
+
+        assertFalse(list.isIgnored(root.resolve("fora/app.iml")));
+    }
+
+    @Test
+    void folderIsOpenedOnlyWhenAGlobMatchesInside() throws IOException {
+        Path modules = Files.createDirectories(root.resolve("modules/core"));
+        Files.writeString(modules.resolve("core.iml"), "x");
+        Path main = Files.writeString(modules.resolve("Main.java"), "m");
+        Path clean = Files.createDirectories(root.resolve("clean"));
+        Files.writeString(clean.resolve("A.java"), "a");
+        IgnoreList list = new IgnoreList(root, List.of("*.iml"));
+
+        assertTrue(list.hasIgnoredUnder(root.resolve("modules")));
+        assertFalse(list.hasIgnoredUnder(clean));
+
+        IgnoreFilter.Result result = IgnoreFilter.apply(SendSelection.of(List.of(root.resolve("modules"), clean)),
+                list, Files::isDirectory);
+
+        assertEquals(List.of(main, clean), result.kept().sends());
+        assertEquals(List.of(modules.resolve("core.iml")), result.ignoredSends());
+    }
+
+    @Test
+    void manualInputIsSplitNormalizedAndValidated() {
+        assertEquals(List.of("*.iml", ".git/*", "build"),
+                IgnorePattern.split(" *.iml \n.git\\*, /build/;*.iml"));
+        assertEquals(List.of("/out*"), IgnorePattern.split("/out*/"));
+        assertTrue(IgnorePattern.problemKey("../x").isPresent());
+        assertTrue(IgnorePattern.problemKey("/").isPresent());
+        assertFalse(IgnorePattern.problemKey("src/**/gen").isPresent());
+    }
+
+    @Test
+    void leadingSlashAnchorsANameGlobToTheRoot() {
+        IgnoreList list = new IgnoreList(root, List.of("/out*"));
+
+        assertTrue(list.isIgnored(root.resolve("out/a.class")));
+        assertFalse(list.isIgnored(root.resolve("sub/out/a.class")));
+    }
 }

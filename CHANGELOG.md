@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Adicionar…** na aba Ignorados: caminhos e padrões digitados (um por linha ou separados por vírgula), no estilo
+  gitignore. Sem `/` casa o nome em qualquer pasta (`*.iml`); com `/` é relativo à raiz do projeto (`.git/*`,
+  `src/**/gen`); pasta que casa leva tudo dentro. Pasta enviada inteira só é aberta arquivo por arquivo quando algum
+  padrão casa dentro dela, então o pacote único continua valendo nas demais. Entrada vazia, com `..` ou caminho
+  inválido é recusada no próprio diálogo.
+
+### Alterado
+- O menu mostra **Ignorado pela pasta ou por padrão** para item coberto por pasta ou padrão.
+
 ## [1.0.23-SNAPSHOT] — 2026-11-03
 
 ### Alterado
