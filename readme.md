@@ -100,12 +100,16 @@ na IDE (nenhum arquivo é criado no projeto) e aparece na aba **Ignorados** do H
 | Entrada | Efeito |
 |---|---|
 | `build`, `src/Secret.java` | caminho relativo à raiz do projeto (como o menu) |
-| `*.iml`, `*.log` | sem `/`: casa o nome em qualquer pasta |
-| `.git/*`, `src/**/gen`, `/out*` | com `/`: relativo à raiz; `/` no início ancora um nome na raiz |
+| `*.iml`, `.git/*`, `src/**/gen` | padrão: vale em qualquer pasta (`.git/*` pega `.git` da raiz e de submódulos) |
+| `/out*`, `/.git/*` | `/` no início: vale só na raiz |
 
 `*` não passa de pasta, `**` passa e `?` é um caractere. Pasta que casa leva tudo dentro (`.git/*` ignora
-`.git/objects/...`). Padrões só valem dentro do projeto; uma pasta enviada inteira só é aberta arquivo por arquivo
-quando algum padrão casa dentro dela. Não há negação (`!padrão`).
+`.git/objects/...`). Padrões valem dentro do projeto e dentro da **Pasta de recepção** do Settings (relativos a
+cada uma); uma pasta enviada inteira só é aberta arquivo por arquivo quando algum padrão casa dentro dela. Não há
+negação (`!padrão`).
+
+Todo projeto começa com estes ignorados, que podem ser removidos na aba e não voltam depois disso: `**/.git`,
+`**/.idea`, `*.iml`, `*.ipr`, `*.iws`, `**/.vs`, `*.suo`, `*.user`, `*.userosscache` e `*.sln.docstates`.
 
 ## Atalhos
 

@@ -26,9 +26,11 @@ public final class IgnoreService {
     }
 
     public IgnoreList list() {
+        Path base = Path.of(settings().projectDirectory());
+        Path receiveBase = settings().destinationBase();
         IgnoreList current = cached;
-        if (current == null) {
-            current = new IgnoreList(Path.of(settings().projectDirectory()), settings().ignored());
+        if (current == null || !current.patternBases().equals(IgnoreList.patternBases(base, receiveBase))) {
+            current = new IgnoreList(base, settings().ignored(), receiveBase);
             cached = current;
         }
         return current;

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Ignorados por padrão**: a pasta `.git`, os arquivos do IntelliJ (`.idea`, `*.iml`, `*.ipr`, `*.iws`) e do Visual
+  Studio (`.vs`, `*.suo`, `*.user`, `*.userosscache`, `*.sln.docstates`), em qualquer nível. Entram uma vez em cada
+  projeto, inclusive nos que já existem, somados aos itens já ignorados; podem ser removidos na aba Ignorados e não
+  voltam depois de removidos ou de **Limpar ignorados**.
+
+### Corrigido
+- Padrão com `/` (ex.: `.git/*`) só valia na raiz do projeto: a pasta `.git` de um submódulo ou repositório interno
+  continuava indo no envio e no **Verificar**. Agora todo padrão vale em qualquer pasta; só `/` no início prende à
+  raiz (`/.git/*`).
+- Padrões não valiam para itens fora do projeto da IDE: agora valem também dentro da **Pasta de recepção**,
+  relativos a ela. Entradas de caminho (do menu) continuam relativas ao projeto.
+
 ## [1.0.24-SNAPSHOT] — 2026-11-03
 
 ### Adicionado

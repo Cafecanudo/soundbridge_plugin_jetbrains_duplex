@@ -83,23 +83,33 @@ class IgnoreListTest {
     }
 
     @Test
-    void anchoredGlobIgnoresMatchedFolderContents() {
+    void globWithSlashMatchesAtAnyLevelAndIgnoresMatchedFolderContents() {
         IgnoreList list = new IgnoreList(root, List.of(".git/*", "src/**/gen"));
 
         assertTrue(list.isIgnored(root.resolve(".git/HEAD")));
         assertTrue(list.isIgnored(root.resolve(".git/objects/ab/cdef")));
         assertFalse(list.isIgnored(root.resolve(".git")));
-        assertFalse(list.isIgnored(root.resolve("sub/.git/HEAD")));
+        assertTrue(list.isIgnored(root.resolve("sub/.git/HEAD")));
+        assertTrue(list.isIgnored(root.resolve("modules/core/.git/objects/x")));
         assertTrue(list.isIgnored(root.resolve("src/gen/A.java")));
         assertTrue(list.isIgnored(root.resolve("src/main/java/gen/B.java")));
+        assertTrue(list.isIgnored(root.resolve("app/src/gen/D.java")));
         assertFalse(list.isIgnored(root.resolve("lib/gen/C.java")));
     }
 
     @Test
-    void globsOnlyApplyInsideTheProject() {
-        IgnoreList list = new IgnoreList(root.resolve("projeto"), List.of("*.iml"));
+    void globsApplyInsideTheProjectOrTheReceiveFolder() {
+        Path project = root.resolve("trabalho/projeto");
+        Path receive = root.resolve("trabalho");
 
+        assertFalse(new IgnoreList(project, List.of("*.iml")).isIgnored(receive.resolve("outro/app.iml")));
+        IgnoreList list = new IgnoreList(project, List.of("*.iml", ".git/*", "/raiz*"), receive);
+        assertTrue(list.isIgnored(receive.resolve("outro/app.iml")));
+        assertTrue(list.isIgnored(receive.resolve("outro/.git/HEAD")));
+        assertTrue(list.isIgnored(receive.resolve("raiz.txt")));
+        assertTrue(list.isIgnored(project.resolve("raiz.txt")));
         assertFalse(list.isIgnored(root.resolve("fora/app.iml")));
+        assertEquals(List.of(project.toAbsolutePath().normalize()), IgnoreList.patternBases(project, project));
     }
 
     @Test
@@ -129,6 +139,23 @@ class IgnoreListTest {
         assertTrue(IgnorePattern.problemKey("../x").isPresent());
         assertTrue(IgnorePattern.problemKey("/").isPresent());
         assertFalse(IgnorePattern.problemKey("src/**/gen").isPresent());
+    }
+
+    @Test
+    void defaultsCoverGitIdeaAndVisualStudioFilesAndKeepExistingEntries() {
+        List<String> entries = IgnoreList.withDefaults(List.of("build", "*.iml"));
+        IgnoreList list = new IgnoreList(root, entries);
+
+        assertEquals(IgnoreList.DEFAULT_ENTRIES.size() + 1, entries.size());
+        assertTrue(entries.contains("build"));
+        assertTrue(list.isIgnored(root.resolve(".git/HEAD")));
+        assertTrue(list.isIgnored(root.resolve("sub/.git/config")));
+        assertTrue(list.isIgnored(root.resolve(".idea/workspace.xml")));
+        assertTrue(list.isIgnored(root.resolve("app.iml")));
+        assertTrue(list.isIgnored(root.resolve(".vs/App/v17/.suo")));
+        assertTrue(list.isIgnored(root.resolve("App.csproj.user")));
+        assertFalse(list.isIgnored(root.resolve("src/Main.java")));
+        assertFalse(list.isIgnored(root.resolve(".gitignore")));
     }
 
     @Test

@@ -7,22 +7,44 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public record IgnoreList(Path base, List<String> entries, List<IgnorePattern> patterns) {
+public record IgnoreList(Path base, List<String> entries, List<IgnorePattern> patterns, List<Path> patternBases) {
+
+    public static final List<String> DEFAULT_ENTRIES = List.of(
+            "**/.git",
+            "**/.idea", "*.iml", "*.ipr", "*.iws",
+            "**/.vs", "*.suo", "*.user", "*.userosscache", "*.sln.docstates");
 
     private static final String SEPARATOR = "/";
+
+    public static List<String> withDefaults(List<String> entries) {
+        Set<String> result = new LinkedHashSet<>(DEFAULT_ENTRIES);
+        result.addAll(entries);
+        return List.copyOf(result);
+    }
 
     public IgnoreList {
         base = base.toAbsolutePath().normalize();
         entries = List.copyOf(entries);
         patterns = List.copyOf(patterns);
+        patternBases = patternBases.stream().map(IgnoreList::normalize).distinct().toList();
     }
 
     public IgnoreList(Path base, List<String> entries) {
-        this(base, entries, entries.stream().map(IgnorePattern::of).flatMap(Optional::stream).toList());
+        this(base, entries, null);
+    }
+
+    public IgnoreList(Path base, List<String> entries, Path receiveBase) {
+        this(base, entries, entries.stream().map(IgnorePattern::of).flatMap(Optional::stream).toList(),
+                patternBases(base, receiveBase));
+    }
+
+    public static List<Path> patternBases(Path base, Path receiveBase) {
+        return Stream.of(base, receiveBase).filter(Objects::nonNull).map(IgnoreList::normalize).distinct().toList();
     }
 
     public boolean isIgnored(Path path) {
@@ -80,16 +102,23 @@ public record IgnoreList(Path base, List<String> entries, List<IgnorePattern> pa
     }
 
     private boolean matchesPattern(Path target) {
-        if (patterns.isEmpty() || !target.startsWith(base) || target.equals(base)) {
+        if (patterns.isEmpty()) {
             return false;
         }
+        return patternBases.stream()
+                .filter(root -> target.startsWith(root) && !target.equals(root))
+                .map(root -> parts(root.relativize(target)))
+                .anyMatch(parts -> patterns.stream().anyMatch(pattern -> pattern.matches(parts)));
+    }
+
+    private static List<String> parts(Path relative) {
         List<String> parts = new ArrayList<>();
-        base.relativize(target).forEach(part -> parts.add(part.toString()));
-        return patterns.stream().anyMatch(pattern -> pattern.matches(parts));
+        relative.forEach(part -> parts.add(part.toString()));
+        return parts;
     }
 
     private boolean patternUnder(Path root) {
-        if (patterns.isEmpty() || !root.startsWith(base) || !Files.isDirectory(root)) {
+        if (patterns.isEmpty() || patternBases.stream().noneMatch(root::startsWith) || !Files.isDirectory(root)) {
             return false;
         }
         try (Stream<Path> walk = Files.walk(root)) {

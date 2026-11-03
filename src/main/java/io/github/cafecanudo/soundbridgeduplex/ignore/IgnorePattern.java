@@ -25,8 +25,9 @@ public record IgnorePattern(String entry, boolean anchored, Pattern regex) {
         if (!isPattern(entry)) {
             return Optional.empty();
         }
-        String body = entry.startsWith(SEPARATOR) ? entry.substring(1) : entry;
-        return Optional.of(new IgnorePattern(entry, entry.contains(SEPARATOR), Pattern.compile(toRegex(body))));
+        boolean anchored = entry.startsWith(SEPARATOR);
+        String body = anchored ? entry.substring(1) : entry;
+        return Optional.of(new IgnorePattern(entry, anchored, Pattern.compile(toRegex(body))));
     }
 
     public static String normalize(String input) {
@@ -70,12 +71,12 @@ public record IgnorePattern(String entry, boolean anchored, Pattern regex) {
     }
 
     public boolean matches(List<String> relativeParts) {
-        for (int end = 1; end <= relativeParts.size(); end++) {
-            String candidate = anchored
-                    ? String.join(SEPARATOR, relativeParts.subList(0, end))
-                    : relativeParts.get(end - 1);
-            if (regex.matcher(candidate).matches()) {
-                return true;
+        int lastStart = anchored ? 0 : relativeParts.size() - 1;
+        for (int start = 0; start <= lastStart; start++) {
+            for (int end = start + 1; end <= relativeParts.size(); end++) {
+                if (regex.matcher(String.join(SEPARATOR, relativeParts.subList(start, end))).matches()) {
+                    return true;
+                }
             }
         }
         return false;

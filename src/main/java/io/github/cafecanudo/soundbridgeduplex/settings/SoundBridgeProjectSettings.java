@@ -11,6 +11,7 @@ import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationOptions;
 import io.github.cafecanudo.soundbridgeduplex.calibration.CalibrationProfile;
 import io.github.cafecanudo.soundbridgeduplex.calibration.UniProfile;
 import io.github.cafecanudo.soundbridgeduplex.cli.CliCommand;
+import io.github.cafecanudo.soundbridgeduplex.ignore.IgnoreList;
 import io.github.cafecanudo.soundbridgeduplex.send.SendMode;
 import io.github.cafecanudo.soundbridgeduplex.send.SendOptions;
 
@@ -61,6 +62,7 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean sendCopyMemory = false;
         public String sendMode = "";
         public List<String> ignored = new ArrayList<>();
+        public boolean ignoreDefaultsApplied = false;
         public Map<String, String> sent = new HashMap<>();
     }
 
@@ -232,7 +234,13 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
     }
 
     public List<String> ignored() {
-        return state.ignored == null ? List.of() : List.copyOf(state.ignored);
+        List<String> entries = state.ignored == null ? List.of() : List.copyOf(state.ignored);
+        if (!state.ignoreDefaultsApplied) {
+            entries = IgnoreList.withDefaults(entries);
+            state.ignored = new ArrayList<>(entries);
+            state.ignoreDefaultsApplied = true;
+        }
+        return entries;
     }
 
     public void setIgnored(List<String> entries) {
