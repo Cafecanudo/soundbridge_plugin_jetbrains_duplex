@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Adicionado
+- **Limpar lista após envio**, abaixo da lista de itens: esvazia a lista quando o envio termina com sucesso. Só
+  vale no modo bidirecional (o sucesso vem do ACK do outro PC); no unidirecional fica desabilitado.
+- **Limpar histórico**, abaixo do **Enviar** ao lado de **Enviar automaticamente ao selecionar** (que desceu para
+  essa linha): cada envio começa limpando o Histórico, que fica só com o envio atual.
+- As duas opções ficam salvas no projeto e valem também no envio direto pelo menu.
+- **Limpar histórico** no Recebimento, abaixo do **Receber** (salvo no projeto): cada recebimento novo limpa o
+  Histórico ao chegar o primeiro arquivo depois do recebimento anterior terminar, e o Histórico fica só com o último
+  recebimento (uma sequência com `--more` conta como um).
+
+### Alterado
+- **Copiar para a memória do outro PC** volta desmarcado a cada arquivo ou pasta escolhido pelo menu (Project ou
+  Commit): a opção ligada pelo **Usar memória** não fica valendo para o envio seguinte. **Usar memória** e o texto
+  selecionado no editor continuam ligando a opção; o reenvio do Histórico mantém a do envio original.
+
 ## [1.0.25-SNAPSHOT] — 2026-11-03
 
 ### Adicionado

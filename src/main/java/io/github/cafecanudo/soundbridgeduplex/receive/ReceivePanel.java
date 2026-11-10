@@ -68,6 +68,7 @@ public final class ReceivePanel {
     private final JButton stopButton = new JButton(message("receive.stop"));
     private final JButton calibrateButton = new JButton(message("receive.calibrate"));
     private final JBCheckBox serveCheck = new JBCheckBox(message("receive.serve"));
+    private final JBCheckBox clearHistoryCheck = new JBCheckBox(message("send.clearHistory"));
     private final JBLabel calibrationTitle = new JBLabel(message("receive.calibration.title"));
     private final JBLabel calibrationLabel = new JBLabel();
     private final JButton copyButton = new JButton(message("receive.calibration.copy"));
@@ -106,6 +107,9 @@ public final class ReceivePanel {
             }
         });
         startButton.addActionListener(e -> service().start(options()));
+        clearHistoryCheck.setSelected(settings().clearHistoryOnReceive());
+        clearHistoryCheck.setToolTipText(message("receive.clearHistory.tooltip"));
+        clearHistoryCheck.addActionListener(e -> settings().setClearHistoryOnReceive(clearHistoryCheck.isSelected()));
         serveCheck.setToolTipText(message("receive.serve.tooltip"));
         serveCheck.addActionListener(e -> {
             settings().setServeRequests(serveCheck.isSelected());
@@ -291,6 +295,7 @@ public final class ReceivePanel {
                 .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
                 .addComponentToRightColumn(row(startButton, calibrateButton, stopButton))
+                .addComponentToRightColumn(row(clearHistoryCheck))
                 .addLabeledComponent(message("receive.state"), stateLabel)
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)

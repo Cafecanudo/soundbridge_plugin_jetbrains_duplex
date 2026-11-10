@@ -220,7 +220,16 @@ public final class ReceiveService implements Disposable {
     private void received(ReceivedFile file) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
         HistoryEntry entry = HistoryEntry.ofReceived(timestamp, file);
+        boolean firstOfSequence;
+        synchronized (sequence) {
+            firstOfSequence = !sequence.isOpen();
+        }
+        boolean clearHistory = firstOfSequence
+                && SoundBridgeProjectSettings.getInstance(project).clearHistoryOnReceive();
         onUi(() -> {
+            if (clearHistory) {
+                SendHistory.getInstance(project).clear();
+            }
             if (!ResendRequestService.getInstance(project).complete(file, entry)) {
                 SendHistory.getInstance(project).add(entry);
             }

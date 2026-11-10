@@ -76,6 +76,9 @@ public final class SendService {
         if (!acquire()) {
             return false;
         }
+        if (SoundBridgeProjectSettings.getInstance(project).clearHistoryOnSend()) {
+            SendHistory.getInstance(project).clear();
+        }
         ProgressManager.getInstance().run(new SendTask(project, request, this));
         return true;
     }
@@ -151,6 +154,10 @@ public final class SendService {
         running.set(false);
         notifyRunning(false);
         onUi(() -> observers.forEach(observer -> observer.onFinished(outcome)));
+        if (outcome.succeeded() && request.snapshot().mode() == SendMode.TWO_WAY
+                && SoundBridgeProjectSettings.getInstance(project).clearListAfterSend()) {
+            onUi(() -> SendDraft.getInstance(project).setSelection(SendSelection.EMPTY));
+        }
         String summary = request.hasIgnored()
                 ? outcome.summary() + message("send.notify.ignoredSuffix", request.ignoredCount()) : outcome.summary();
         notifyUser(summary, outcome.succeeded() ? NotificationType.INFORMATION : NotificationType.WARNING);

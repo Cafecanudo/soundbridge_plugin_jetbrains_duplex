@@ -36,7 +36,9 @@ seja digitado na janela. Sem a janela, o menu só envia direto com **Enviar auto
 O progresso tem duas barras: **Progresso** (arquivo atual, com velocidade e tempo restante) e **Total** (todos os
 itens, ponderado pelo tamanho, com *3/10 item(ns)* e as falhas). Na barra de status da IDE, o indicador da tarefa
 mostra o total e o texto ao lado traz o item atual (*3/10 · Main.java 45%*). No fim do envio sai uma notificação
-só, com os enviados e as falhas.
+só, com os enviados e as falhas. **Limpar lista após envio** (abaixo de Itens, só no bidirecional) esvazia a lista
+quando o envio termina com sucesso, e **Limpar histórico** (abaixo do Enviar) limpa o Histórico a cada envio; as
+duas opções ficam salvas no projeto.
 
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
 Com Ctrl/Shift dá para selecionar várias linhas (envios, recebidos e verificações) e **Reenviar** tudo de uma vez:
@@ -50,8 +52,9 @@ Com a Tool Window de envio aberta, o plugin observa a área de transferência e 
 quando há algo copiado, mesmo fora da IDE: arquivos (Ctrl+C no Explorer), um print ou um texto. O botão coloca nos
 itens os arquivos copiados, o print como `sb-memoria.png` ou o texto como `sb-memoria.txt` (temporários em
 `%TEMP%\sb-duplex-memoria-tx`, apagados após 24 h). Um texto selecionado no editor vai do mesmo jeito: botão direito
-→ **SoundBridge → Enviar**, ou Alt+Shift+K, E. No outro PC, com **Copiar para a memória** marcado no Recebimento
-(`--copy-memory`, exige `sb-duplex` 1.4.0b5), texto e print colam como texto e imagem, e arquivos colam como arquivos.
+→ **SoundBridge → Enviar**, ou Alt+Shift+K, E. Os dois ligam **Copiar para a memória do outro PC** (`--copy-memory`,
+exige `sb-duplex` 1.4.0b6 nos dois PCs): no outro PC, texto e print colam como texto e imagem, e arquivos colam como
+arquivos. Arquivos e pastas escolhidos pelo menu desligam a opção, que só volta se marcada à mão.
 
 ## Verificação
 
@@ -128,6 +131,8 @@ Atalhos em dois toques: **Alt+Shift+K** e depois a letra (no macOS, ⌥⇧K). Tr
 Na seção **Recebimento** da Tool Window, **Receber** deixa o SoundBridge escutando na pasta de recepção do
 projeto (com confirmação no modo bidirecional) até **Parar**. Durante um envio ou uma calibração o recebimento
 pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de download) e na árvore do Project.
+Com **Limpar histórico** (abaixo do Receber, salvo no projeto), cada recebimento novo limpa o Histórico, que fica só
+com o último recebimento.
 Numa sequência (pasta ou lista enviada de uma vez), só as falhas notificam na hora; no fim sai um resumo
 (*5 recebido(s) · 1 falha(s)*), e a linha **Sequência** do Recebimento conta os recebidos e as falhas.
 

@@ -91,6 +91,8 @@ final class SendPanel {
     private final JButton verifyButton = new JButton(message("send.verify"));
     private final JButton cancelButton = new JButton(message("send.cancel"));
     private final JBCheckBox autoSendCheck = new JBCheckBox(message("send.autoSend"));
+    private final JBCheckBox clearHistoryCheck = new JBCheckBox(message("send.clearHistory"));
+    private final JBCheckBox clearListCheck = new JBCheckBox(message("send.clearList"));
     private final JBCheckBox replaceCheck = new JBCheckBox(message("send.replace"));
     private final JBCheckBox packageCheck = new JBCheckBox(message("send.package"));
     private final JBCheckBox copyMemoryCheck = new JBCheckBox(message("send.copyMemory"));
@@ -145,6 +147,12 @@ final class SendPanel {
         autoSendCheck.setSelected(settings().autoSend());
         autoSendCheck.setToolTipText(message("send.autoSend.tooltip"));
         autoSendCheck.addActionListener(e -> settings().setAutoSend(autoSendCheck.isSelected()));
+        clearHistoryCheck.setSelected(settings().clearHistoryOnSend());
+        clearHistoryCheck.setToolTipText(message("send.clearHistory.tooltip"));
+        clearHistoryCheck.addActionListener(e -> settings().setClearHistoryOnSend(clearHistoryCheck.isSelected()));
+        clearListCheck.setSelected(settings().clearListAfterSend());
+        clearListCheck.setToolTipText(message("send.clearList.tooltip"));
+        clearListCheck.addActionListener(e -> settings().setClearListAfterSend(clearListCheck.isSelected()));
         showCommandCheck.setSelected(settings().showCommand());
         showLogCheck.setSelected(settings().showLog());
         showCommandCheck.addActionListener(e -> {
@@ -318,6 +326,7 @@ final class SendPanel {
         commandArea.setText(!outside.isEmpty() ? QuickSend.outsideMessage(destinationBase(), outside)
                 : request().map(SendPanel::preview)
                         .orElse(message(currentSelection().isEmpty() ? "send.items.empty" : "send.mode.none")));
+        clearListCheck.setEnabled(selectedMode().filter(mode -> mode == SendMode.TWO_WAY).isPresent());
         updateButtons();
     }
 
@@ -566,6 +575,7 @@ final class SendPanel {
                 .addComponent(showWindowCheck)
                 .addComponentToRightColumn(row(replaceCheck, packageCheck, copyMemoryCheck))
                 .addLabeledComponent(message("send.items"), itemsPanel)
+                .addComponentToRightColumn(row(clearListCheck))
                 .addComponentToRightColumn(row(memoryButton))
                 .addLabeledComponent(message("send.mode"), row(oneWayRadio, twoWayRadio, configureButton))
                 .addComponentToRightColumn(modeHint)
@@ -575,7 +585,8 @@ final class SendPanel {
                 .addLabeledComponent(message("send.mcs"), row(mcsCombo))
                 .addComponentToRightColumn(row(showCommandCheck, showLogCheck))
                 .addLabeledComponent(commandLabel, commandScroll)
-                .addComponentToRightColumn(row(sendButton, verifyButton, cancelButton, autoSendCheck))
+                .addComponentToRightColumn(row(sendButton, verifyButton, cancelButton))
+                .addComponentToRightColumn(row(autoSendCheck, clearHistoryCheck))
                 .addLabeledComponent(message("send.progress"), progressBar)
                 .addComponentToRightColumn(progressLabel)
                 .addLabeledComponent(message("send.total"), totalBar)

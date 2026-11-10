@@ -44,6 +44,9 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
         public boolean calibrationSave = CalibrationOptions.DEFAULT.save();
         public String calibrationProfile = "";
         public boolean autoSend = false;
+        public boolean clearListAfterSend = false;
+        public boolean clearHistoryOnSend = false;
+        public boolean clearHistoryOnReceive = false;
         public boolean replaceExisting = false;
         public boolean packageFolders = false;
         public boolean showCommand = false;
@@ -147,6 +150,30 @@ public final class SoundBridgeProjectSettings implements PersistentStateComponen
 
     public void setAutoSend(boolean value) {
         state.autoSend = value;
+    }
+
+    public boolean clearListAfterSend() {
+        return state.clearListAfterSend;
+    }
+
+    public void setClearListAfterSend(boolean value) {
+        state.clearListAfterSend = value;
+    }
+
+    public boolean clearHistoryOnSend() {
+        return state.clearHistoryOnSend;
+    }
+
+    public void setClearHistoryOnSend(boolean value) {
+        state.clearHistoryOnSend = value;
+    }
+
+    public boolean clearHistoryOnReceive() {
+        return state.clearHistoryOnReceive;
+    }
+
+    public void setClearHistoryOnReceive(boolean value) {
+        state.clearHistoryOnReceive = value;
     }
 
     public boolean replaceExisting() {
