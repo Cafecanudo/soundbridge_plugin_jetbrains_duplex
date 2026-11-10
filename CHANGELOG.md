@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.26-SNAPSHOT] — 2026-11-10
+
 ### Adicionado
 - **Limpar lista após envio**, abaixo da lista de itens: esvazia a lista quando o envio termina com sucesso. Só
   vale no modo bidirecional (o sucesso vem do ACK do outro PC); no unidirecional fica desabilitado.
