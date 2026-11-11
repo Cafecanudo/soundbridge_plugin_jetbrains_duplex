@@ -48,6 +48,7 @@ public final class ReceiveService implements Disposable {
     private final Project project;
     private final List<ReceiveObserver> observers = new CopyOnWriteArrayList<>();
     private final ReceiveSequence sequence = new ReceiveSequence();
+    private boolean batchHistoryCleared;
     private final List<String> log = new CopyOnWriteArrayList<>();
     private volatile CliProcess process;
     private volatile ReceiveState state = ReceiveState.STOPPED;
@@ -184,7 +185,7 @@ public final class ReceiveService implements Disposable {
     public void dispose() {
         wanted = false;
         CliProcess current = process;
-        if (current != null && current.isRunning()) {
+        if (current != null) {
             current.kill();
         }
     }
@@ -211,25 +212,16 @@ public final class ReceiveService implements Disposable {
             return;
         }
         current.cancel();
-        if (!current.waitFor(STOP_WAIT_MILLIS)) {
-            current.kill();
-            current.waitFor(STOP_WAIT_MILLIS);
-        }
+        current.waitFor(STOP_WAIT_MILLIS);
+        current.kill();
+        current.waitFor(STOP_WAIT_MILLIS);
     }
 
     private void received(ReceivedFile file) {
         String timestamp = LocalDateTime.now().format(TIMESTAMP);
         HistoryEntry entry = HistoryEntry.ofReceived(timestamp, file);
-        boolean firstOfSequence;
-        synchronized (sequence) {
-            firstOfSequence = !sequence.isOpen();
-        }
-        boolean clearHistory = firstOfSequence
-                && SoundBridgeProjectSettings.getInstance(project).clearHistoryOnReceive();
+        clearHistoryForNewBatch();
         onUi(() -> {
-            if (clearHistory) {
-                SendHistory.getInstance(project).clear();
-            }
             if (!ResendRequestService.getInstance(project).complete(file, entry)) {
                 SendHistory.getInstance(project).add(entry);
             }
@@ -243,14 +235,28 @@ public final class ReceiveService implements Disposable {
         List<ReceiveSequence.Notice> notices;
         synchronized (sequence) {
             notices = sequence.add(file);
+            batchHistoryCleared = sequence.isOpen();
         }
         publish(notices);
+    }
+
+    private void clearHistoryForNewBatch() {
+        synchronized (sequence) {
+            if (sequence.isOpen() || batchHistoryCleared) {
+                return;
+            }
+            batchHistoryCleared = true;
+        }
+        if (SoundBridgeProjectSettings.getInstance(project).clearHistoryOnReceive()) {
+            onUi(() -> SendHistory.getInstance(project).clear());
+        }
     }
 
     private void endSequence() {
         List<ReceiveSequence.Notice> notices;
         synchronized (sequence) {
             notices = sequence.end();
+            batchHistoryCleared = false;
         }
         publish(notices);
     }
@@ -349,6 +355,7 @@ public final class ReceiveService implements Disposable {
                 setState(update.state());
             }
             if (update.progress() != null) {
+                clearHistoryForNewBatch();
                 onUi(() -> observers.forEach(observer -> observer.onProgress(update.progress())));
             }
             if (update.received() != null) {

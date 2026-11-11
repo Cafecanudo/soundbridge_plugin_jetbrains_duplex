@@ -36,9 +36,9 @@ seja digitado na janela. Sem a janela, o menu só envia direto com **Enviar auto
 O progresso tem duas barras: **Progresso** (arquivo atual, com velocidade e tempo restante) e **Total** (todos os
 itens, ponderado pelo tamanho, com *3/10 item(ns)* e as falhas). Na barra de status da IDE, o indicador da tarefa
 mostra o total e o texto ao lado traz o item atual (*3/10 · Main.java 45%*). No fim do envio sai uma notificação
-só, com os enviados e as falhas. **Limpar lista após envio** (abaixo de Itens, só no bidirecional) esvazia a lista
-quando o envio termina com sucesso, e **Limpar histórico** (abaixo do Enviar) limpa o Histórico a cada envio; as
-duas opções ficam salvas no projeto.
+só, com os enviados e as falhas. **Limpar lista após envio** (abaixo de Itens, uni e bidirecional) esvazia a lista
+quando o envio termina com sucesso, e **Limpar histórico antes de enviar** (abaixo do Enviar) limpa o Histórico
+antes de cada envio começar; as duas opções ficam salvas no projeto.
 
 O histórico (por projeto, últimas 200 entradas) permite reenviar com as mesmas opções e ver o log de cada envio.
 Com Ctrl/Shift dá para selecionar várias linhas (envios, recebidos e verificações) e **Reenviar** tudo de uma vez:
@@ -131,8 +131,8 @@ Atalhos em dois toques: **Alt+Shift+K** e depois a letra (no macOS, ⌥⇧K). Tr
 Na seção **Recebimento** da Tool Window, **Receber** deixa o SoundBridge escutando na pasta de recepção do
 projeto (com confirmação no modo bidirecional) até **Parar**. Durante um envio ou uma calibração o recebimento
 pausa e retoma sozinho. Cada arquivo recebido aparece no Histórico (ícone de download) e na árvore do Project.
-Com **Limpar histórico** (abaixo do Receber, salvo no projeto), cada recebimento novo limpa o Histórico, que fica só
-com o último recebimento.
+Com **Limpar histórico sempre a cada novo lote de arquivos** (abaixo do Receber, salvo no projeto), o Histórico é
+limpo assim que um novo lote começa a chegar e fica só com esse lote (arquivos encadeados com `--more` são um lote).
 Numa sequência (pasta ou lista enviada de uma vez), só as falhas notificam na hora; no fim sai um resumo
 (*5 recebido(s) · 1 falha(s)*), e a linha **Sequência** do Recebimento conta os recebidos e as falhas.
 

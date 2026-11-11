@@ -8,10 +8,13 @@ import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.openapi.util.Key;
 
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class CliProcess {
 
     private final KillableProcessHandler handler;
+    private final Set<ProcessHandle> descendants = ConcurrentHashMap.newKeySet();
 
     private CliProcess(KillableProcessHandler handler) {
         this.handler = handler;
@@ -27,11 +30,20 @@ public final class CliProcess {
     }
 
     public void cancel() {
+        rememberDescendants();
         handler.destroyProcess();
     }
 
     public void kill() {
+        rememberDescendants();
         handler.killProcess();
+        descendants.stream().filter(ProcessHandle::isAlive).forEach(ProcessHandle::destroyForcibly);
+    }
+
+    private void rememberDescendants() {
+        if (!handler.isProcessTerminated()) {
+            handler.getProcess().descendants().forEach(descendants::add);
+        }
     }
 
     public boolean isRunning() {

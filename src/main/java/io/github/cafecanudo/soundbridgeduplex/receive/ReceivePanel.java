@@ -68,7 +68,7 @@ public final class ReceivePanel {
     private final JButton stopButton = new JButton(message("receive.stop"));
     private final JButton calibrateButton = new JButton(message("receive.calibrate"));
     private final JBCheckBox serveCheck = new JBCheckBox(message("receive.serve"));
-    private final JBCheckBox clearHistoryCheck = new JBCheckBox(message("send.clearHistory"));
+    private final JBCheckBox clearHistoryCheck = new JBCheckBox(message("receive.clearHistory"));
     private final JBLabel calibrationTitle = new JBLabel(message("receive.calibration.title"));
     private final JBLabel calibrationLabel = new JBLabel();
     private final JButton copyButton = new JButton(message("receive.calibration.copy"));

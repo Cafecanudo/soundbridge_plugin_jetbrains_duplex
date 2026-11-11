@@ -326,7 +326,6 @@ final class SendPanel {
         commandArea.setText(!outside.isEmpty() ? QuickSend.outsideMessage(destinationBase(), outside)
                 : request().map(SendPanel::preview)
                         .orElse(message(currentSelection().isEmpty() ? "send.items.empty" : "send.mode.none")));
-        clearListCheck.setEnabled(selectedMode().filter(mode -> mode == SendMode.TWO_WAY).isPresent());
         updateButtons();
     }
 

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Alterado
+- **Limpar histórico** do Recebimento passou a se chamar **Limpar histórico sempre a cada novo lote de arquivos** e
+  limpa assim que o lote começa a chegar (primeiro progresso), não mais quando o primeiro arquivo termina.
+- **Limpar histórico** do envio passou a se chamar **Limpar histórico antes de enviar** (já limpava antes do envio
+  começar).
+- **Limpar lista após envio** vale também no unidirecional. Lá o sucesso significa que todos os arquivos foram
+  transmitidos, sem confirmação do outro PC.
+
+### Corrigido
+- Fechar o IntelliJ (ou o projeto) podia deixar o `--rx` do Recebimento rodando: o plugin encerrava só o processo
+  iniciado, e quando o `python` do lançador é um intermediário (alias do WindowsApps, `py`, Python de venv) o Python
+  real é filho dele e sobrevivia. Agora o encerramento derruba a árvore de processos, ao fechar, no **Parar** e no
+  cancelamento de envio, verificação, calibração e pedido de reenvio.
+
 ## [1.0.26-SNAPSHOT] — 2026-11-10
 
 ### Adicionado

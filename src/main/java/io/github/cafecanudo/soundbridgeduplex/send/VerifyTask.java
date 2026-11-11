@@ -95,6 +95,7 @@ final class VerifyTask extends Task.Backgroundable {
                     cancelled = true;
                     process.cancel();
                     process.waitFor(CANCEL_WAIT_MILLIS);
+                    process.kill();
                     return CliExitCode.INTERRUPTED;
                 }
             }

@@ -154,8 +154,7 @@ public final class SendService {
         running.set(false);
         notifyRunning(false);
         onUi(() -> observers.forEach(observer -> observer.onFinished(outcome)));
-        if (outcome.succeeded() && request.snapshot().mode() == SendMode.TWO_WAY
-                && SoundBridgeProjectSettings.getInstance(project).clearListAfterSend()) {
+        if (outcome.succeeded() && SoundBridgeProjectSettings.getInstance(project).clearListAfterSend()) {
             onUi(() -> SendDraft.getInstance(project).setSelection(SendSelection.EMPTY));
         }
         String summary = request.hasIgnored()

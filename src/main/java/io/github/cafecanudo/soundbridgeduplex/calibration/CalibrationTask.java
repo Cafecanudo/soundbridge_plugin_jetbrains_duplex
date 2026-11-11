@@ -49,6 +49,7 @@ final class CalibrationTask extends Task.Backgroundable {
                     process.cancel();
                     failure.set(message("calibration.notify.cancelled"));
                     process.waitFor(POLL_MILLIS * 20);
+                    process.kill();
                     return;
                 }
             }

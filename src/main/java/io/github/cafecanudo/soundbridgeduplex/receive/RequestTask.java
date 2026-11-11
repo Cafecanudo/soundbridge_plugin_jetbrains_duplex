@@ -48,6 +48,7 @@ final class RequestTask extends Task.Backgroundable {
                 if (indicator.isCanceled()) {
                     process.cancel();
                     process.waitFor(CANCEL_WAIT_MILLIS);
+                    process.kill();
                     exit.set(CliExitCode.INTERRUPTED);
                     return;
                 }
