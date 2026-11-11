@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.27-SNAPSHOT] — 2026-11-10
+
 ### Alterado
 - **Limpar histórico** do Recebimento passou a se chamar **Limpar histórico sempre a cada novo lote de arquivos** e
   limpa assim que o lote começa a chegar (primeiro progresso), não mais quando o primeiro arquivo termina.
